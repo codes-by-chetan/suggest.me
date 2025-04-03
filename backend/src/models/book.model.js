@@ -37,6 +37,21 @@ const bookSchema = new mongoose.Schema(
         ],
         bookType: {
             type: String,
+            enum: [
+                "Novel",
+                "Manga",
+                "Comics",
+                "Manhwa",
+                "Graphic Novel",
+                "Anthology",
+                "Light Novel",
+                "Webtoon",
+                "Novella",
+                "Short Story",
+                "Poetry",
+                "Play",
+                "Other",
+            ],
             required: true,
         },
         publishedYear: {
@@ -164,14 +179,23 @@ const bookSchema = new mongoose.Schema(
             },
         },
         coverImage: {
-            type: String,
-            required: [
-                true,
-                "Cover image URL is required for initial book creation.",
-            ],
-            validate: {
-                validator: (value) => validator.isURL(value),
-                message: "Cover image must be a valid URL.",
+            url: {
+                type: String,
+                required: [
+                    true,
+                    "Cover image URL is required for initial book creation.",
+                ],
+                validate: {
+                    validator: (value) => validator.isURL(value),
+                    message: "Cover image must be a valid URL.",
+                },
+            },
+            publicId: {
+                type: String,
+                required: [
+                    true,
+                    "Cover image Public ID is required for initial book creation.",
+                ],
             },
         },
         availableOn: {
@@ -269,6 +293,35 @@ const bookSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: false, // Optional at creation
+        },
+        reviews: {
+            type: [
+                {
+                    reviewer: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "User",
+                        required: [true, "Reviewer is required"],
+                    },
+                    rating: {
+                        type: Number,
+                        required: [true, "Rating is required"],
+                        min: [1, "Rating must be at least 1"],
+                        max: [5, "Rating cannot exceed 5"],
+                    },
+                    comment: {
+                        type: String,
+                        maxlength: [500, "Comment cannot exceed 500 characters"],
+                    },
+                    createdAt: {
+                        type: Date,
+                        default: Date.now,
+                    },
+                },
+            ],
+            validate: {
+                validator: (arr) => !arr.length || arr.length <= 100,
+                message: "Reviews cannot exceed 100 entries.",
+            },
         },
     },
     {

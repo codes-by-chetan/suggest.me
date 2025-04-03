@@ -37,14 +37,23 @@ const movieSchema = new mongoose.Schema(
             ],
         },
         poster: {
-            type: String,
-            required: [
-                true,
-                "Poster URL is required for initial movie creation.",
-            ],
-            validate: {
-                validator: (value) => validator.isURL(value),
-                message: "Poster must be a valid URL.",
+            url: {
+                type: String,
+                required: [
+                    true,
+                    "Poster URL is required for initial movie creation.",
+                ],
+                validate: {
+                    validator: (value) => validator.isURL(value),
+                    message: "Poster must be a valid URL.",
+                },
+            },
+            publicId: {
+                type: String,
+                required: [
+                    true,
+                    "Poster Public ID is required for initial movie creation.",
+                ],
             },
         },
         rated: {

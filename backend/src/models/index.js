@@ -5,6 +5,7 @@ import Movie from "./movie.model.js";
 import Person from "./person.model.js";
 import ProductionCompany from "./productionCompany.model.js";
 import RequestLog from "./requestLogs.model.js";
+import Series from "./series.model.js";
 import Studio from "./studio.model.js";
 import User from "./user.model.js";
 
@@ -18,6 +19,7 @@ const models = {
     Studio,
     Distributor,
     Book,
+    Series,
 };
 
 export default models;
