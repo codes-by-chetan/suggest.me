@@ -25,22 +25,19 @@ const musicSchema = new mongoose.Schema(
             ],
         },
         artist: {
-            type: String,
-            required: [true, "Artist name is required."],
-            trim: true,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Person",
+            required: [true, "Artist reference is required."],
         },
-        featuredArtists: {
-            type: [String],
-            default: ["None"],
-            validate: {
-                validator: (arr) => arr.length > 0,
-                message:
-                    "Featured artists must have at least one entry, e.g., 'None'.",
+        featuredArtists: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Person",
             },
-        },
+        ],
         album: {
-            type: String,
-            trim: true,
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Album",
         },
         releaseYear: {
             type: Number,
@@ -52,20 +49,17 @@ const musicSchema = new mongoose.Schema(
             ],
         },
         duration: {
-            type: Number,
-            min: [0, "Duration can not be negative"],
-            validate: {
-                validator: Number.isInteger,
-                message: "Duration in seconds should be an integer",
-            },
+            type: String,
+            match: [
+                /^\d+ min( \d+ sec)?$/,
+                "Duration must be in the format 'X min Y sec' (e.g., '3 min 22 sec').",
+            ],
         },
         genres: {
             type: [String],
             validate: {
-                validator: (arr) =>
-                    !arr.length || (arr.length > 0),
-                message:
-                    "Genres, if provided, must be at least 1 .",
+                validator: (arr) => !arr.length || (arr.length > 0 && arr.length <= 5),
+                message: "Genres, if provided, must be between 1 and 5 entries.",
             },
             index: true,
         },
@@ -77,10 +71,6 @@ const musicSchema = new mongoose.Schema(
             },
         },
         language: {
-            type: String,
-            trim: true,
-        },
-        label: {
             type: String,
             trim: true,
         },
@@ -102,29 +92,36 @@ const musicSchema = new mongoose.Schema(
             type: [String],
             enum: ["Digital", "CD", "Vinyl", "Cassette", "Other"],
         },
-        writers: {
-            type: [String],
-            validate: {
-                validator: (arr) => !arr.length || arr.length <= 10,
-                message: "Writers list, if provided, cannot exceed 10 entries.",
+        writers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Person",
+                validate: {
+                    validator: (arr) => !arr.length || arr.length <= 10,
+                    message: "Writers list, if provided, cannot exceed 10 entries.",
+                },
             },
-        },
-        producers: {
-            type: [String],
-            validate: {
-                validator: (arr) => !arr.length || arr.length <= 10,
-                message:
-                    "Producers list, if provided, cannot exceed 10 entries.",
+        ],
+        producers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Person",
+                validate: {
+                    validator: (arr) => !arr.length || arr.length <= 10,
+                    message: "Producers list, if provided, cannot exceed 10 entries.",
+                },
             },
-        },
-        engineers: {
-            type: [String],
-            validate: {
-                validator: (arr) => !arr.length || arr.length <= 10,
-                message:
-                    "Engineers list, if provided, cannot exceed 10 entries.",
+        ],
+        engineers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Person",
+                validate: {
+                    validator: (arr) => !arr.length || arr.length <= 10,
+                    message: "Engineers list, if provided, cannot exceed 10 entries.",
+                },
             },
-        },
+        ],
         certifications: {
             type: Map,
             of: String,
@@ -136,8 +133,7 @@ const musicSchema = new mongoose.Schema(
                     type: String,
                     validate: {
                         validator: (value) => !value || validator.isURL(value),
-                        message:
-                            "Spotify link must be a valid URL if provided.",
+                        message: "Spotify link must be a valid URL if provided.",
                     },
                 },
             },
@@ -147,8 +143,7 @@ const musicSchema = new mongoose.Schema(
                     type: String,
                     validate: {
                         validator: (value) => !value || validator.isURL(value),
-                        message:
-                            "Apple Music link must be a valid URL if provided.",
+                        message: "Apple Music link must be a valid URL if provided.",
                     },
                 },
             },
@@ -158,8 +153,7 @@ const musicSchema = new mongoose.Schema(
                     type: String,
                     validate: {
                         validator: (value) => !value || validator.isURL(value),
-                        message:
-                            "YouTube link must be a valid URL if provided.",
+                        message: "YouTube link must be a valid URL if provided.",
                     },
                 },
             },
@@ -196,10 +190,7 @@ const musicSchema = new mongoose.Schema(
                 nominations: {
                     type: Number,
                     default: 0,
-                    min: [
-                        0,
-                        "Billboard Music Award nominations cannot be negative.",
-                    ],
+                    min: [0, "Billboard Music Award nominations cannot be negative."],
                 },
             },
         },
@@ -225,7 +216,11 @@ const musicSchema = new mongoose.Schema(
             userReviews: {
                 type: [
                     {
-                        reviewer: { type: String, required: true },
+                        reviewer: {
+                            type: mongoose.Schema.Types.ObjectId,
+                            ref: "User",
+                            required: true,
+                        },
                         rating: {
                             type: Number,
                             required: true,
@@ -234,10 +229,7 @@ const musicSchema = new mongoose.Schema(
                         },
                         comment: {
                             type: String,
-                            maxlength: [
-                                500,
-                                "Comment cannot exceed 500 characters.",
-                            ],
+                            maxlength: [500, "Comment cannot exceed 500 characters."],
                         },
                     },
                 ],
@@ -253,95 +245,12 @@ const musicSchema = new mongoose.Schema(
                 type: String,
                 validate: {
                     validator: (value) => !value || validator.isURL(value),
-                    message:
-                        "Full lyrics link must be a valid URL if provided.",
+                    message: "Full lyrics link must be a valid URL if provided.",
                 },
-            },
-        },
-        coverImage: {
-            url: {
-                type: String,
-                required: [true, "Cover image URL is required."],
-                validate: {
-                    validator: (value) => validator.isURL(value),
-                    message: "Cover image URL must be a valid URL.",
-                },
-            },
-            publicId: {
-                type: String,
-                required: [true, "Cover image Public ID is required."],
             },
         },
         availableOn: {
             type: [String],
-        },
-        musicVideo: {
-            url: {
-                type: String,
-                validate: {
-                    validator: (value) => !value || validator.isURL(value),
-                    message: "Music video URL must be a valid URL if provided.",
-                },
-            },
-            director: { type: String },
-            releaseDate: {
-                type: Date,
-                validate: {
-                    validator: (value) => !value || value <= new Date(),
-                    message:
-                        "Music video release date cannot be in the future.",
-                },
-            },
-        },
-        livePerformances: {
-            type: [
-                {
-                    event: { type: String, required: true },
-                    date: {
-                        type: Date,
-                        validate: {
-                            validator: (value) => !value || value <= new Date(),
-                            message:
-                                "Performance date cannot be in the future.",
-                        },
-                    },
-                    location: { type: String },
-                    url: {
-                        type: String,
-                        validate: {
-                            validator: (value) =>
-                                !value || validator.isURL(value),
-                            message:
-                                "Performance URL must be a valid URL if provided.",
-                        },
-                    },
-                },
-            ],
-        },
-        remixes: {
-            type: [
-                {
-                    remixer: { type: String, required: true },
-                    version: { type: String, required: true },
-                    releaseDate: {
-                        type: Date,
-                        validate: {
-                            validator: (value) => !value || value <= new Date(),
-                            message:
-                                "Remix release date cannot be in the future.",
-                        },
-                    },
-                    url: {
-                        type: String,
-                        validate: {
-                            validator: (value) =>
-                                !value || validator.isURL(value),
-                            message:
-                                "Remix URL must be a valid URL if provided.",
-                        },
-                    },
-                },
-            ],
         },
         recommendedBy: {
             name: { type: String },
@@ -373,17 +282,14 @@ const musicSchema = new mongoose.Schema(
     }
 );
 
-// Plugins
 musicSchema.plugin(plugins.paginate);
 musicSchema.plugin(plugins.privatePlugin);
 musicSchema.plugin(plugins.softDelete);
 
-// Indexes for performance
 musicSchema.index({ slug: 1 });
 musicSchema.index({ title: 1, releaseYear: 1 });
 musicSchema.index({ genres: 1 });
 
-// Pre-save hook to generate slug
 musicSchema.pre("save", async function (next) {
     if (this.isModified("title") || !this.slug) {
         const baseSlug = this.title
@@ -402,37 +308,21 @@ musicSchema.pre("save", async function (next) {
     next();
 });
 
-// Pre-save validation for arrays
-musicSchema.pre("save", function (next) {
-    if (this.livePerformances && this.livePerformances.length > 50) {
-        return next(new Error("Live performances cannot exceed 50 entries."));
-    }
-    if (this.remixes && this.remixes.length > 20) {
-        return next(new Error("Remixes cannot exceed 20 entries."));
-    }
-    next();
-});
-
-// Pre-save hook for logging
 musicSchema.pre("save", middlewares.dbLogger("Music"));
 
-// Method to mark as verified
 musicSchema.methods.markAsVerified = async function () {
     this.isVerified = true;
     return this.save();
 };
 
-// Soft delete method
 musicSchema.statics.softDelete = async function (id) {
     return this.updateOne({ _id: id }, { isActive: false });
 };
 
-// Restore soft-deleted document
 musicSchema.statics.restore = async function (id) {
     return this.updateOne({ _id: id }, { isActive: true });
 };
 
-// Query only active records by default
 musicSchema.pre(/^find/, function (next) {
     if (!this.getQuery().hasOwnProperty("isActive")) {
         this.where({ isActive: true });
@@ -440,9 +330,17 @@ musicSchema.pre(/^find/, function (next) {
     next();
 });
 
-// Utility method for populated data
 musicSchema.statics.findPopulatedById = async function (id) {
-    return this.findById(id).populate("createdBy").populate("updatedBy");
+    return this.findById(id)
+        .populate("artist")
+        .populate("featuredArtists")
+        .populate("album")
+        .populate("writers")
+        .populate("producers")
+        .populate("engineers")
+        .populate("ratings.userReviews.reviewer")
+        .populate("createdBy")
+        .populate("updatedBy");
 };
 
 const Music = mongoose.model("Music", musicSchema);
