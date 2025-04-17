@@ -43,6 +43,14 @@ app.get("/", (req, res) => {
     if (req.body.demoError) {
         throw new ApiError(409, "error response demo");
     }
+    if (req.body.demoReq) {
+        const response = new ApiResponse(
+            200,
+            null,
+            req.headers
+        );
+        res.status(200).send(response);
+    }
     const response = new ApiResponse(
         200,
         null,

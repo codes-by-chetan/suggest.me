@@ -3,7 +3,7 @@ import Joi from "joi";
 const register = {
     body: Joi.object().keys({
         email: Joi.string().required().email(),
-        userName: Joi.string().required(),
+        userName: Joi.string().optional(),
         fullName: Joi.object().keys({
             firstName: Joi.string().required(),
             lastName: Joi.string().required(),

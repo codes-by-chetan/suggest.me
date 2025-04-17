@@ -7,7 +7,7 @@ import httpStatus from "http-status";
 
 const register = asyncHandler(async (req, res) => {
     const user = await services.authService.registerUser(req.body);
-    const authTokens = await user.generateAccessToken();
+    const authTokens = await user.generateAccessToken(req);
     const response = new ApiResponse(
         httpStatus.CREATED,
         { user, ...authTokens },
@@ -18,7 +18,7 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
     const token = await services.authService.loginWithEmailAndPassword(
-        req.body
+        req
     );
 
     const response = new ApiResponse(

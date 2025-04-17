@@ -4,7 +4,7 @@ import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
 
 /**
- * Schema for ContentList to store user preferences for content (Movies, Series, Books, Music).
+ * Schema for UserContent to store user preferences for content (Movies, Series, Books, Music).
  * One document per user-content pair, supporting WantToConsume, Consuming, Consumed, and NotInterested statuses.
  */
 const userContentSchema = new mongoose.Schema(
@@ -37,6 +37,12 @@ const userContentSchema = new mongoose.Schema(
       },
       required: [true, "Status is required"],
       default: "WantToConsume",
+    },
+    suggestion: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Suggestions",
+      required: false,
+      index: true,
     },
     addedAt: {
       type: Date,
@@ -80,6 +86,7 @@ userContentSchema.index({ user: 1, content: 1 }, { unique: true });
 userContentSchema.index({ user: 1, status: 1 });
 userContentSchema.index({ user: 1, contentType: 1 });
 userContentSchema.index({ content: 1 });
+userContentSchema.index({ suggestion: 1 });
 
 // Pre-save hook to update lastUpdatedAt on status change
 userContentSchema.pre("save", function (next) {
@@ -90,7 +97,7 @@ userContentSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-userContentSchema.pre("save", middlewares.dbLogger("ContentList"));
+userContentSchema.pre("save", middlewares.dbLogger("UserContent"));
 
 // Method to mark as verified
 userContentSchema.methods.markAsVerified = async function () {
@@ -121,13 +128,15 @@ userContentSchema.statics.addContent = async function (
   userId,
   contentId,
   contentType,
-  status = "WantToConsume"
+  status = "WantToConsume",
+  suggestionId
 ) {
   return this.create({
     user: userId,
     content: contentId,
     contentType,
     status,
+    suggestion: suggestionId,
     createdBy: userId,
   });
 };
@@ -151,6 +160,7 @@ userContentSchema.statics.findByUserId = async function (userId) {
   return this.find({ user: userId })
     .populate("content")
     .populate("user")
+    .populate("suggestion")
     .populate("createdBy")
     .populate("updatedBy");
 };
@@ -160,6 +170,7 @@ userContentSchema.statics.findPopulatedById = async function (id) {
   return this.findById(id)
     .populate("content")
     .populate("user")
+    .populate("suggestion")
     .populate("createdBy")
     .populate("updatedBy");
 };

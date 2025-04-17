@@ -16,6 +16,7 @@ import Series from "./series.model.js";
 import Studio from "./studio.model.js";
 import User from "./user.model.js";
 import UserContent from "./userContent.model.js";
+import UserSuggestions from "./userSuggestion.model.js";
 
 const models = {
     User,
@@ -35,7 +36,8 @@ const models = {
     UserContent,
     Music,
     Publisher,
-    RecordLabel
+    RecordLabel,
+    UserSuggestions,
 };
 
 export default models;

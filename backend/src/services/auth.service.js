@@ -14,7 +14,9 @@ import userService from "./user.service.js";
  * @returns {Promise<string>} - A promise that resolves to the access token if authentication is successful.
  * @throws {ApiError} - Throws an error if the username or email is not provided, user is not found, user is inactive, or password is incorrect.
  */
-const loginWithEmailAndPassword = async (credentials) => {
+const loginWithEmailAndPassword = async (req) => {
+    const credentials = req.body;
+
     if (!credentials.userName && !credentials.email) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
@@ -39,7 +41,7 @@ const loginWithEmailAndPassword = async (credentials) => {
         throw new ApiError(httpStatus.UNAUTHORIZED, "Password is incorrect!!!");
     }
 
-    const token = user.generateAccessToken();
+    const token = user.generateAccessToken(req);
 
     return token;
 };
