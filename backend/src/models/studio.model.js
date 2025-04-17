@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
+import reusableSchemas from "./reusableSchemas/index.js";
 
 const studioSchema = new mongoose.Schema(
     {
@@ -34,11 +35,8 @@ const studioSchema = new mongoose.Schema(
             trim: true,
         },
         logo: {
-            type: String,
-            validate: {
-                validator: (value) => validator.isURL(value),
-                message: "logo must be a valid URL.",
-            },
+            type: reusableSchemas.logoSchema,
+            required: false,
         },
         website: {
             type: String,

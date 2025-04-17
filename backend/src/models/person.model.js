@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
+import avatarSchema from "./reusableSchemas/avatar.schema.js";
+import reusableSchemas from "./reusableSchemas/index.js";
 
 const personSchema = new mongoose.Schema(
     {
@@ -38,11 +40,8 @@ const personSchema = new mongoose.Schema(
             maxlength: [1000, "Biography cannot exceed 1000 characters."],
         },
         profileImage: {
-            type: String,
-            validate: {
-                validator: (value) => !value || validator.isURL(value),
-                message: "Profile image must be a valid URL if provided.",
-            },
+            type: reusableSchemas.avatarSchema,
+            required: false,
         },
         professions: {
             type: [String],
@@ -98,13 +97,12 @@ personSchema.pre("save", async function (next) {
     next();
 });
 
-personSchema.pre("save", middlewares.dbLogger("Person"))
+personSchema.pre("save", middlewares.dbLogger("Person"));
 
 // Index for efficient querying
 personSchema.index({ name: 1 });
 personSchema.index({ slug: 1 });
 personSchema.index({ professions: 1 }); // For querying by profession
-
 
 const Person = mongoose.model("Person", personSchema);
 

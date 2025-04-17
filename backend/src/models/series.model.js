@@ -1,4 +1,3 @@
-// series.js
 import mongoose from "mongoose";
 import validator from "validator"; // Corrected import
 import plugins from "./plugins/index.js";
@@ -435,7 +434,6 @@ const seriesSchema = new mongoose.Schema(
             index: true,
         },
         availableOn: {
-            // Updated from Movie/Book, adapted for series
             streaming: {
                 type: [
                     {

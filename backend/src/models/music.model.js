@@ -58,8 +58,10 @@ const musicSchema = new mongoose.Schema(
         genres: {
             type: [String],
             validate: {
-                validator: (arr) => !arr.length || (arr.length > 0 && arr.length <= 5),
-                message: "Genres, if provided, must be between 1 and 5 entries.",
+                validator: (arr) =>
+                    !arr.length || (arr.length > 0 && arr.length <= 5),
+                message:
+                    "Genres, if provided, must be between 1 and 5 entries.",
             },
             index: true,
         },
@@ -98,7 +100,8 @@ const musicSchema = new mongoose.Schema(
                 ref: "Person",
                 validate: {
                     validator: (arr) => !arr.length || arr.length <= 10,
-                    message: "Writers list, if provided, cannot exceed 10 entries.",
+                    message:
+                        "Writers list, if provided, cannot exceed 10 entries.",
                 },
             },
         ],
@@ -108,7 +111,8 @@ const musicSchema = new mongoose.Schema(
                 ref: "Person",
                 validate: {
                     validator: (arr) => !arr.length || arr.length <= 10,
-                    message: "Producers list, if provided, cannot exceed 10 entries.",
+                    message:
+                        "Producers list, if provided, cannot exceed 10 entries.",
                 },
             },
         ],
@@ -118,7 +122,8 @@ const musicSchema = new mongoose.Schema(
                 ref: "Person",
                 validate: {
                     validator: (arr) => !arr.length || arr.length <= 10,
-                    message: "Engineers list, if provided, cannot exceed 10 entries.",
+                    message:
+                        "Engineers list, if provided, cannot exceed 10 entries.",
                 },
             },
         ],
@@ -126,6 +131,13 @@ const musicSchema = new mongoose.Schema(
             type: Map,
             of: String,
         },
+        remixes: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Music",
+                required: false,
+            },
+        ],
         streams: {
             spotify: {
                 plays: { type: String },
@@ -133,7 +145,8 @@ const musicSchema = new mongoose.Schema(
                     type: String,
                     validate: {
                         validator: (value) => !value || validator.isURL(value),
-                        message: "Spotify link must be a valid URL if provided.",
+                        message:
+                            "Spotify link must be a valid URL if provided.",
                     },
                 },
             },
@@ -143,7 +156,8 @@ const musicSchema = new mongoose.Schema(
                     type: String,
                     validate: {
                         validator: (value) => !value || validator.isURL(value),
-                        message: "Apple Music link must be a valid URL if provided.",
+                        message:
+                            "Apple Music link must be a valid URL if provided.",
                     },
                 },
             },
@@ -153,7 +167,8 @@ const musicSchema = new mongoose.Schema(
                     type: String,
                     validate: {
                         validator: (value) => !value || validator.isURL(value),
-                        message: "YouTube link must be a valid URL if provided.",
+                        message:
+                            "YouTube link must be a valid URL if provided.",
                     },
                 },
             },
@@ -190,7 +205,10 @@ const musicSchema = new mongoose.Schema(
                 nominations: {
                     type: Number,
                     default: 0,
-                    min: [0, "Billboard Music Award nominations cannot be negative."],
+                    min: [
+                        0,
+                        "Billboard Music Award nominations cannot be negative.",
+                    ],
                 },
             },
         },
@@ -229,7 +247,10 @@ const musicSchema = new mongoose.Schema(
                         },
                         comment: {
                             type: String,
-                            maxlength: [500, "Comment cannot exceed 500 characters."],
+                            maxlength: [
+                                500,
+                                "Comment cannot exceed 500 characters.",
+                            ],
                         },
                     },
                 ],
@@ -245,7 +266,8 @@ const musicSchema = new mongoose.Schema(
                 type: String,
                 validate: {
                     validator: (value) => !value || validator.isURL(value),
-                    message: "Full lyrics link must be a valid URL if provided.",
+                    message:
+                        "Full lyrics link must be a valid URL if provided.",
                 },
             },
         },

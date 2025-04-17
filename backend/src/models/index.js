@@ -5,7 +5,6 @@ import LivePerformance from "./livePerformance.model.js";
 import Movie from "./movie.model.js";
 import Music from "./music.model.js";
 import MusicAlbum from "./musicAlbum.model.js";
-import MusicRemix from "./musicRemix.model.js";
 import MusicVideo from "./musicVideo.model.js";
 import Person from "./person.model.js";
 import ProductionCompany from "./productionCompany.model.js";
@@ -16,7 +15,9 @@ import Series from "./series.model.js";
 import Studio from "./studio.model.js";
 import User from "./user.model.js";
 import UserContent from "./userContent.model.js";
+import UserProfile from "./userProfile.model.js";
 import UserSuggestions from "./userSuggestion.model.js";
+import Video from "./video.model.js";
 
 const models = {
     User,
@@ -32,12 +33,13 @@ const models = {
     MusicAlbum,
     MusicVideo,
     LivePerformance,
-    MusicRemix,
     UserContent,
     Music,
     Publisher,
     RecordLabel,
     UserSuggestions,
+    UserProfile,
+    Video,
 };
 
 export default models;

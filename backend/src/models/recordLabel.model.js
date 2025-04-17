@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import validator from "validator";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
+import logoSchema from "./reusableSchemas/logo.schema.js";
+import reusableSchemas from "./reusableSchemas/index.js";
 
 const recordLabelSchema = new mongoose.Schema(
     {
@@ -36,16 +38,8 @@ const recordLabelSchema = new mongoose.Schema(
             trim: true,
         },
         logo: {
-            url: {
-                type: String,
-                validate: {
-                    validator: (value) => !value || validator.isURL(value),
-                    message: "Logo URL must be a valid URL if provided.",
-                },
-            },
-            publicId: {
-                type: String,
-            },
+            type: reusableSchemas.logoSchema,
+            required: false,
         },
         website: {
             type: String,

@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
+import logoSchema from "./reusableSchemas/logo.schema.js";
+import reusableSchemas from "./reusableSchemas/index.js";
 
 const productionCompanySchema = new mongoose.Schema(
     {
@@ -23,11 +25,8 @@ const productionCompanySchema = new mongoose.Schema(
             ],
         },
         logo: {
-            type: String,
-            validate: {
-                validator: (value) => validator.isURL(value),
-                message: "logo must be a valid URL.",
-            },
+            type: reusableSchemas.logoSchema,
+            required: false,
         },
         founded: {
             type: Date,

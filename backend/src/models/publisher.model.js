@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import validator from "validator"; // Correct import
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
+import logoSchema from "./reusableSchemas/logo.schema.js";
+import reusableSchemas from "./reusableSchemas/index.js";
 
 const publisherSchema = new mongoose.Schema(
     {
@@ -21,11 +23,8 @@ const publisherSchema = new mongoose.Schema(
             match: [/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, or hyphens."]
         },
         logo: {
-            type: String,
-            validate: {
-                validator: (value) => !value || validator.isURL(value),
-                message: "Logo must be a valid URL if provided."
-            }
+            type: reusableSchemas.logoSchema,
+            required: false,
         },
         founded: {
             type: Date,
