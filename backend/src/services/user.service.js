@@ -52,7 +52,6 @@ const findUserById = async (id) => {
     return await models.User.findById(id);
 };
 
-
 /**
  * Update user information
  * @param {string} id - The id of the user to update
@@ -93,13 +92,11 @@ const updateUserInfo = async (id, userBody) => {
  * @throws {ApiError} If the user is not found
  */
 const getUserProfile = async (id) => {
-    const user = await models.User.findById(id)
-        .populate("organisation")
-        .populate("profile");
-    if (!user) {
+    const userProfile = await models.UserProfile.findByUserId(id);
+    if (!userProfile) {
         throw new ApiError(httpStatus.NOT_FOUND, "User not found");
     }
-    return user;
+    return userProfile;
 };
 
 const userService = {
