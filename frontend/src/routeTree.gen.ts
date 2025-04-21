@@ -8,6 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
@@ -34,6 +36,27 @@ import { Route as AuthenticatedSettingsNotificationsImport } from './routes/_aut
 import { Route as AuthenticatedSettingsDisplayImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings/account'
+
+// Create Virtual Routes
+
+const AuthenticatedSuggestedToMeIndexLazyImport = createFileRoute(
+  '/_authenticated/suggested-to-me/',
+)()
+const AuthenticatedProfileIndexLazyImport = createFileRoute(
+  '/_authenticated/profile/',
+)()
+const AuthenticatedMySuggestionsIndexLazyImport = createFileRoute(
+  '/_authenticated/my-suggestions/',
+)()
+const AuthenticatedHomeIndexLazyImport = createFileRoute(
+  '/_authenticated/home/',
+)()
+const AuthenticatedProfileUpdateProfileIndexLazyImport = createFileRoute(
+  '/_authenticated/profile/update-profile/',
+)()
+const AuthenticatedProfileIdIndexLazyImport = createFileRoute(
+  '/_authenticated/profile/$id/',
+)()
 
 // Create/Update Routes
 
@@ -116,6 +139,47 @@ const AuthenticatedSettingsRouteRoute = AuthenticatedSettingsRouteImport.update(
   } as any,
 )
 
+const AuthenticatedSuggestedToMeIndexLazyRoute =
+  AuthenticatedSuggestedToMeIndexLazyImport.update({
+    id: '/suggested-to-me/',
+    path: '/suggested-to-me/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/suggested-to-me/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedProfileIndexLazyRoute =
+  AuthenticatedProfileIndexLazyImport.update({
+    id: '/profile/',
+    path: '/profile/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/profile/index.lazy').then((d) => d.Route),
+  )
+
+const AuthenticatedMySuggestionsIndexLazyRoute =
+  AuthenticatedMySuggestionsIndexLazyImport.update({
+    id: '/my-suggestions/',
+    path: '/my-suggestions/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/my-suggestions/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedHomeIndexLazyRoute = AuthenticatedHomeIndexLazyImport.update(
+  {
+    id: '/home/',
+    path: '/home/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any,
+).lazy(() =>
+  import('./routes/_authenticated/home/index.lazy').then((d) => d.Route),
+)
+
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexImport.update({
   id: '/users/',
   path: '/users/',
@@ -182,6 +246,28 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+
+const AuthenticatedProfileUpdateProfileIndexLazyRoute =
+  AuthenticatedProfileUpdateProfileIndexLazyImport.update({
+    id: '/profile/update-profile/',
+    path: '/profile/update-profile/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/profile/update-profile/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedProfileIdIndexLazyRoute =
+  AuthenticatedProfileIdIndexLazyImport.update({
+    id: '/profile/$id/',
+    path: '/profile/$id/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/profile/$id/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 
 // Populate the FileRoutesByPath interface
 
@@ -348,6 +434,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersIndexImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/home/': {
+      id: '/_authenticated/home/'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AuthenticatedHomeIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/my-suggestions/': {
+      id: '/_authenticated/my-suggestions/'
+      path: '/my-suggestions'
+      fullPath: '/my-suggestions'
+      preLoaderRoute: typeof AuthenticatedMySuggestionsIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/profile/': {
+      id: '/_authenticated/profile/'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/suggested-to-me/': {
+      id: '/_authenticated/suggested-to-me/'
+      path: '/suggested-to-me'
+      fullPath: '/suggested-to-me'
+      preLoaderRoute: typeof AuthenticatedSuggestedToMeIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/profile/$id/': {
+      id: '/_authenticated/profile/$id/'
+      path: '/profile/$id'
+      fullPath: '/profile/$id'
+      preLoaderRoute: typeof AuthenticatedProfileIdIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/profile/update-profile/': {
+      id: '/_authenticated/profile/update-profile/'
+      path: '/profile/update-profile'
+      fullPath: '/profile/update-profile'
+      preLoaderRoute: typeof AuthenticatedProfileUpdateProfileIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
   }
 }
 
@@ -384,6 +512,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
+  AuthenticatedHomeIndexLazyRoute: typeof AuthenticatedHomeIndexLazyRoute
+  AuthenticatedMySuggestionsIndexLazyRoute: typeof AuthenticatedMySuggestionsIndexLazyRoute
+  AuthenticatedProfileIndexLazyRoute: typeof AuthenticatedProfileIndexLazyRoute
+  AuthenticatedSuggestedToMeIndexLazyRoute: typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  AuthenticatedProfileIdIndexLazyRoute: typeof AuthenticatedProfileIdIndexLazyRoute
+  AuthenticatedProfileUpdateProfileIndexLazyRoute: typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -394,6 +528,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
+  AuthenticatedHomeIndexLazyRoute: AuthenticatedHomeIndexLazyRoute,
+  AuthenticatedMySuggestionsIndexLazyRoute:
+    AuthenticatedMySuggestionsIndexLazyRoute,
+  AuthenticatedProfileIndexLazyRoute: AuthenticatedProfileIndexLazyRoute,
+  AuthenticatedSuggestedToMeIndexLazyRoute:
+    AuthenticatedSuggestedToMeIndexLazyRoute,
+  AuthenticatedProfileIdIndexLazyRoute: AuthenticatedProfileIdIndexLazyRoute,
+  AuthenticatedProfileUpdateProfileIndexLazyRoute:
+    AuthenticatedProfileUpdateProfileIndexLazyRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -423,6 +566,12 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/home': typeof AuthenticatedHomeIndexLazyRoute
+  '/my-suggestions': typeof AuthenticatedMySuggestionsIndexLazyRoute
+  '/profile': typeof AuthenticatedProfileIndexLazyRoute
+  '/suggested-to-me': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/profile/$id': typeof AuthenticatedProfileIdIndexLazyRoute
+  '/profile/update-profile': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
 
 export interface FileRoutesByTo {
@@ -447,6 +596,12 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/home': typeof AuthenticatedHomeIndexLazyRoute
+  '/my-suggestions': typeof AuthenticatedMySuggestionsIndexLazyRoute
+  '/profile': typeof AuthenticatedProfileIndexLazyRoute
+  '/suggested-to-me': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/profile/$id': typeof AuthenticatedProfileIdIndexLazyRoute
+  '/profile/update-profile': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
 
 export interface FileRoutesById {
@@ -474,6 +629,12 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/home/': typeof AuthenticatedHomeIndexLazyRoute
+  '/_authenticated/my-suggestions/': typeof AuthenticatedMySuggestionsIndexLazyRoute
+  '/_authenticated/profile/': typeof AuthenticatedProfileIndexLazyRoute
+  '/_authenticated/suggested-to-me/': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/_authenticated/profile/$id/': typeof AuthenticatedProfileIdIndexLazyRoute
+  '/_authenticated/profile/update-profile/': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
 
 export interface FileRouteTypes {
@@ -502,6 +663,12 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/tasks'
     | '/users'
+    | '/home'
+    | '/my-suggestions'
+    | '/profile'
+    | '/suggested-to-me'
+    | '/profile/$id'
+    | '/profile/update-profile'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -525,6 +692,12 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/home'
+    | '/my-suggestions'
+    | '/profile'
+    | '/suggested-to-me'
+    | '/profile/$id'
+    | '/profile/update-profile'
   id:
     | '__root__'
     | '/_authenticated'
@@ -550,6 +723,12 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/home/'
+    | '/_authenticated/my-suggestions/'
+    | '/_authenticated/profile/'
+    | '/_authenticated/suggested-to-me/'
+    | '/_authenticated/profile/$id/'
+    | '/_authenticated/profile/update-profile/'
   fileRoutesById: FileRoutesById
 }
 
@@ -613,7 +792,13 @@ export const routeTree = rootRoute
         "/_authenticated/chats/",
         "/_authenticated/help-center/",
         "/_authenticated/tasks/",
-        "/_authenticated/users/"
+        "/_authenticated/users/",
+        "/_authenticated/home/",
+        "/_authenticated/my-suggestions/",
+        "/_authenticated/profile/",
+        "/_authenticated/suggested-to-me/",
+        "/_authenticated/profile/$id/",
+        "/_authenticated/profile/update-profile/"
       ]
     },
     "/_authenticated/settings": {
@@ -699,6 +884,30 @@ export const routeTree = rootRoute
     },
     "/_authenticated/users/": {
       "filePath": "_authenticated/users/index.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/home/": {
+      "filePath": "_authenticated/home/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/my-suggestions/": {
+      "filePath": "_authenticated/my-suggestions/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/profile/": {
+      "filePath": "_authenticated/profile/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/suggested-to-me/": {
+      "filePath": "_authenticated/suggested-to-me/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/profile/$id/": {
+      "filePath": "_authenticated/profile/$id/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/profile/update-profile/": {
+      "filePath": "_authenticated/profile/update-profile/index.lazy.tsx",
       "parent": "/_authenticated"
     }
   }

@@ -1,5 +1,5 @@
 import { UserAuthForm } from './components/user-auth-form'
-import suggestMeLogo from '@/assets/suggestMeLogo.png'
+import suggestMeLogo from '@/assets/suggestMeLogobanner.png'
 
 export default function SignIn2() {
   return (

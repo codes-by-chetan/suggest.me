@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Cookies from 'js-cookie'
 import { create } from 'zustand'
 
@@ -7,7 +8,10 @@ interface AuthUser {
   accountNo: string
   email: string
   role: string[]
-  exp: number
+  exp: number,
+  avatar?: string
+  name?: string
+  [key:string]: any
 }
 
 interface AuthState {

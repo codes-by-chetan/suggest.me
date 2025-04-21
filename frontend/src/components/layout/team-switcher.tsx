@@ -15,19 +15,20 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useTheme } from '@/context/theme-context'
 
 export function TeamSwitcher({
   teams,
 }: {
   teams: {
     name: string
-    logo: React.ElementType
+    logo: { light: string; dark: string }
     plan: string
   }[]
 }) {
   const { isMobile } = useSidebar()
   const [activeTeam, setActiveTeam] = React.useState(teams[0])
-
+  const theme = useTheme()
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -37,8 +38,12 @@ export function TeamSwitcher({
               size='lg'
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
             >
-              <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
-                <activeTeam.logo className='size-4' />
+              <div className='text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg'>
+                {activeTeam.logo.light && theme.theme === "light" ? (
+                  <img src={activeTeam.logo.light} alt={activeTeam.name} width={25} />
+                ) : (
+                  <img src={activeTeam.logo.dark} alt={activeTeam.name} width={25} />
+                )}
               </div>
               <div className='grid flex-1 text-left text-sm leading-tight'>
                 <span className='truncate font-semibold'>
@@ -65,7 +70,11 @@ export function TeamSwitcher({
                 className='gap-2 p-2'
               >
                 <div className='flex size-6 items-center justify-center rounded-sm border'>
-                  <team.logo className='size-4 shrink-0' />
+                {activeTeam.logo.light && theme.theme === "light" ? (
+                  <img src={activeTeam.logo.light} alt={activeTeam.name} width={25} />
+                ) : (
+                  <img src={activeTeam.logo.dark} alt={activeTeam.name} width={25} />
+                )}
                 </div>
                 {team.name}
                 <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>

@@ -2,15 +2,12 @@ import {
   IconBarrierBlock,
   IconBrowserCheck,
   IconBug,
-  IconChecklist,
   IconError404,
   IconHelp,
-  IconLayoutDashboard,
   IconLock,
   IconLockAccess,
   IconMessages,
   IconNotification,
-  IconPackages,
   IconPalette,
   IconServerOff,
   IconSettings,
@@ -19,8 +16,10 @@ import {
   IconUserOff,
   IconUsers,
 } from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
+import {  BookmarkIcon, BookOpenCheck, HomeIcon, User } from 'lucide-react'
 import { type SidebarData } from '../types'
+import suggestMeLogoDark from '@/assets/suggestMeLogoDark.png'
+import suggestMeLogoLight from '@/assets/suggestMeLogo.png'
 
 export const sidebarData: SidebarData = {
   user: {
@@ -30,19 +29,9 @@ export const sidebarData: SidebarData = {
   },
   teams: [
     {
-      name: 'Shadcn Admin',
-      logo: Command,
-      plan: 'Vite + ShadcnUI',
-    },
-    {
-      name: 'Acme Inc',
-      logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
-    },
-    {
-      name: 'Acme Corp.',
-      logo: AudioWaveform,
-      plan: 'Startup',
+      name: 'Suggest.ME',
+      logo: {light: suggestMeLogoDark, dark:suggestMeLogoLight },
+      plan: 'Suggest Content',
     },
   ],
   navGroups: [
@@ -50,19 +39,19 @@ export const sidebarData: SidebarData = {
       title: 'General',
       items: [
         {
-          title: 'Dashboard',
-          url: '/',
-          icon: IconLayoutDashboard,
+          title: 'Home',
+          url: '/home',
+          icon: HomeIcon,
         },
         {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: IconChecklist,
+          title: 'Suggested To Me',
+          url: '/suggested-to-me',
+          icon: BookOpenCheck,
         },
         {
-          title: 'Apps',
-          url: '/apps',
-          icon: IconPackages,
+          title: 'My Suggestions',
+          url: '/my-suggestions',
+          icon: User,
         },
         {
           title: 'Chats',
@@ -71,10 +60,15 @@ export const sidebarData: SidebarData = {
           icon: IconMessages,
         },
         {
-          title: 'Users',
+          title: 'Peoples',
           url: '/users',
           icon: IconUsers,
         },
+        {
+          title: 'My Watchlist',
+          url: '/apps',
+          icon: BookmarkIcon
+        }
       ],
     },
     {

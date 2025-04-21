@@ -181,3 +181,9 @@
     height: 0;
   }
 }
+@layer utilities {
+  .sidebar-icon-size {
+    font-size: large;
+  }
+  
+}
