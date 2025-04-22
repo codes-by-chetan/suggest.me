@@ -26,7 +26,6 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { NewChat } from './components/new-chat'
 import { type ChatUser, type Convo } from './data/chat-types'
-// Fake Data
 import { conversations } from './data/convo.json'
 
 export default function Chats() {
@@ -107,7 +106,7 @@ export default function Chats() {
               </label>
             </div>
 
-            <ScrollArea className='-mx-3 h-full p-3'>
+            <ScrollArea className='-mx-3 overflow-auto h-full p-3'>
               {filteredChatList.map((chatUsr) => {
                 const { id, profile, username, messages, fullName } = chatUsr
                 const lastConvo = messages[0]

@@ -176,7 +176,7 @@ const MyWatchListCard = ({
   return (
     <Card
       key={item.id}
-      className='shadow-social dark:shadow-social-dark hover:shadow-social-hover dark:hover:shadow-social-dark-hover cursor-pointer overflow-hidden border-0 transition-all'
+      className='bg-background shadow-[1px_0px_5px_0_rgb(100,116,139)] hover:shadow-[5px_4px_10px_0_rgb(100,116,139)] cursor-pointer overflow-hidden border-1 p-0 transition-all'
     >
       <div className='flex h-full flex-col'>
         {item.imageUrl && (

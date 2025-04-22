@@ -77,6 +77,15 @@ const verifyRegistrationToken = asyncHandler(async (req, res) => {
     res.status(200).json(response);
 });
 
+const getUserDetails = asyncHandler(async (req, res)=>{
+    const user = await services.userService.getUserDetails(req.user._id);
+    const response = new ApiResponse(
+        httpStatus.OK,
+        user,
+        "user details fetched successfully"
+    );
+    res.status(httpStatus.OK).json(response);
+})
 
 
 const authController = {
@@ -86,6 +95,7 @@ const authController = {
     isAdmin,
     verifyUser,
     verifyRegistrationToken,
+    getUserDetails
 };
 
 export default authController;

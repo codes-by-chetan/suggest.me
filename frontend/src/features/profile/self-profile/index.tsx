@@ -18,9 +18,9 @@ import Navbar from '@/components/layout/Navbar'
 import { suggestorsArray } from '@/components/layout/data/suggestors'
 import PostCard from '@/components/profile/PostCard'
 import ProfileHeader from '@/components/profile/ProfileHeader'
-import { Friend, myFriendsArray } from './data/myFriends'
-import { myPostsArray, Post } from './data/myPosts'
-import { SavedItem, savedItemsArray } from './data/mySavedItem'
+import { Friend, myFriendsArray } from '../data/myFriends'
+import { myPostsArray, Post } from '../data/myPosts'
+import { SavedItem, savedItemsArray } from '../data/mySavedItem'
 
 const defaultUser = {
   name: 'John Doe',
@@ -31,14 +31,14 @@ const defaultUser = {
   bio: 'Movie enthusiast and book lover. Always looking for new recommendations!',
 }
 
-const Profile = () => {
+const SelfProfile = () => {
   const [activeTab, setActiveTab] = useState('profile')
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const navigate = useNavigate()
   // Mock user data - in a real app, this would come from an API
   // for now the type is given s any as the fields in the object differ from suggestor
-  const [userData, setUserData] = useState<any>()
+  const [userData, setUserData] = useState<any>(defaultUser)
 
   // Mock saved items data
   const [savedItems, setSavedItems] = useState<SavedItem[]>(savedItemsArray)
@@ -48,20 +48,7 @@ const Profile = () => {
 
   // Mock friends data
   const [friends, setFriends] = useState<Friend[]>(myFriendsArray)
-  const router = useRouter();
-  const path = router.state.location.pathname
-  
-  const  id = useParams({ from: '/_authenticated/profile/$id/' }).id
-
-  useEffect(() => {
-    if (id) {
-      const user = suggestorsArray.find((suggestor) => suggestor.id === id)
-
-      setUserData(user)
-    } else {
-      setUserData(defaultUser)
-    }
-  }, [])
+  const accountHolder = true // This would be determined by the logged-in user's ID
 
   // Mock function to handle profile update
   const handleProfileUpdate = (e: React.FormEvent) => {
@@ -97,7 +84,7 @@ const Profile = () => {
           onOpenSettings={() => setShowSettingsDialog(true)}
           followingCount={userData?.followingCount}
           postsCount={userData?.postsCount}
-          accountHolder={id ? false : true} // id id is present means we are navigating to the profile of another user
+          accountHolder={accountHolder} // id id is present means we are navigating to the profile of another user
         />
 
         {/* Instagram-like tabs */}
@@ -330,4 +317,4 @@ const Profile = () => {
   )
 }
 
-export default Profile
+export default SelfProfile

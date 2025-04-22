@@ -28,7 +28,7 @@ const MySuggestions = () => {
 
   return (
     <>
-      <main className='mx-auto max-w-7xl px-4 pt-20 sm:px-6 lg:px-8'>
+      <main className='mx-auto max-w-7xl px-4 pb-6 sm:px-6 lg:px-8'>
         <div className='py-6'>
           <div className='mb-8 flex items-center justify-between'>
             <h1 className='text-foreground text-3xl font-bold'>

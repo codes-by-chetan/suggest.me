@@ -18,7 +18,7 @@ const createUser = async (userBody) => {
         );
     }
 
-    if (await models.User.isUserNameTaken(userBody.userName)) {
+    if (userBody.userName && await models.User.isUserNameTaken(userBody.userName)) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
             `user name ${userBody.userName} is already taken!!`
@@ -98,12 +98,29 @@ const getUserProfile = async (id) => {
     }
     return userProfile;
 };
+const getUserDetails = async (id)=>{
+    const user = await findUserById(id);
+    if (!user) {
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    }
+    const userData = user.populate("profile").lean();
+    const choosenFields = {
+        fullName: userData.fullName,
+        email: userData.email,
+        contactNumber: userData.contactNumber,
+        role: userData.role,
+        fullNameString: userData.fullNameString,
+        avatar: userData.profile.avatar
+    }
+    return choosenFields;
 
+}
 const userService = {
     createUser,
     findOneUser,
     findUserById,
     updateUserInfo,
     getUserProfile,
+    getUserDetails,
 };
 export default userService;

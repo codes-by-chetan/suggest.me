@@ -28,6 +28,7 @@ import {
 } from '../ui/dropdown-menu'
 import { NavCollapsible, NavItem, NavLink, type NavGroup } from './types'
 
+
 export function NavGroup({ title, items }: NavGroup) {
   const { state } = useSidebar()
   const href = useLocation({ select: (location) => location.href })
@@ -35,6 +36,7 @@ export function NavGroup({ title, items }: NavGroup) {
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
+        
         {items.map((item) => {
           const key = `${item.title}-${item.url}`
 
@@ -66,7 +68,7 @@ const SidebarMenuLink = ({ item, href }: { item: NavLink; href: string }) => {
         isActive={checkIsActive(href, item)}
         tooltip={item.title}
       >
-        <Link to={item.url} onClick={() => setOpenMobile(false)} className='!p-0'>
+        <Link to={item.url} onClick={() => setOpenMobile(false)} >
           {item.icon && <item.icon className="!text-2xl w-16 h-16 text-pink-500 font-bold "/>}
           <span>{item.title}</span>
           {item.badge && <NavBadge>{item.badge}</NavBadge>}

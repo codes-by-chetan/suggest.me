@@ -66,7 +66,7 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'My Watchlist',
-          url: '/apps',
+          url: '/my-watchlist',
           icon: BookmarkIcon
         }
       ],

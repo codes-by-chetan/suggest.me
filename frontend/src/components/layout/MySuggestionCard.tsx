@@ -60,7 +60,7 @@ function MySuggestionCard({ item }: { item: MySuggestionContentItem }) {
   return (
     <Card
       key={item.id}
-      className="overflow-hidden shadow-social dark:shadow-social-dark transition-all hover:shadow-social-hover dark:hover:shadow-social-dark-hover border-0 cursor-pointer"
+      className="overflow-hidden  bg-background shadow-[1px_0px_5px_0_rgb(100,116,139)] p-0 hover:shadow-[5px_4px_10px_0_rgb(100,116,139)]  transition-all border-1 cursor-pointer"
     >
       <div className="flex flex-col h-full relative">
         {item.imageUrl && (

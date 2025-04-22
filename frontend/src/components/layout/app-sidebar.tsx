@@ -10,22 +10,24 @@ import { NavGroup } from '@/components/layout/nav-group'
 import { NavUser } from '@/components/layout/nav-user'
 import { sidebarData } from './data/sidebar-data'
 import { TeamSwitcher } from './team-switcher'
+import { ThemeSwitch } from '../theme-switch'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible='icon' variant='floating' {...props} >
-      <SidebarHeader className='bg-slate-200/60'>
-        <SidebarTrigger> </SidebarTrigger>
-        
+      <SidebarHeader className=' '>
+        {/* <SidebarTrigger> </SidebarTrigger>
+         */}
         <TeamSwitcher teams={sidebarData.teams} />
         
       </SidebarHeader>
-      <SidebarContent className='bg-slate-200/60'>
+      <SidebarContent className=' '>
         {sidebarData.navGroups.map((props) => (
           <NavGroup key={props.title} {...props} />
         ))}
+        <div className='w-full flex items-center justify-center'><ThemeSwitch/></div>
       </SidebarContent>
-      <SidebarFooter className='bg-slate-200/60'>
+      <SidebarFooter className=' '>
         <NavUser user={sidebarData.user} />
       </SidebarFooter>
       <SidebarRail />

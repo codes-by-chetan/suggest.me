@@ -45,6 +45,9 @@ const AuthenticatedSuggestedToMeIndexLazyImport = createFileRoute(
 const AuthenticatedProfileIndexLazyImport = createFileRoute(
   '/_authenticated/profile/',
 )()
+const AuthenticatedMyWatchlistIndexLazyImport = createFileRoute(
+  '/_authenticated/my-watchlist/',
+)()
 const AuthenticatedMySuggestionsIndexLazyImport = createFileRoute(
   '/_authenticated/my-suggestions/',
 )()
@@ -56,6 +59,9 @@ const AuthenticatedProfileUpdateProfileIndexLazyImport = createFileRoute(
 )()
 const AuthenticatedProfileIdIndexLazyImport = createFileRoute(
   '/_authenticated/profile/$id/',
+)()
+const AuthenticatedContentIdIndexLazyImport = createFileRoute(
+  '/_authenticated/content/$id/',
 )()
 
 // Create/Update Routes
@@ -157,6 +163,17 @@ const AuthenticatedProfileIndexLazyRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any).lazy(() =>
     import('./routes/_authenticated/profile/index.lazy').then((d) => d.Route),
+  )
+
+const AuthenticatedMyWatchlistIndexLazyRoute =
+  AuthenticatedMyWatchlistIndexLazyImport.update({
+    id: '/my-watchlist/',
+    path: '/my-watchlist/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/my-watchlist/index.lazy').then(
+      (d) => d.Route,
+    ),
   )
 
 const AuthenticatedMySuggestionsIndexLazyRoute =
@@ -265,6 +282,17 @@ const AuthenticatedProfileIdIndexLazyRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any).lazy(() =>
     import('./routes/_authenticated/profile/$id/index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+
+const AuthenticatedContentIdIndexLazyRoute =
+  AuthenticatedContentIdIndexLazyImport.update({
+    id: '/content/$id/',
+    path: '/content/$id/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/content/$id/index.lazy').then(
       (d) => d.Route,
     ),
   )
@@ -448,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMySuggestionsIndexLazyImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/my-watchlist/': {
+      id: '/_authenticated/my-watchlist/'
+      path: '/my-watchlist'
+      fullPath: '/my-watchlist'
+      preLoaderRoute: typeof AuthenticatedMyWatchlistIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
     '/_authenticated/profile/': {
       id: '/_authenticated/profile/'
       path: '/profile'
@@ -460,6 +495,13 @@ declare module '@tanstack/react-router' {
       path: '/suggested-to-me'
       fullPath: '/suggested-to-me'
       preLoaderRoute: typeof AuthenticatedSuggestedToMeIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/content/$id/': {
+      id: '/_authenticated/content/$id/'
+      path: '/content/$id'
+      fullPath: '/content/$id'
+      preLoaderRoute: typeof AuthenticatedContentIdIndexLazyImport
       parentRoute: typeof AuthenticatedRouteImport
     }
     '/_authenticated/profile/$id/': {
@@ -514,8 +556,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedHomeIndexLazyRoute: typeof AuthenticatedHomeIndexLazyRoute
   AuthenticatedMySuggestionsIndexLazyRoute: typeof AuthenticatedMySuggestionsIndexLazyRoute
+  AuthenticatedMyWatchlistIndexLazyRoute: typeof AuthenticatedMyWatchlistIndexLazyRoute
   AuthenticatedProfileIndexLazyRoute: typeof AuthenticatedProfileIndexLazyRoute
   AuthenticatedSuggestedToMeIndexLazyRoute: typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  AuthenticatedContentIdIndexLazyRoute: typeof AuthenticatedContentIdIndexLazyRoute
   AuthenticatedProfileIdIndexLazyRoute: typeof AuthenticatedProfileIdIndexLazyRoute
   AuthenticatedProfileUpdateProfileIndexLazyRoute: typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
@@ -531,9 +575,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeIndexLazyRoute: AuthenticatedHomeIndexLazyRoute,
   AuthenticatedMySuggestionsIndexLazyRoute:
     AuthenticatedMySuggestionsIndexLazyRoute,
+  AuthenticatedMyWatchlistIndexLazyRoute:
+    AuthenticatedMyWatchlistIndexLazyRoute,
   AuthenticatedProfileIndexLazyRoute: AuthenticatedProfileIndexLazyRoute,
   AuthenticatedSuggestedToMeIndexLazyRoute:
     AuthenticatedSuggestedToMeIndexLazyRoute,
+  AuthenticatedContentIdIndexLazyRoute: AuthenticatedContentIdIndexLazyRoute,
   AuthenticatedProfileIdIndexLazyRoute: AuthenticatedProfileIdIndexLazyRoute,
   AuthenticatedProfileUpdateProfileIndexLazyRoute:
     AuthenticatedProfileUpdateProfileIndexLazyRoute,
@@ -568,8 +615,10 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersIndexRoute
   '/home': typeof AuthenticatedHomeIndexLazyRoute
   '/my-suggestions': typeof AuthenticatedMySuggestionsIndexLazyRoute
+  '/my-watchlist': typeof AuthenticatedMyWatchlistIndexLazyRoute
   '/profile': typeof AuthenticatedProfileIndexLazyRoute
   '/suggested-to-me': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/content/$id': typeof AuthenticatedContentIdIndexLazyRoute
   '/profile/$id': typeof AuthenticatedProfileIdIndexLazyRoute
   '/profile/update-profile': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
@@ -598,8 +647,10 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersIndexRoute
   '/home': typeof AuthenticatedHomeIndexLazyRoute
   '/my-suggestions': typeof AuthenticatedMySuggestionsIndexLazyRoute
+  '/my-watchlist': typeof AuthenticatedMyWatchlistIndexLazyRoute
   '/profile': typeof AuthenticatedProfileIndexLazyRoute
   '/suggested-to-me': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/content/$id': typeof AuthenticatedContentIdIndexLazyRoute
   '/profile/$id': typeof AuthenticatedProfileIdIndexLazyRoute
   '/profile/update-profile': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
@@ -631,8 +682,10 @@ export interface FileRoutesById {
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/home/': typeof AuthenticatedHomeIndexLazyRoute
   '/_authenticated/my-suggestions/': typeof AuthenticatedMySuggestionsIndexLazyRoute
+  '/_authenticated/my-watchlist/': typeof AuthenticatedMyWatchlistIndexLazyRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexLazyRoute
   '/_authenticated/suggested-to-me/': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/_authenticated/content/$id/': typeof AuthenticatedContentIdIndexLazyRoute
   '/_authenticated/profile/$id/': typeof AuthenticatedProfileIdIndexLazyRoute
   '/_authenticated/profile/update-profile/': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
 }
@@ -665,8 +718,10 @@ export interface FileRouteTypes {
     | '/users'
     | '/home'
     | '/my-suggestions'
+    | '/my-watchlist'
     | '/profile'
     | '/suggested-to-me'
+    | '/content/$id'
     | '/profile/$id'
     | '/profile/update-profile'
   fileRoutesByTo: FileRoutesByTo
@@ -694,8 +749,10 @@ export interface FileRouteTypes {
     | '/users'
     | '/home'
     | '/my-suggestions'
+    | '/my-watchlist'
     | '/profile'
     | '/suggested-to-me'
+    | '/content/$id'
     | '/profile/$id'
     | '/profile/update-profile'
   id:
@@ -725,8 +782,10 @@ export interface FileRouteTypes {
     | '/_authenticated/users/'
     | '/_authenticated/home/'
     | '/_authenticated/my-suggestions/'
+    | '/_authenticated/my-watchlist/'
     | '/_authenticated/profile/'
     | '/_authenticated/suggested-to-me/'
+    | '/_authenticated/content/$id/'
     | '/_authenticated/profile/$id/'
     | '/_authenticated/profile/update-profile/'
   fileRoutesById: FileRoutesById
@@ -795,8 +854,10 @@ export const routeTree = rootRoute
         "/_authenticated/users/",
         "/_authenticated/home/",
         "/_authenticated/my-suggestions/",
+        "/_authenticated/my-watchlist/",
         "/_authenticated/profile/",
         "/_authenticated/suggested-to-me/",
+        "/_authenticated/content/$id/",
         "/_authenticated/profile/$id/",
         "/_authenticated/profile/update-profile/"
       ]
@@ -894,12 +955,20 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/my-suggestions/index.lazy.tsx",
       "parent": "/_authenticated"
     },
+    "/_authenticated/my-watchlist/": {
+      "filePath": "_authenticated/my-watchlist/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/profile/": {
       "filePath": "_authenticated/profile/index.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/suggested-to-me/": {
       "filePath": "_authenticated/suggested-to-me/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/content/$id/": {
+      "filePath": "_authenticated/content/$id/index.lazy.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/profile/$id/": {

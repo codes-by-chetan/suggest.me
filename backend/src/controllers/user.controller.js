@@ -2,7 +2,6 @@ import services from "../services/index.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import httpStatus from "http-status";
 import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
 
 const getUserProfile = asyncHandler(async (req, res) => {
     const profileData = await services.userService.getUserProfile(req.user._id);

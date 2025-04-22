@@ -87,55 +87,65 @@ const MyWatchlist = () => {
   }
 
   return (
-    <div className='py-6'>
-      <div className='mb-8 flex items-center justify-between'>
-        <h1 className='text-foreground text-3xl font-bold'>
-          My <span className='text-primary'>Collections</span>
-        </h1>
-        <div className='flex gap-2'>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='outline' className='gap-2 rounded-full'>
-                <Filter className='h-4 w-4' />
-                {statusFilter ? getStatusText(statusFilter) : 'All Statuses'}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={() => setStatusFilter(null)}>
-                All Statuses
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('watched')}>
-                <CheckCircle className='mr-2 h-4 w-4 text-green-500' />
-                Completed
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('watching')}>
-                <Clock className='mr-2 h-4 w-4 text-amber-500' />
-                In Progress
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter('watchlist')}>
-                <Bookmark className='mr-2 h-4 w-4 text-blue-500' />
-                In List
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+    <div className='bg-background min-h-screen'>
+      <main className='mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8'>
+        <div className='pb-6'>
+          <div className='mb-8 flex items-center justify-between'>
+            <h1 className='text-foreground text-3xl font-bold'>
+              My <span className='text-primary'>Collections</span>
+            </h1>
+            <div className='flex gap-2'>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant='outline' className='gap-2 rounded-full'>
+                    <Filter className='h-4 w-4' />
+                    {statusFilter
+                      ? getStatusText(statusFilter)
+                      : 'All Statuses'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  <DropdownMenuItem onClick={() => setStatusFilter(null)}>
+                    All Statuses
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('watched')}>
+                    <CheckCircle className='mr-2 h-4 w-4 text-green-500' />
+                    Completed
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter('watching')}>
+                    <Clock className='mr-2 h-4 w-4 text-amber-500' />
+                    In Progress
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setStatusFilter('watchlist')}
+                  >
+                    <Bookmark className='mr-2 h-4 w-4 text-blue-500' />
+                    In List
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
-      <CustomTabsList
-        activeTab={activeTab}
-        CustomCard={MyWatchListCard}
-        setActiveTab={setActiveTab}
-        filteredSuggestions={filteredItems}
-        handleMarkAsWatched={(id: string) => handleUpdateStatus(id, 'watched')}
-        handleMarkAsWatching={(id: string) =>
-          handleUpdateStatus(id, 'watching')
-        }
-        handleAddToWatchlist={() => {}}
-        handleRemoveFromMyWatchList={(id: string) =>
-          handleUpdateStatus(id, 'remove')
-        }
-        myWatchList={true}
-      />
+          <CustomTabsList
+            activeTab={activeTab}
+            CustomCard={MyWatchListCard}
+            setActiveTab={setActiveTab}
+            filteredSuggestions={filteredItems}
+            handleMarkAsWatched={(id: string) =>
+              handleUpdateStatus(id, 'watched')
+            }
+            handleMarkAsWatching={(id: string) =>
+              handleUpdateStatus(id, 'watching')
+            }
+            handleAddToWatchlist={() => {}}
+            handleRemoveFromMyWatchList={(id: string) =>
+              handleUpdateStatus(id, 'remove')
+            }
+            myWatchList={true}
+          />
+        </div>
+      </main>
     </div>
   )
 }
