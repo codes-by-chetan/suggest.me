@@ -3,6 +3,9 @@ import ApiError from "../utils/ApiError.js";
 import httpStatus from "http-status";
 import services from "./index.js";
 import userService from "./user.service.js";
+import jwt from "jsonwebtoken";
+import config from "../config/env.config.js";
+import models from "../models/index.js";
 
 /**
  * Authenticates a user using their email or username and password.
@@ -54,7 +57,8 @@ const loginWithEmailAndPassword = async (req) => {
  */
 const registerUser = async (userDetails) => {
     const user = await services.userService.createUser(userDetails);
-    return user;
+    
+    return user.populate("profile");
 };
 
 /**
@@ -100,11 +104,39 @@ const changeUserPassword = async (oldPassword, newPassword, userId) => {
     await user.save();
 };
 
+/**
+ * Logs out a user by revoking the specified session.
+ *
+ * @param {string} userId - The ID of the user.
+ * @param {string} token - The JWT token to revoke.
+ * @returns {Promise<void>} - A promise that resolves when the session is revoked.
+ * @throws {ApiError} - Throws an error if the token is invalid or the session is not found.
+ */
+const logout = async (userId, token) => {
+    try {
+        const decoded = jwt.verify(token, config.jwt.secret);
+        const tokenId = decoded.jti;
+        const sessions = await models.User.getActiveSessions(userId);
+        console.log("sessions===>",sessions);
+        
+        const result = await models.User.revokeSession(userId, tokenId);
+        if (result.modifiedCount === 0) {
+            throw new ApiError(httpStatus.BAD_REQUEST, "Session not found or already revoked");
+        }
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid token");
+        }
+        throw error;
+    }
+};
+
 const authService = {
     loginWithEmailAndPassword,
     registerOrganisation,
     registerUser,
     changeUserPassword,
+    logout,
 };
 
 export default authService;

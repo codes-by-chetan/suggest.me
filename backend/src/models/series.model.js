@@ -552,7 +552,9 @@ seriesSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-seriesSchema.pre("save", middlewares.dbLogger("Series"));
+seriesSchema.pre("save", function () {
+    middlewares.dbLogger("Series");
+});
 
 // Method to mark as verified
 seriesSchema.methods.markAsVerified = async function () {

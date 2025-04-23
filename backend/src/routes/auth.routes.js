@@ -22,5 +22,6 @@ router.use(authMiddleware);
 // Change password endpoint
 router.post("/change-password", controllers.authController.changePassword);
 router.get("/refresh-user", controllers.authController.getUserDetails);
+router.get("/logout", controllers.authController.logout);
 const authRouter = router;
 export default authRouter;

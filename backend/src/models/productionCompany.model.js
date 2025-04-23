@@ -93,7 +93,9 @@ productionCompanySchema.pre("save", async function (next) {
     next();
 });
 
-productionCompanySchema.pre("save", middlewares.dbLogger("ProductionCompany"));
+productionCompanySchema.pre("save", function () {
+    middlewares.dbLogger("ProductionCompany");
+});
 
 // Index for efficient querying
 productionCompanySchema.index({ name: 1 });

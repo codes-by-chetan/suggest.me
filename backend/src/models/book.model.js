@@ -310,7 +310,10 @@ const bookSchema = new mongoose.Schema(
                     },
                     comment: {
                         type: String,
-                        maxlength: [500, "Comment cannot exceed 500 characters"],
+                        maxlength: [
+                            500,
+                            "Comment cannot exceed 500 characters",
+                        ],
                     },
                     createdAt: {
                         type: Date,
@@ -369,7 +372,9 @@ bookSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging (mirroring Movie)
-bookSchema.pre("save", middlewares.dbLogger("Book"));
+bookSchema.pre("save", function () {
+    middlewares.dbLogger("Book");
+});
 
 // Method to mark as verified
 bookSchema.methods.markAsVerified = async function () {

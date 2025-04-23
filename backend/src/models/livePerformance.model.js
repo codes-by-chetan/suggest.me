@@ -63,7 +63,9 @@ livePerformanceSchema.plugin(plugins.softDelete);
 livePerformanceSchema.index({ music: 1 });
 livePerformanceSchema.index({ event: 1 });
 
-livePerformanceSchema.pre("save", middlewares.dbLogger("LivePerformance"));
+livePerformanceSchema.pre("save", function () {
+    middlewares.dbLogger("LivePerformance");
+});
 
 livePerformanceSchema.statics.softDelete = async function (id) {
     return this.updateOne({ _id: id }, { isActive: false });
@@ -80,6 +82,9 @@ livePerformanceSchema.pre(/^find/, function (next) {
     next();
 });
 
-const LivePerformance = mongoose.model("LivePerformance", livePerformanceSchema);
+const LivePerformance = mongoose.model(
+    "LivePerformance",
+    livePerformanceSchema
+);
 
 export default LivePerformance;

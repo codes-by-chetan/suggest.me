@@ -69,7 +69,9 @@ musicVideoSchema.plugin(plugins.softDelete);
 
 musicVideoSchema.index({ music: 1 });
 
-musicVideoSchema.pre("save", middlewares.dbLogger("MusicVideo"));
+musicVideoSchema.pre("save", function () {
+    middlewares.dbLogger("MusicVideo");
+});
 
 musicVideoSchema.statics.softDelete = async function (id) {
     return this.updateOne({ _id: id }, { isActive: false });

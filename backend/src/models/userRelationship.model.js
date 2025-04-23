@@ -63,7 +63,9 @@ userRelationshipSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-userRelationshipSchema.pre("save", middlewares.dbLogger("UserRelationship"));
+userRelationshipSchema.pre("save", function () {
+    middlewares.dbLogger("UserRelationship");
+});
 
 // Query only active records
 userRelationshipSchema.pre(/^find/, function (next) {
@@ -86,14 +88,14 @@ userRelationshipSchema.statics.follow = async function (
         createdBy: followerId,
     });
     // Update counts
-    await Promise.all([
-        mongoose
-            .model("User")
-            .updateOne({ _id: followerId }, { $inc: { followingCount: 1 } }),
-        mongoose
-            .model("User")
-            .updateOne({ _id: followingId }, { $inc: { followersCount: 1 } }),
-    ]);
+    // await Promise.all([
+    //     mongoose
+    //         .model("User")
+    //         .updateOne({ _id: followerId }, { $inc: { followingCount: 1 } }),
+    //     mongoose
+    //         .model("User")
+    //         .updateOne({ _id: followingId }, { $inc: { followersCount: 1 } }),
+    // ]);
     return relationship;
 };
 
@@ -114,14 +116,14 @@ userRelationshipSchema.statics.unfollow = async function (
         );
     }
     // Update counts
-    await Promise.all([
-        mongoose
-            .model("User")
-            .updateOne({ _id: followerId }, { $inc: { followingCount: -1 } }),
-        mongoose
-            .model("User")
-            .updateOne({ _id: followingId }, { $inc: { followersCount: -1 } }),
-    ]);
+    // await Promise.all([
+    //     mongoose
+    //         .model("User")
+    //         .updateOne({ _id: followerId }, { $inc: { followingCount: -1 } }),
+    //     mongoose
+    //         .model("User")
+    //         .updateOne({ _id: followingId }, { $inc: { followersCount: -1 } }),
+    // ]);
     return result;
 };
 

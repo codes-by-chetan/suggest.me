@@ -143,7 +143,9 @@ recordLabelSchema.pre("save", async function (next) {
 });
 
 // Pre-save hook for logging
-recordLabelSchema.pre("save", middlewares.dbLogger("RecordLabel"));
+recordLabelSchema.pre("save", function () {
+    middlewares.dbLogger("RecordLabel");
+});
 
 // Soft delete method
 recordLabelSchema.statics.softDelete = async function (id) {

@@ -12,7 +12,7 @@ const publisherSchema = new mongoose.Schema(
             required: [true, "Name is required for a publisher."],
             trim: true,
             minlength: [1, "Name must be at least 1 character long."],
-            maxlength: [100, "Name cannot exceed 100 characters."]
+            maxlength: [100, "Name cannot exceed 100 characters."],
         },
         slug: {
             type: String,
@@ -20,7 +20,10 @@ const publisherSchema = new mongoose.Schema(
             required: [true, "Slug is required for URL generation."],
             lowercase: true,
             trim: true,
-            match: [/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, or hyphens."]
+            match: [
+                /^[a-z0-9-]+$/,
+                "Slug must contain only lowercase letters, numbers, or hyphens.",
+            ],
         },
         logo: {
             type: reusableSchemas.logoSchema,
@@ -30,44 +33,43 @@ const publisherSchema = new mongoose.Schema(
             type: Date,
             validate: {
                 validator: (value) => !value || value <= new Date(),
-                message: "Founding date cannot be in the future."
-            }
+                message: "Founding date cannot be in the future.",
+            },
         },
         headquarters: {
             type: String,
-            trim: true
+            trim: true,
         },
         website: {
             type: String,
             validate: {
                 validator: (value) => !value || validator.isURL(value),
-                message: "Website must be a valid URL if provided."
-            }
+                message: "Website must be a valid URL if provided.",
+            },
         },
         description: {
             type: String,
-            maxlength: [1000, "Description cannot exceed 1000 characters."]
+            maxlength: [1000, "Description cannot exceed 1000 characters."],
         },
         isActive: {
             type: Boolean,
-            default: true
+            default: true,
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Created by is required"]
+            required: [true, "Created by is required"],
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: false // Optional at creation, updated later
-        }
+            required: false, // Optional at creation, updated later
+        },
     },
     {
-        timestamps: true
+        timestamps: true,
     }
 );
-
 
 publisherSchema.plugin(plugins.paginate);
 publisherSchema.plugin(plugins.privatePlugin);
@@ -82,7 +84,9 @@ publisherSchema.pre("save", async function (next) {
             .replace(/(^-|-$)/g, "");
         let slug = baseSlug;
         let counter = 1;
-        while (await this.constructor.findOne({ slug, _id: { $ne: this._id } })) {
+        while (
+            await this.constructor.findOne({ slug, _id: { $ne: this._id } })
+        ) {
             slug = `${baseSlug}-${counter++}`;
         }
         this.slug = slug;
@@ -91,7 +95,9 @@ publisherSchema.pre("save", async function (next) {
 });
 
 // Pre-save hook for logging
-publisherSchema.pre("save", middlewares.dbLogger("Publisher"));
+publisherSchema.pre("save", function () {
+    middlewares.dbLogger("Publisher");
+});
 
 // Index for efficient querying
 publisherSchema.index({ name: 1 });

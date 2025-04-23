@@ -4,14 +4,68 @@ import httpStatus from "http-status";
 import asyncHandler from "../utils/asyncHandler.js";
 
 const getUserProfile = asyncHandler(async (req, res) => {
-    const profileData = await services.userService.getUserProfile(req.user._id);
+    const profileData = await services.userService.getUserProfileDetails(
+        req.user
+    );
     const response = new ApiResponse(
         httpStatus.OK,
         profileData,
         "User profile fetched successfully"
     );
-    res.status(httpStatus.OK).json(response);
+    return res.status(httpStatus.OK).json(response);
+});
+const getUserFullProfile = asyncHandler(async (req, res) => {
+    const profileData = await services.userProfileService.getUserProfile(
+        req.user._id
+    );
+    const response = new ApiResponse(
+        httpStatus.OK,
+        profileData,
+        "User profile fetched successfully"
+    );
+    return res.status(httpStatus.OK).json(response);
 });
 
-const userController = { getUserProfile };
+const getUserFullProfileById = asyncHandler(async (req, res) => {
+    const {userId} = req.params;
+
+    const profileData = await services.userService.getOtherUserProfileDetails(
+        userId
+    );
+
+    const response = new ApiResponse(
+        httpStatus.OK,
+        profileData,
+        "User profile fetched successfully"
+    );
+    return res.status(httpStatus.OK).json(response);
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+    await services.userProfileService.updateAvatar(req);
+    const response = new ApiResponse(
+        httpStatus.OK,
+        null,
+        "User Avatar Updated Successfully"
+    );
+    return res.status(httpStatus.OK).json(response);
+});
+
+const updateUserProfile = asyncHandler(async (req, res) => {
+    await services.userProfileService.updateUserProfile(req.body, req.user._id);
+    const response = new ApiResponse(
+        httpStatus.OK,
+        null,
+        "User Profile Updated Successfully"
+    );
+    return res.status(httpStatus.OK).json(response);
+});
+
+const userController = {
+    getUserProfile,
+    updateUserAvatar,
+    getUserFullProfile,
+    updateUserProfile,
+    getUserFullProfileById
+};
 export default userController;

@@ -92,7 +92,9 @@ studioSchema.pre("save", async function (next) {
     next();
 });
 
-studioSchema.pre("save", middlewares.dbLogger("Studio"));
+studioSchema.pre("save", function () {
+    middlewares.dbLogger("Studio");
+});
 
 // Index for efficient querying
 studioSchema.index({ name: 1 });

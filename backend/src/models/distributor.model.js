@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
-import logoSchema from "./reusableSchemas/logo.schema.js";
 import reusableSchemas from "./reusableSchemas/index.js";
 
 const distributorSchema = new mongoose.Schema(
@@ -93,7 +92,9 @@ distributorSchema.pre("save", async function (next) {
     next();
 });
 
-distributorSchema.pre("save", middlewares.dbLogger("Distributor"));
+distributorSchema.pre("save", function () {
+    middlewares.dbLogger("Distributor");
+});
 
 // Index for efficient querying
 distributorSchema.index({ name: 1 });

@@ -12,12 +12,12 @@ import constants from "../constants/index.js";
  * @param {Response} res - The response object
  * @param {Function} next - The next middleware function    
  */
-const authMiddleware = asyncHandler(async (req, res, next) => {
+const userMiddleware = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-        throw new ApiError(401, "Access token is missing or invalid");
+        next();
     }
     let decoded;
 
@@ -33,16 +33,16 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     }
     const user = await models.User.findById(decoded?.id); // Assuming the token contains the user ID
 
-    if (!user) {
-        throw new ApiError(404, "User not found");
-    } else if (user.status === constants.UserStatus.Inactive) {
-        throw new ApiError(403, "User is inactive");
-    } else if (user.deleted) {
-        throw new ApiError(403, "User is deleted");
-    }
-    console.log(user)
+    // if (!user) {
+    //     throw new ApiError(404, "User not found");
+    // } else if (user.status === constants.UserStatus.Inactive) {
+    //     throw new ApiError(403, "User is inactive");
+    // } else if (user.deleted) {
+    //     throw new ApiError(403, "User is deleted");
+    // }
+
     req.user = user;
     next();
 });
 
-export default authMiddleware;
+export default userMiddleware;

@@ -18,14 +18,37 @@ const createUser = async (userBody) => {
         );
     }
 
-    if (userBody.userName && await models.User.isUserNameTaken(userBody.userName)) {
+    if (
+        userBody.userName &&
+        (await models.User.isUserNameTaken(userBody.userName))
+    ) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
             `user name ${userBody.userName} is already taken!!`
         );
     }
+    const createdUser = await models.User.create(userBody);
+    if (!createdUser) {
+        throw new ApiError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            "User creation failed"
+        );
+    }
+    const userProfile = await models.UserProfile.create({
+        user: createdUser._id,
+        createdBy: createdUser._id,
+    });
+    if (!userProfile) {
+        throw new ApiError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            "User profile creation failed"
+        );
+    }
+    createdUser.profile = userProfile._id;
+    await createdUser.save();
+    await createdUser.populate("profile");
 
-    return models.User.create(userBody);
+    return createdUser;
 };
 
 /**
@@ -98,23 +121,117 @@ const getUserProfile = async (id) => {
     }
     return userProfile;
 };
-const getUserDetails = async (id)=>{
+const getUserDetails = async (id) => {
     const user = await findUserById(id);
     if (!user) {
         throw new ApiError(httpStatus.NOT_FOUND, "User not found");
     }
-    const userData = user.populate("profile").lean();
+    const userData = await user.populate("profile");
+
     const choosenFields = {
         fullName: userData.fullName,
         email: userData.email,
         contactNumber: userData.contactNumber,
         role: userData.role,
         fullNameString: userData.fullNameString,
-        avatar: userData.profile.avatar
-    }
+        avatar: userData?.profile?.avatar,
+    };
     return choosenFields;
+};
 
-}
+const getUserFollowers = async (id) => {
+    const followers = await models.UserRelationship.getFollowers(id);
+
+    const data = {
+        count: followers.length,
+        followers: followers.map((follower) => {
+            return {
+                id: follower.follower._id,
+                fullName: follower.follower.fullName,
+                avatar: follower.follower?.profile?.avatar,
+                createdAt: follower.createdAt,
+            };
+        }),
+    };
+    return data;
+};
+const getUserFollowings = async (id) => {
+    const followings = await models.UserRelationship.getFollowing(id);
+    const data = {
+        count: followings.length,
+        followings: followings.map((follower) => {
+            return {
+                id: followings.follower._id,
+                fullName: followings.follower.fullName,
+                avatar: followings.follower?.profile?.avatar,
+                createdAt: followings.createdAt,
+            };
+        }),
+    };
+    return data;
+};
+const getUserRelations = async (id) => {
+    const followers = await getUserFollowers(id);
+    const followings = await getUserFollowings(id);
+    return {
+        followers,
+        followings,
+    };
+};
+
+const getUserProfileDetails = async (user) => {
+    await user.populate("profile");
+    const userRelations = await getUserRelations(user._id);
+    const profileData = {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        userName: user.userName,
+        contactNumber: user.contactNumber,
+        fullNameString: user.fullNameString,
+        profile: {
+            avatar: user?.profile?.avatar,
+            bio: user?.profile?.bio,
+            location: user?.profile?.location,
+            displayName: user?.profile?.displayName,
+            socialLinks: user?.profile?.socialLinks,
+            preferences: user?.profile?.preferences,
+            isPublic: user?.profile?.isPublic,
+            isVerified: user?.profile?.isVerified,
+        },
+        relations: userRelations,
+        createdAt: user.createdAt,
+    };
+    return profileData;
+};
+
+const getOtherUserProfileDetails = async (id) => {
+    const user = await findUserById(id);
+    await user.populate("profile");
+    const userRelations = await getUserRelations(user._id);
+    const profileData = {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        userName: user.userName,
+        contactNumber: user.contactNumber,
+        fullNameString: user.fullNameString,
+        profile: {
+            avatar: user?.profile?.avatar,
+            bio: user?.profile?.bio,
+            location: user?.profile?.location,
+            displayName: user?.profile?.displayName,
+            socialLinks: user?.profile?.socialLinks,
+            preferences: user?.profile?.preferences,
+            isPublic: user?.profile?.isPublic,
+            isVerified: user?.profile?.isVerified,
+        },
+        relations: userRelations,
+        createdAt: user.createdAt,
+    };
+    return profileData;
+};
+
 const userService = {
     createUser,
     findOneUser,
@@ -122,5 +239,10 @@ const userService = {
     updateUserInfo,
     getUserProfile,
     getUserDetails,
+    getUserFollowers,
+    getUserFollowings,
+    getUserRelations,
+    getUserProfileDetails,
+    getOtherUserProfileDetails,
 };
 export default userService;

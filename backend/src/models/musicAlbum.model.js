@@ -55,8 +55,10 @@ const musicAlbumSchema = new mongoose.Schema(
         genres: {
             type: [String],
             validate: {
-                validator: (arr) => !arr.length || (arr.length > 0 && arr.length <= 5),
-                message: "Genres, if provided, must be between 1 and 5 entries.",
+                validator: (arr) =>
+                    !arr.length || (arr.length > 0 && arr.length <= 5),
+                message:
+                    "Genres, if provided, must be between 1 and 5 entries.",
             },
             index: true,
         },
@@ -125,7 +127,9 @@ musicAlbumSchema.pre("save", async function (next) {
     next();
 });
 
-musicAlbumSchema.pre("save", middlewares.dbLogger("Album"));
+musicAlbumSchema.pre("save", function () {
+    middlewares.dbLogger("MusicAlbum");
+});
 
 musicAlbumSchema.statics.softDelete = async function (id) {
     return this.updateOne({ _id: id }, { isActive: false });
@@ -152,6 +156,6 @@ musicAlbumSchema.statics.findPopulatedById = async function (id) {
         .populate("updatedBy");
 };
 
-const MusicAlbum = mongoose.model("Album", musicAlbumSchema);
+const MusicAlbum = mongoose.model("MusicAlbum", musicAlbumSchema);
 
 export default MusicAlbum;

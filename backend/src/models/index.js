@@ -16,6 +16,7 @@ import Studio from "./studio.model.js";
 import User from "./user.model.js";
 import UserContent from "./userContent.model.js";
 import UserProfile from "./userProfile.model.js";
+import UserRelationship from "./userRelationship.model.js";
 import UserSuggestions from "./userSuggestion.model.js";
 import Video from "./video.model.js";
 
@@ -40,6 +41,7 @@ const models = {
     UserSuggestions,
     UserProfile,
     Video,
+    UserRelationship,
 };
 
 export default models;

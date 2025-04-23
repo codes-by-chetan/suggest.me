@@ -6,20 +6,26 @@ import asyncHandler from "../utils/asyncHandler.js";
 import httpStatus from "http-status";
 
 const register = asyncHandler(async (req, res) => {
-    const user = await services.authService.registerUser(req.body);
-    const authTokens = await user.generateAccessToken(req);
+    const userData = await services.authService.registerUser(req.body);
+    const authTokens = await userData.generateAccessToken(req);
+    const choosenFields = {
+        fullName: userData.fullName,
+        email: userData.email,
+        contactNumber: userData.contactNumber,
+        role: userData.role,
+        fullNameString: userData.fullNameString,
+        avatar: userData?.profile?.avatar,
+    };
     const response = new ApiResponse(
         httpStatus.CREATED,
-        { user, ...authTokens },
+        { user: choosenFields, ...authTokens },
         "user created successfully"
     );
     res.status(httpStatus.CREATED).json(response);
 });
 
 const login = asyncHandler(async (req, res) => {
-    const token = await services.authService.loginWithEmailAndPassword(
-        req
-    );
+    const token = await services.authService.loginWithEmailAndPassword(req);
 
     const response = new ApiResponse(
         httpStatus.OK,
@@ -29,6 +35,7 @@ const login = asyncHandler(async (req, res) => {
 
     res.status(httpStatus.OK).json(response);
 });
+
 // Change password callback function
 const changePassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
@@ -46,6 +53,7 @@ const changePassword = asyncHandler(async (req, res) => {
     );
     res.status(200).json(response);
 });
+
 const verifyUser = asyncHandler(async (req, res) => {
     const response = new ApiResponse(200, null, "user is verified");
     res.status(200).json(response);
@@ -77,16 +85,33 @@ const verifyRegistrationToken = asyncHandler(async (req, res) => {
     res.status(200).json(response);
 });
 
-const getUserDetails = asyncHandler(async (req, res)=>{
+const getUserDetails = asyncHandler(async (req, res) => {
     const user = await services.userService.getUserDetails(req.user._id);
     const response = new ApiResponse(
         httpStatus.OK,
-        user,
+        { user: user },
         "user details fetched successfully"
     );
     res.status(httpStatus.OK).json(response);
-})
+});
 
+const logout = asyncHandler(async (req, res) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Token not provided");
+    }
+
+    await services.authService.logout(req.user._id, token);
+
+    const response = new ApiResponse(
+        httpStatus.OK,
+        null,
+        "Logged out successfully"
+    );
+    res.status(httpStatus.OK).json(response);
+});
 
 const authController = {
     register,
@@ -95,7 +120,8 @@ const authController = {
     isAdmin,
     verifyUser,
     verifyRegistrationToken,
-    getUserDetails
+    getUserDetails,
+    logout,
 };
 
 export default authController;

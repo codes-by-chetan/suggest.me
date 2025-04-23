@@ -37,7 +37,7 @@ const musicSchema = new mongoose.Schema(
         ],
         album: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Album",
+            ref: "MusicAlbum",
         },
         releaseYear: {
             type: Number,
@@ -330,7 +330,9 @@ musicSchema.pre("save", async function (next) {
     next();
 });
 
-musicSchema.pre("save", middlewares.dbLogger("Music"));
+musicSchema.pre("save", function () {
+    middlewares.dbLogger("Music");
+});
 
 musicSchema.methods.markAsVerified = async function () {
     this.isVerified = true;

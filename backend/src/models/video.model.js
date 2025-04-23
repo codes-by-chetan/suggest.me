@@ -297,7 +297,9 @@ videoSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-videoSchema.pre("save", middlewares.dbLogger("Video"));
+videoSchema.pre("save", function () {
+    middlewares.dbLogger("Video");
+});
 
 // Method to mark as verified
 videoSchema.methods.markAsVerified = async function () {
