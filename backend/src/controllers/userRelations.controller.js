@@ -2,6 +2,7 @@ import services from "../services/index.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import httpStatus from "http-status";
 import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
 
 const followUser = asyncHandler(async (req, res) => {
     const followerId = req.user._id;
@@ -14,5 +15,16 @@ const followUser = asyncHandler(async (req, res) => {
     res.status(200).json(response);
 });
 
-const userRelationsController = {followUser};
+const getRelation = asyncHandler(async (req, res) => {
+    const followerId = req.user._id;
+    const followingId = req.params.followingId;
+
+    const result = await services.userRelationsService.getRelation(
+        followerId,
+        followingId
+    );
+    const response = new ApiResponse(200, result, "Relation Fetched!!!");
+    res.status(200).json(response);
+});
+const userRelationsController = { followUser, getRelation };
 export default userRelationsController;

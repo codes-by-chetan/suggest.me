@@ -6,6 +6,7 @@ import Movie from "./movie.model.js";
 import Music from "./music.model.js";
 import MusicAlbum from "./musicAlbum.model.js";
 import MusicVideo from "./musicVideo.model.js";
+import Notification from "./notification.model.js";
 import Person from "./person.model.js";
 import ProductionCompany from "./productionCompany.model.js";
 import Publisher from "./publisher.model.js";
@@ -42,6 +43,7 @@ const models = {
     UserProfile,
     Video,
     UserRelationship,
+    Notification,
 };
 
 export default models;

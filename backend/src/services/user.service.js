@@ -129,6 +129,7 @@ const getUserDetails = async (id) => {
     const userData = await user.populate("profile");
 
     const choosenFields = {
+        _id: userData._id,
         fullName: userData.fullName,
         email: userData.email,
         contactNumber: userData.contactNumber,
@@ -159,12 +160,12 @@ const getUserFollowings = async (id) => {
     const followings = await models.UserRelationship.getFollowing(id);
     const data = {
         count: followings.length,
-        followings: followings.map((follower) => {
+        followings: followings.map((following) => {
             return {
-                id: followings.follower._id,
-                fullName: followings.follower.fullName,
-                avatar: followings.follower?.profile?.avatar,
-                createdAt: followings.createdAt,
+                id: following.follower?._id,
+                fullName: following.follower?.fullName,
+                avatar: following.follower?.profile?.avatar,
+                createdAt: following.createdAt,
             };
         }),
     };

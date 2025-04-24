@@ -82,6 +82,7 @@ const customMorganFormat = (tokens, req, res) => {
     // Console output with colors
     const consoleLog = [
         timestamp,
+        chalk.bold(statusColor(`[SERVER]`)),
         chalk.bold(statusColor(`[${tokens.method(req, res)}]`)),
         "===>>",
         chalk.bold(chalk.bgBlackBright(tokens.url(req, res))),
@@ -111,19 +112,20 @@ const requestLogger = morgan(customMorganFormat);
  * Logs messages to both console and HTML file with specified log levels.
  * @param {"info"|"warn"|"error"|"debug"|"success"} type - The log level.
  * @param {string|object} message - The message or data to log.
+ * @param {"SERVER"|"SOCKET"} from - The message or data to log.
  */
-const logMessage = (type, message) => {
+const logMessage = (type, message, from = "SERVER") => {
     updateLogStream(); // Check and update stream before logging
 
     const timestamp =
         new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString();
 
     const logTypes = {
-        info: chalk.bold(chalk.blue("[INFO]")),
-        warn: chalk.bold(chalk.yellow("[WARN]")),
-        error: chalk.bold(chalk.red("[ERROR]")),
-        debug: chalk.bold(chalk.magenta("[DEBUG]")),
-        success: chalk.bold(chalk.green("[SUCCESS]")),
+        info: chalk.bold(chalk.blue(`[${from}] ` + "[INFO]")),
+        warn: chalk.bold(chalk.yellow(`[${from}] ` + "[WARN]")),
+        error: chalk.bold(chalk.red(`[${from}] ` + "[ERROR]")),
+        debug: chalk.bold(chalk.magenta(`[${from}] ` + "[DEBUG]")),
+        success: chalk.bold(chalk.green(`[${from}] ` + "[SUCCESS]")),
     };
 
     const logType =

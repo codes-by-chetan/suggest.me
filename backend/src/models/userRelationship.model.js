@@ -140,6 +140,32 @@ userRelationshipSchema.statics.getFollowing = async function (userId) {
         .populate("following")
         .populate("createdBy");
 };
+// Utility method to check if userA follows userB
+userRelationshipSchema.statics.isFollowing = async function (userAId, userBId) {
+    const relationship = await this.findOne({
+        follower: userAId,
+        following: userBId,
+        status: "Accepted",
+        isActive: true,
+    });
+    return !!relationship; // Returns true if userA follows userB, else false
+};
+
+// Utility method to get restricted profile data based on follow status
+userRelationshipSchema.statics.getProfileAccess = async function (viewerId, profileOwnerId) {
+    const isFollowed = await this.isFollowing(viewerId, profileOwnerId);
+    
+    // Define what fields are visible based on follow status
+    const restrictedFields = {
+        public: ["username", "name", "profilePicture", "bio"], // Fields visible to everyone
+        followed: ["username", "name", "profilePicture", "bio", "posts", "followersCount", "followingCount"], // Fields visible to followers
+    };
+
+    return {
+        isFollowed,
+        accessibleFields: isFollowed ? restrictedFields.followed : restrictedFields.public,
+    };
+};
 
 const UserRelationship = mongoose.model(
     "UserRelationship",

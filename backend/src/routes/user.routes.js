@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.use(middleware.authMiddleware);
 router.get("/profile", controllers.userController.getUserProfile);
-
+router.get("/notifications", controllers.userController.getAllNotifications);
 router.get("/profile-whole", controllers.userController.getUserFullProfile);
 router.post("/update/profile", controllers.userController.updateUserProfile);
 router.post(

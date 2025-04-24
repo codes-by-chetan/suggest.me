@@ -36,13 +36,13 @@ const searchableModels = [
         model: models.MusicAlbum,
         name: "albums",
         fields: ["title", "genres"],
-        personFields: [], 
+        personFields: [],
         select: "title slug coverImage",
     },
     {
         model: models.MusicVideo,
         name: "musicVideos",
-        fields: [], 
+        fields: [],
         personFields: ["director"],
         select: "music slug director",
     },
@@ -97,20 +97,31 @@ const searchableModels = [
     },
 ];
 
-const globalSearch = async ({
+const globalSearch = async (
     searchTerm,
     page = 1,
     limit = 10,
     sortBy = "relevance",
-    contentTypes = [],
-}) => {
+    contentTypes = []
+) => {
     // Validate search term
-    if (!searchTerm || typeof searchTerm !== "string" || searchTerm.trim().length < 2) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Search term must be a string with at least 2 characters");
+
+    console.log("searchTerm: ", searchTerm);
+    if (
+        !searchTerm ||
+        typeof searchTerm !== "string" ||
+        searchTerm.trim().length < 1
+    ) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Search term must be a string with at least 2 characters"
+        );
     }
 
     // Sanitize search term and create regex
-    const sanitizedTerm = searchTerm.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const sanitizedTerm = searchTerm
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(sanitizedTerm, "i");
 
     // Filter models based on contentTypes if provided
@@ -119,8 +130,10 @@ const globalSearch = async ({
         : searchableModels;
 
     // Step 1: Find matching Person IDs for artist search
-    const matchingPersons = await models.Person
-        .find({ name: regex, isActive: true })
+    const matchingPersons = await models.Person.find({
+        name: regex,
+        isActive: true,
+    })
         .select("_id")
         .lean();
     const personIds = matchingPersons.map((p) => p._id);
@@ -192,11 +205,25 @@ const globalSearch = async ({
             uniqueResults.sort((a, b) => {
                 let aScore = fields.reduce((score, field) => {
                     const value = a[field] || "";
-                    return score + (value.toLowerCase().includes(sanitizedTerm.toLowerCase()) ? 1 : 0);
+                    return (
+                        score +
+                        (value
+                            .toLowerCase()
+                            .includes(sanitizedTerm.toLowerCase())
+                            ? 1
+                            : 0)
+                    );
                 }, 0);
                 let bScore = fields.reduce((score, field) => {
                     const value = b[field] || "";
-                    return score + (value.toLowerCase().includes(sanitizedTerm.toLowerCase()) ? 1 : 0);
+                    return (
+                        score +
+                        (value
+                            .toLowerCase()
+                            .includes(sanitizedTerm.toLowerCase())
+                            ? 1
+                            : 0)
+                    );
                 }, 0);
                 // Boost score for person matches
                 if (a.matchReason.includes("Person fields")) aScore += 2;
@@ -215,13 +242,19 @@ const globalSearch = async ({
     const searchResults = await Promise.all(searchQueries);
 
     // Format results
-    const formattedResults = searchResults.reduce((acc, { name, results, total }) => {
-        acc[name] = { data: results, total };
-        return acc;
-    }, {});
+    const formattedResults = searchResults.reduce(
+        (acc, { name, results, total }) => {
+            acc[name] = { data: results, total };
+            return acc;
+        },
+        {}
+    );
 
     // Calculate pagination metadata
-    const totalResults = searchResults.reduce((sum, { total }) => sum + total, 0);
+    const totalResults = searchResults.reduce(
+        (sum, { total }) => sum + total,
+        0
+    );
     const totalPages = Math.ceil(totalResults / limit);
 
     return {
@@ -235,33 +268,53 @@ const globalSearch = async ({
     };
 };
 
-const searchUser = async ({ searchTerm, page = 1, limit = 10 }) => {
-    
-    if (!searchTerm || typeof searchTerm !== "string" || searchTerm.trim().length < 2) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Search term must be a string with at least 2 characters");
+const searchUser = async (searchTerm, page = 1, limit = 10) => {
+    console.log("searchTerm:", searchTerm);
+    if (
+        !searchTerm ||
+        typeof searchTerm !== "string" ||
+        searchTerm.trim().length < 1
+    ) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Search term must be a non-empty string"
+        );
     }
 
-    const regex = new RegExp(searchTerm.trim(), "i");
+    // Sanitize search term
+    const sanitizedTerm = searchTerm
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    console.log("Sanitized term:", sanitizedTerm);
 
+    // Build query conditions with $regex and $options
+    const queryConditions = [
+        { userName: { $regex: sanitizedTerm, $options: "i" } },
+        { email: { $regex: sanitizedTerm, $options: "i" } },
+        { "fullName.firstName": { $regex: sanitizedTerm, $options: "i" } },
+        { "fullName.lastName": { $regex: sanitizedTerm, $options: "i" } },
+    ];
+
+    // Build query
     const query = {
-        $or: [
-            { userName: regex },
-            { email: regex },
-            { "fullName.firstName": regex },
-            { "fullName.lastName": regex },
-        ],
-        status: "Active",
-        isActive: true,
+        $or: queryConditions,
+        status: "ACTIVE", // instead of isActive: true
+        deleted: false, // optional, based on your document structure
     };
 
+    console.log("Query:", JSON.stringify(query, null, 2));
+
     const total = await models.User.countDocuments(query);
-    const users = await models.User
-        .find(query)
+    console.log("Total matching users:", total);
+
+    const users = await models.User.find(query)
         .populate("profile")
-        .select("-password -sessions")
+        .select("fullName userName email profile _id fullNameString")
         .skip((page - 1) * limit)
         .limit(limit)
         .lean();
+
+    console.log("Found users:", users);
 
     return {
         data: users,

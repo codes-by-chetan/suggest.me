@@ -12,6 +12,9 @@ router.get(
     "/follow/:followingId",
     controllers.userRelationsController.followUser
 );
-
+router.get(
+    "/relation/:followingId",
+    controllers.userRelationsController.getRelation
+);
 const userRelationsRouter = router;
 export default userRelationsRouter;

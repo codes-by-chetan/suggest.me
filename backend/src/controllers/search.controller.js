@@ -21,6 +21,7 @@ const searchUser = asyncHandler(async (req, res) => {
 const searchThroughGlobal = asyncHandler(async (req, res) => {
     const { query } = req;
     const { search } = query;
+    console.log(query, "search: ", search)
     if (!search) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Search query is required");
     }

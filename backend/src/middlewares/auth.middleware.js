@@ -23,7 +23,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 
     try {
         decoded = jwt.verify(token, config.jwt.secret);
-        console.log("decoded user ===>>",decoded);
+        // console.log("decoded user ===>>",decoded);
     } catch (err) {
         console.log(err.message);
         if (err.message === "jwt expired") {
@@ -40,7 +40,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     } else if (user.deleted) {
         throw new ApiError(403, "User is deleted");
     }
-    console.log(user)
+    // console.log(user)
     req.user = user;
     next();
 });

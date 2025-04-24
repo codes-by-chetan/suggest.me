@@ -27,11 +27,8 @@ const getUserFullProfile = asyncHandler(async (req, res) => {
 });
 
 const getUserFullProfileById = asyncHandler(async (req, res) => {
-    const {userId} = req.params;
-
-    const profileData = await services.userService.getOtherUserProfileDetails(
-        userId
-    );
+    const profileData =
+        await services.userProfileService.viewOtherUserProfile(req);
 
     const response = new ApiResponse(
         httpStatus.OK,
@@ -61,11 +58,25 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     return res.status(httpStatus.OK).json(response);
 });
 
+const getAllNotifications = asyncHandler(async (req, res) => {
+    const result =
+        await services.notificationService.getNotificationsByRecipient(
+            req.user._id
+        );
+    const response = new ApiResponse(
+        httpStatus.OK,
+        result,
+        "Notifications Fetched Successfully"
+    );
+    return res.status(httpStatus.OK).json(response);
+});
+
 const userController = {
     getUserProfile,
     updateUserAvatar,
     getUserFullProfile,
     updateUserProfile,
-    getUserFullProfileById
+    getUserFullProfileById,
+    getAllNotifications,
 };
 export default userController;
