@@ -13,6 +13,10 @@ router.get(
     controllers.userRelationsController.followUser
 );
 router.get(
+    "/accept/follow/:requestId",
+    controllers.userRelationsController.acceptFollowRequest
+);
+router.get(
     "/relation/:followingId",
     controllers.userRelationsController.getRelation
 );

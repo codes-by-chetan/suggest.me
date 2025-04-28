@@ -19,7 +19,7 @@ import models from "../models/index.js";
  */
 const loginWithEmailAndPassword = async (req) => {
     const credentials = req.body;
-
+    console.log(credentials)
     if (!credentials.userName && !credentials.email) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,

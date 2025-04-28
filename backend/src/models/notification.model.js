@@ -30,6 +30,7 @@ const notificationSchema = new mongoose.Schema(
             required: [true, "Notification type is required."],
             enum: {
                 values: [
+                    "Followed",
                     "FollowRequest",
                     "FollowAccepted",
                     "Suggestion",
@@ -71,6 +72,7 @@ const notificationSchema = new mongoose.Schema(
                 },
                 contentId: {
                     type: mongoose.Schema.Types.ObjectId,
+                    refPath: "contentType",
                     required: [
                         true,
                         "Content ID is required if related content is provided.",
@@ -111,6 +113,10 @@ const notificationSchema = new mongoose.Schema(
                 followRequestStatus: {
                     type: String,
                     enum: ["Pending", "Accepted", "Rejected"],
+                },
+                followRequestId: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref:"UserRelationship",
                 },
             },
             required: false, // Additional context for specific notification types

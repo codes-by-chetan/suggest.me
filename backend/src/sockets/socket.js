@@ -6,28 +6,15 @@ const initializeSocket = (io) => {
 
         // User joins a room based on their userId
         socket.on("join", (userId) => {
-            socket.join(userId);
+            const userIdString = userId.toString(); // Convert ObjectId to string
+            socket.join(userIdString);
             logger.logMessage(
                 "info",
-                `User ${userId} joined their room`,
+                `User ${userIdString} joined their room`,
                 "SOCKET"
             );
-        });
-
-        // Example event: when a user sends a message (from previous setup)
-        socket.on("message", (msg) => {
-            logger.logMessage("info", "Message received: " + msg, "SOCKET");
-            io.emit("message", msg);
-        });
-
-        // Test event (from previous setup)
-        socket.on("test-connection", (data) => {
-            logger.logMessage(
-                "info",
-                "Test connection message received: " + data,
-                "SOCKET"
-            );
-            socket.emit("test-response", "Connection is working fine, bhai!");
+            // Debug log to confirm room state after joining
+            console.log("Rooms after join:", io.sockets.adapter.rooms);
         });
 
         // Handle disconnection
@@ -42,14 +29,30 @@ const initializeSocket = (io) => {
 };
 
 // Methods to send notifications
-const sendNotification = async (io, userId, notification) => {
-    io.to(userId).emit("notification", notification);
-    logger.logMessage(
-        "info",
-        `Notification sent to user ${userId}: ${JSON.stringify(notification)}`,
-        "SOCKET"
-    );
-};
+const sendNotification = async (io, userId, notifications) => {
+    for (const notification of notifications) {
+        // Check if the user is in the room
+        const room = io.sockets.adapter.rooms.get(userId.toString());
+        console.log("rooms : ", io.sockets.adapter.rooms);
+        console.log("Checking room for userId:", userId, "Room exists:", !!room);
+        if (!room) {
+            console.log(`User ${userId} is not in the room, cannot emit notification`);
+            continue; // Uncomment this to skip emission if room doesn't exist
+        }
 
+        console.log(`Emitting to room ${userId}:`, notification);
+        io.to(userId.toString()).emit("notification", notification);
+        logger.logMessage(
+            "debug",
+            `Emitting notification to user ${userId}: ${JSON.stringify(notification)}`,
+            "SOCKET"
+        );
+        logger.logMessage(
+            "info",
+            `Notification sent to user ${userId}: ${JSON.stringify(notification)}`,
+            "SOCKET"
+        );
+    }
+};
 // Export both the initialize function and the notification method
 export { initializeSocket, sendNotification };

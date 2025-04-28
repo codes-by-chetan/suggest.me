@@ -36,7 +36,7 @@ const getUserProfile = async (id) => {
 const viewOtherUserProfile = async (req) => {
     const viewer = req.user;
     const profileOwnerId = req.params.userId;
-    if (viewer._id === profileOwnerId) {
+    if (viewer?._id === profileOwnerId) {
         return userService.getUserProfileDetails(viewer);
     }
 
@@ -47,7 +47,7 @@ const viewOtherUserProfile = async (req) => {
     const userProfile = await getUserProfile(profileOwnerId);
     const { isFollowed, accessibleFields } =
         await models.UserRelationship.getProfileAccess(
-            viewer._id,
+            viewer?._id,
             profileOwnerId
         );
 
@@ -56,7 +56,7 @@ const viewOtherUserProfile = async (req) => {
     }
 
     if (!isFollowed) {
-        if (!userProfile.isPublic) {
+        if (!userProfile?.isPublic) {
             const selectedFields = {
                 id: user._id,
                 fullName: user.fullName,

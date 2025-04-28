@@ -39,6 +39,8 @@ const getUserFullProfileById = asyncHandler(async (req, res) => {
 });
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
+
+    console.log(req.body.avatar);
     await services.userProfileService.updateAvatar(req);
     const response = new ApiResponse(
         httpStatus.OK,

@@ -28,7 +28,7 @@ const initializeLogFile = (filePath) => {
     <style>
         body { font-family: monospace; background: #1a1a1a; color: #fff; padding: 20px; }
         .timestamp { color: #888; font-weight: bold; }
-        .info { color: #00f; }
+        .info { color: #0ca8d8; }
         .warn { color: #ff0; }
         .error { color: #f00; }
         .debug { color: #f0f; }
@@ -98,7 +98,7 @@ const customMorganFormat = (tokens, req, res) => {
     // HTML log with styled classes
     const htmlLog = `<span class="timestamp">${
         new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()
-    }</span> <span class="method ${status >= 400 ? "status-red" : "status-green"}">[${tokens.method(req, res)}]</span> ===>> <span class="url">${tokens.url(req, res)}</span>  <span class="${status >= 400 ? "status-red" : "status-green"}">${status}</span> <span class="status-message">[${statusMessage}]</span> <span class="content-length">${tokens.res(req, res, "content-length") || "-"}</span> - <span class="response-time">${tokens["response-time"](req, res)}</span> ms\n`;
+    }</span> <span class="method ${status >= 400 ? "status-red" : "status-green"}">[SERVER] [${tokens.method(req, res)}]</span> ===>> <span class="url">${tokens.url(req, res)}</span>  <span class="${status >= 400 ? "status-red" : "status-green"}">${status}</span> <span class="status-message">[${statusMessage}]</span> <span class="content-length">${tokens.res(req, res, "content-length") || "-"}</span> - <span class="response-time">${tokens["response-time"](req, res)}</span> ms\n`;
 
     logStream.write(htmlLog);
 
@@ -139,7 +139,7 @@ const logMessage = (type, message, from = "SERVER") => {
     console.log(`${chalk.gray(timestamp)} ${logType} ${formattedMessage}`);
 
     // Log to HTML file with styled classes
-    const htmlLog = `<span class="timestamp">${timestamp}</span> <span class="${type}">[${type.toUpperCase()}]</span> ${formattedMessage}\n`;
+    const htmlLog = `<span class="timestamp">${timestamp}</span> <span class="${type}">[${from.toUpperCase()}] [${type.toUpperCase()}]</span> ${formattedMessage}\n`;
     logStream.write(htmlLog);
 };
 

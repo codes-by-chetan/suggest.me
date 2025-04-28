@@ -26,5 +26,15 @@ const getRelation = asyncHandler(async (req, res) => {
     const response = new ApiResponse(200, result, "Relation Fetched!!!");
     res.status(200).json(response);
 });
-const userRelationsController = { followUser, getRelation };
+const acceptFollowRequest = asyncHandler(async (req, res) => {
+    const requestId = req.params.requestId;
+
+    const result = await services.userRelationsService.acceptFollowRequest(
+        req,
+        requestId
+    );
+    const response = new ApiResponse(200, result, "Request Accepted!!!");
+    res.status(200).json(response);
+});
+const userRelationsController = { followUser, getRelation, acceptFollowRequest };
 export default userRelationsController;

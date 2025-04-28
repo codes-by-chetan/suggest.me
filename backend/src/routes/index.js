@@ -5,6 +5,7 @@ import searchRouter from "./search.routes.js";
 import userRoutes from "./user.routes.js";
 import profileRouter from "./profile.routes.js";
 import userRelationsRouter from "./userRelations.routes.js";
+import notificationRouter from "./notifications.routes.js";
 const router = express.Router();
 
 // Routes index
@@ -32,6 +33,10 @@ const defaultRoutes = [
     {
         path: "/relations",
         route: userRelationsRouter,
+    },
+    {
+        path: "/notifications",
+        route: notificationRouter,
     },
 ];
 

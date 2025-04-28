@@ -20,7 +20,6 @@ connectDB()
         io = new Server(server, {
             cors: {
                 origin: "*", // Adjust this based on your frontend URL
-                methods: ["GET", "POST"],
                 credentials: true,
             },
         });
