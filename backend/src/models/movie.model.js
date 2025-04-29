@@ -108,6 +108,16 @@ const movieSchema = new mongoose.Schema(
                 },
             },
         ],
+        references: {
+            imdbId: {
+                type: String,
+                required: false,
+            },
+            tmdbId: {
+                type: String,
+                required: false,
+            },
+        },
         cast: [
             {
                 person: {

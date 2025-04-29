@@ -425,6 +425,16 @@ const seriesSchema = new mongoose.Schema(
                 ],
             },
         },
+        references: {
+            imdbId: {
+                type: String,
+                required: false,
+            },
+            tmdbId: {
+                type: String,
+                required: false,
+            },
+        },
         keywords: {
             type: [String],
             validate: {

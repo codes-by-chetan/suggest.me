@@ -4,28 +4,37 @@ import ApiError from "../utils/ApiError.js";
 
 dotenv.config({ path: ".env" });
 
-const envVarSchema = joi.object({
-    NODE_ENV: joi.string().description("node environment type"),
-    PORT: joi.number().default(3000),
-    MONGODB_URI: joi.string().description("Mongo DB connection string"),
-    CORS_ORIGIN: joi.string().description("CORS origin url"),
-    ACCESS_TOKEN_SECRET_KEY: joi
-        .string()
-        .description("Access token secret key"),
-    ACCESS_TOKEN_EXPIRY: joi.string().description("Access token expiry time"),
-    CLOUDINARY_CLOUD_NAME: joi.string().description("Cloudinary cloud name"),
-    CLOUDINARY_API_KEY: joi.string().description("Cloudinary api key"),
-    CLOUDINARY_API_SECRET: joi.string().description("Cloudinary api secret"),
-    CLOUDINARY_FOLDER: joi.string().description("Cloudinary folder name"),
-})
-.unknown();
+const envVarSchema = joi
+    .object({
+        NODE_ENV: joi.string().description("node environment type"),
+        PORT: joi.number().default(3000),
+        MONGODB_URI: joi.string().description("Mongo DB connection string"),
+        CORS_ORIGIN: joi.string().description("CORS origin url"),
+        ACCESS_TOKEN_SECRET_KEY: joi
+            .string()
+            .description("Access token secret key"),
+        ACCESS_TOKEN_EXPIRY: joi
+            .string()
+            .description("Access token expiry time"),
+        CLOUDINARY_CLOUD_NAME: joi
+            .string()
+            .description("Cloudinary cloud name"),
+        CLOUDINARY_API_KEY: joi.string().description("Cloudinary api key"),
+        CLOUDINARY_API_SECRET: joi
+            .string()
+            .description("Cloudinary api secret"),
+        CLOUDINARY_FOLDER: joi.string().description("Cloudinary folder name"),
+        TMDB_API_KEY: joi.string().description("TMDB API Access Key"),
+        TMDB_AUTH_TOKEN: joi.string().description("TMDB Access Token"),
+    })
+    .unknown();
 
 const { value: envVars, error } = envVarSchema
     .prefs({ errors: { label: "key" } })
     .validate(process.env);
 
 if (error) {
-    throw new ApiError(500,`ENV config validation error : ${error.message}`);
+    throw new ApiError(500, `ENV config validation error : ${error.message}`);
 }
 
 const config = {
@@ -52,6 +61,10 @@ const config = {
         apiSecret: envVars.CLOUDINARY_API_SECRET,
         folder: envVars.CLOUDINARY_FOLDER,
     },
+    tmdb: {
+        apiKey: envVars.TMDB_API_KEY,
+        accessToken: envVars.TMDB_AUTH_TOKEN,
+    },
 };
 
-export default config
+export default config;
