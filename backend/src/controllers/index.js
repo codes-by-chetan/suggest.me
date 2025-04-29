@@ -1,5 +1,6 @@
 import authController from "./auth.controller.js";
 import logsController from "./logs.controller.js";
+import movieController from "./movie.controller.js";
 import notificationController from "./notification.controller.js";
 import searchController from "./search.controller.js";
 import userController from "./user.controller.js";
@@ -12,6 +13,7 @@ const controllers = {
     searchController,
     userRelationsController,
     notificationController,
+    movieController,
 };
 
 export default controllers;
