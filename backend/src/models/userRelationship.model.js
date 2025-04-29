@@ -50,7 +50,7 @@ userRelationshipSchema.plugin(plugins.paginate);
 userRelationshipSchema.plugin(plugins.privatePlugin);
 
 // Indexes for performance
-userRelationshipSchema.index({ follower: 1, following: 1 }, { unique: true });
+userRelationshipSchema.index({ follower: 1, following: 1 });
 userRelationshipSchema.index({ follower: 1, status: 1 });
 userRelationshipSchema.index({ following: 1, status: 1 });
 
@@ -81,6 +81,18 @@ userRelationshipSchema.statics.follow = async function (
     followingId,
     folowStatus = "Accepted"
 ) {
+    const oldRelationship = await this.findOne({
+        follower: followerId,
+        following: followingId,
+        isActive: true,
+        deleted: false,
+    });
+    if (oldRelationship) {
+        throw new ApiError(
+            httpStatus.CONFLICT,
+            "Already followed or sent request"
+        );
+    }
     const relationship = await this.create({
         follower: followerId,
         following: followingId,
@@ -104,17 +116,16 @@ userRelationshipSchema.statics.unfollow = async function (
     followerId,
     followingId
 ) {
-    const result = await this.deleteOne({
+    const relationship = await this.findOne({
         follower: followerId,
         following: followingId,
         isActive: true,
+        deleted: false,
     });
-    if (result.deletedCount === 0) {
-        throw new ApiError(
-            httpStatus.NOT_FOUND,
-            "Follow relationship not found"
-        );
+    if (!relationship) {
+        throw new ApiError(httpStatus.NOT_FOUND, "Relationship not found");
     }
+    await relationship.delete(); // Triggers soft delete
     // Update counts
     // await Promise.all([
     //     mongoose
@@ -124,7 +135,7 @@ userRelationshipSchema.statics.unfollow = async function (
     //         .model("User")
     //         .updateOne({ _id: followingId }, { $inc: { followersCount: -1 } }),
     // ]);
-    return result;
+    return relationship;
 };
 
 // Utility method to get followers
@@ -147,23 +158,37 @@ userRelationshipSchema.statics.isFollowing = async function (userAId, userBId) {
         following: userBId,
         status: "Accepted",
         isActive: true,
+        deleted: false,
     });
     return !!relationship; // Returns true if userA follows userB, else false
 };
 
 // Utility method to get restricted profile data based on follow status
-userRelationshipSchema.statics.getProfileAccess = async function (viewerId, profileOwnerId) {
+userRelationshipSchema.statics.getProfileAccess = async function (
+    viewerId,
+    profileOwnerId
+) {
     const isFollowed = await this.isFollowing(viewerId, profileOwnerId);
-    
+
     // Define what fields are visible based on follow status
     const restrictedFields = {
         public: ["username", "name", "profilePicture", "bio"], // Fields visible to everyone
-        followed: ["username", "name", "profilePicture", "bio", "posts", "followersCount", "followingCount"], // Fields visible to followers
+        followed: [
+            "username",
+            "name",
+            "profilePicture",
+            "bio",
+            "posts",
+            "followersCount",
+            "followingCount",
+        ], // Fields visible to followers
     };
 
     return {
         isFollowed,
-        accessibleFields: isFollowed ? restrictedFields.followed : restrictedFields.public,
+        accessibleFields: isFollowed
+            ? restrictedFields.followed
+            : restrictedFields.public,
     };
 };
 

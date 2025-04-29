@@ -4,6 +4,12 @@ import httpStatus from "http-status";
 import userService from "./user.service.js";
 import notificationService from "./notification.service.js";
 import userProfileService from "./userProfile.service.js";
+import {
+    EmmitFollowAcceptedEvent,
+    EmmitFollowedYouEvent,
+    EmmitUnFollowedYouEvent,
+} from "../sockets/socket.js";
+import { io } from "../index.js";
 
 const followUser = async (userId, userIdToFollow) => {
     const userTOFollowProfile =
@@ -30,11 +36,13 @@ const followUser = async (userId, userIdToFollow) => {
     } else {
         result = await notificationService.sendFollowedNotification(
             userIdToFollow,
-            userId
+            userId,
+            relation._id
         );
     }
+    await EmmitFollowedYouEvent(io, userIdToFollow, relation);
 
-    return result;
+    return relation;
 };
 
 const acceptFollowRequest = async (req, requestId) => {
@@ -72,23 +80,40 @@ const acceptFollowRequest = async (req, requestId) => {
         userId,
         [result1]
     );
-
-    return result1 && result2;
+    await EmmitFollowAcceptedEvent(io, relation.follower, relation);
+    await EmmitFollowedYouEvent(io, user._id, relation);
+    return relation;
 };
 
 const getRelation = async (follower, following) => {
-    console.log();
+    // console.log("Follower:  ", follower, "Following : ", following);
 
     const relation = await models.UserRelationship.findOne({
         follower: follower,
         following: following,
         deleted: false,
     });
+    // console.log(relation);
     if (!relation) {
         throw new ApiError(httpStatus.NOT_FOUND, "Relation Not found");
     }
     return relation;
 };
 
-const userRelationsService = { followUser, getRelation, acceptFollowRequest };
+const unfollowUser = async (userId, userIdToUnFollow) => {
+    const result = await models.UserRelationship.unfollow(
+        userId,
+        userIdToUnFollow
+    );
+    EmmitUnFollowedYouEvent(io, userIdToUnFollow, result);
+    await notificationService.dismissFollowRequestNotification(result);
+    return result;
+};
+
+const userRelationsService = {
+    followUser,
+    getRelation,
+    acceptFollowRequest,
+    unfollowUser,
+};
 export default userRelationsService;

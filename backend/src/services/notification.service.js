@@ -4,6 +4,7 @@ import httpStatus from "http-status";
 import userService from "./user.service.js";
 import { sendNotification } from "../sockets/socket.js";
 import { io } from "../index.js";
+import logger from "../config/logger.config.js";
 
 const sendFollowRequstNotification = async (
     recipientId,
@@ -83,6 +84,7 @@ const sendFollowRequstAcceptedNotification = async (recipientId, senderId) => {
 const sendFollowedNotification = async (
     recipientId,
     senderId,
+    followRequestId,
     oldNotifications = []
 ) => {
     const sender = await models.User.findById(senderId);
@@ -92,7 +94,10 @@ const sendFollowedNotification = async (
         sender: sender._id,
         type: "Followed",
         message: `${sender.fullNameString} Has followed you.`,
-        metadata: { followRequestStatus: "Accepted" },
+        metadata: {
+            followRequestStatus: "Accepted",
+            followRequestId: followRequestId,
+        },
         createdBy: sender._id,
     });
     await notification.save();
@@ -235,6 +240,45 @@ const markAllNotificationsAsRead = async (user) => {
     return notifications;
 };
 
+const dismissFollowRequestNotification = async (relation) => {
+    const type = relation.status === "Accepted" ? "Followed" : "FollowRequest";
+    console.log({
+        recipient: relation.following,
+        sender: relation.follower,
+        type: type,
+        "metadata.followRequestId": relation._id,
+        createdBy: relation.follower,
+        status: { $ne: "Dismissed" },
+        deleted: false,
+    });
+    const notification = await models.Notification.findOne({
+        recipient: relation.following,
+        sender: relation.follower,
+        type: type,
+        "metadata.followRequestId": relation._id,
+        createdBy: relation.follower,
+        status: { $ne: "Dismissed" },
+        deleted: false,
+    });
+    if (!notification) {
+        logger.logMessage("warn", "Notification Not Found!!!");
+        return;
+    }
+    notification.status = "Dismissed";
+    notification.delete();
+    await notification.populate({
+        path: "sender",
+        select: "_id fullName fullNameString profile",
+        populate: {
+            path: "profile",
+            select: "avatar",
+        },
+    });
+    await sendNotification(io, notification.recipient, [notification]);
+
+    return true;
+};
+
 const notificationService = {
     sendFollowRequstNotification,
     sendFollowRequstAcceptedNotification,
@@ -245,5 +289,6 @@ const notificationService = {
     markAllNotificationsAsRead,
     dismissNotification,
     dismissAllNotifications,
+    dismissFollowRequestNotification,
 };
 export default notificationService;

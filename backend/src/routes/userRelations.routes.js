@@ -13,12 +13,20 @@ router.get(
     controllers.userRelationsController.followUser
 );
 router.get(
+    "/unfollow/:followingId",
+    controllers.userRelationsController.unfollowUser
+);
+router.get(
     "/accept/follow/:requestId",
     controllers.userRelationsController.acceptFollowRequest
 );
 router.get(
     "/relation/:followingId",
     controllers.userRelationsController.getRelation
+);
+router.get(
+    "/follows/you/:followingId",
+    controllers.userRelationsController.getFollowsYou
 );
 const userRelationsRouter = router;
 export default userRelationsRouter;
