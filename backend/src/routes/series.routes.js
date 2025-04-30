@@ -5,7 +5,7 @@ import validate from "../middlewares/validate.js";
 
 const router = express.Router();
 
-router.get("/movie/details/:movieId", controllers.movieController.getMovieDetails)
+router.get("/tv/details/:seriesId", controllers.seriesController.getSeriesDetails)
 
-const moviesRouter = router;
-export default moviesRouter;
+const seriesRouter = router;
+export default seriesRouter;

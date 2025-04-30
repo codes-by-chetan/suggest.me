@@ -1,5 +1,7 @@
 import authService from "./auth.service.js";
+import bookService from "./book.service.js";
 import movieService from "./movie.service.js";
+import musicService from "./music.service.js";
 import notificationService from "./notification.service.js";
 import searchService from "./search.service.js";
 import seriesService from "./series.service.js";
@@ -15,7 +17,9 @@ const services = {
     userRelationsService,
     notificationService,
     movieService,
-    seriesService
+    seriesService,
+    bookService,
+    musicService,
 };
 
 export default services;

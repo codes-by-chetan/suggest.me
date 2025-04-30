@@ -65,6 +65,13 @@ const config = {
         apiKey: envVars.TMDB_API_KEY,
         accessToken: envVars.TMDB_AUTH_TOKEN,
     },
+    spotify: {
+        clientId: process.env.SPOTIFY_CLIENT_ID,
+        clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+      },
+      openLibrary: {
+        baseUrl: "https://openlibrary.org",
+      },
 };
 
 export default config;

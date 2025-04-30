@@ -15,14 +15,6 @@ const bookSchema = new mongoose.Schema(
         },
         slug: {
             type: String,
-            unique: true,
-            required: [true, "Slug is required for URL generation."],
-            lowercase: true,
-            trim: true,
-            match: [
-                /^[a-z0-9-]+$/,
-                "Slug must contain only lowercase letters, numbers, or hyphens.",
-            ],
         },
         author: [
             {
@@ -89,13 +81,9 @@ const bookSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        openLibraryId: { type: String },
         pages: {
-            type: Number,
-            min: [1, "Pages must be at least 1."],
-            validate: {
-                validator: Number.isInteger,
-                message: "Pages must be an integer.",
-            },
+            type: String,
         },
         publisher: {
             type: mongoose.Schema.Types.ObjectId,
@@ -287,7 +275,7 @@ const bookSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Created by is required"],
+            required: false,
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,

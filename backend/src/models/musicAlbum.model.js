@@ -87,7 +87,7 @@ const musicAlbumSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Created by field is required."],
+            required: false,
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,

@@ -23,6 +23,12 @@ const distributorSchema = new mongoose.Schema(
                 "Slug must contain only lowercase letters, numbers, or hyphens.",
             ],
         },
+        tmdbId: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true,
+        },
         logo: {
             type: reusableSchemas.logoSchema,
             required: false,
@@ -56,12 +62,12 @@ const distributorSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "created by is required"],
+            required: false, // Relaxed requirement
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "updated by is required"],
+            required: false, // Relaxed requirement
         },
     },
     {
@@ -99,6 +105,7 @@ distributorSchema.pre("save", function () {
 // Index for efficient querying
 distributorSchema.index({ name: 1 });
 distributorSchema.index({ slug: 1 });
+distributorSchema.index({ tmdbId: 1 }, { sparse: true });
 
 const Distributor = mongoose.model("Distributor", distributorSchema);
 

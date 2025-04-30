@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import validator from "validator"; // Corrected import
+import validator from "validator";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
 
@@ -7,7 +7,6 @@ import middlewares from "../middlewares/index.js";
 const episodeDetailsSchema = {
     title: {
         type: String,
-        required: [true, "Episode title is required"],
         trim: true,
         maxlength: [100, "Episode title cannot exceed 100 characters."],
     },
@@ -28,6 +27,23 @@ const episodeDetailsSchema = {
             message: "Runtime must be an integer number of minutes.",
         },
     },
+    overview: {
+        type: String,
+        trim: true,
+        maxlength: [1500, "Episode overview cannot exceed 1500 characters."],
+    },
+    air_date: {
+        type: Date,
+    },
+    vote_average: {
+        type: Number,
+        min: [0, "Vote average cannot be less than 0."],
+        max: [10, "Vote average cannot exceed 10."],
+    },
+    vote_count: {
+        type: Number,
+        min: [0, "Vote count cannot be negative."],
+    },
 };
 
 // Sub-schema for season details
@@ -35,17 +51,34 @@ const seasonDetailsSchema = {
     seasonNumber: {
         type: Number,
         required: [true, "Season number is required"],
-        min: [1, "Season number must be at least 1."],
+        min: [0, "Season number can be 0 for specials."], // TMDB uses 0 for specials
     },
     title: {
         type: String,
         trim: true,
         maxlength: [100, "Season title cannot exceed 100 characters."],
     },
-    numberOfEpisodes: {
+    episodeCount: {
         type: Number,
         required: [true, "Number of episodes is required"],
         min: [1, "Number of episodes must be at least 1."],
+    },
+    overview: {
+        type: String,
+        trim: true,
+        maxlength: [1500, "Season overview cannot exceed 1500 characters."],
+    },
+    air_date: {
+        type: Date,
+    },
+    poster_path: {
+        type: String,
+        trim: true,
+    },
+    vote_average: {
+        type: Number,
+        min: [0, "Vote average cannot be less than 0."],
+        max: [10, "Vote average cannot exceed 10."],
     },
     episodes: {
         type: [episodeDetailsSchema],
@@ -53,10 +86,6 @@ const seasonDetailsSchema = {
     },
 };
 
-/**
- * Schema for all types of series (TV series, web series, etc.).
- * Stores detailed metadata, cast, episodes, and production details.
- */
 const seriesSchema = new mongoose.Schema(
     {
         title: {
@@ -80,7 +109,7 @@ const seriesSchema = new mongoose.Schema(
         },
         year: {
             type: Number,
-            required: [true, "Year is required for initial series creation."],
+            required: false,
             min: [1888, "Year cannot be earlier than 1888."],
             max: [
                 new Date().getFullYear() + 5,
@@ -89,14 +118,8 @@ const seriesSchema = new mongoose.Schema(
         },
         rated: {
             type: String,
-            enum: {
-                values: ["TV-G", "TV-PG", "TV-14", "TV-MA", "R", "Unrated"],
-                message:
-                    "Rating must be one of: TV-G, TV-PG, TV-14, TV-MA, R, Unrated.",
-            },
         },
         released: {
-            // Added from Movie
             type: Date,
             validate: {
                 validator: (value) => !value || value <= new Date(),
@@ -105,14 +128,16 @@ const seriesSchema = new mongoose.Schema(
             },
         },
         runtime: {
-            // Added from Movie, average runtime
-            type: Number,
-            min: [1, "Average runtime must be at least 1 minute."],
-            max: [600, "Average runtime cannot exceed 600 minutes."],
+            type: [Number], // Changed to array to support TMDB's episode_run_time
             validate: {
-                validator: Number.isInteger,
+                validator: (arr) => {
+                    if (!arr) return;
+                    return arr.every(
+                        (r) => Number.isInteger(r) && r >= 1 && r <= 600
+                    );
+                },
                 message:
-                    "Average runtime must be an integer number of minutes.",
+                    "All runtimes must be integers between 1 and 600 minutes.",
             },
         },
         seriesType: {
@@ -123,6 +148,9 @@ const seriesSchema = new mongoose.Schema(
                 "Anime Series",
                 "Mini Series",
                 "Documentary Series",
+                "Reality Show",
+                "Talk Show",
+                "Scripted", // Added for TMDB's type
                 "Other",
             ],
             default: "Other",
@@ -146,13 +174,12 @@ const seriesSchema = new mongoose.Schema(
             },
         },
         country: {
-            // Added from Movie
-            type: String,
+            type: [String], // Changed to array for production_countries
             trim: true,
         },
         seasons: {
             type: Number,
-            min: [1, "Seasons must be at least 1."],
+            min: [0, "Seasons can be 0 for specials."],
             validate: {
                 validator: Number.isInteger,
                 message: "Seasons must be an integer.",
@@ -172,150 +199,61 @@ const seriesSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: {
-                values: ["Ongoing", "Completed", "Canceled", "Limited"],
-                message:
-                    "Status must be one of: Ongoing, Completed, Canceled, Limited.",
+        },
+        creators: {
+            type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Person" }],
+            required: false,
+        },
+        cast: {
+            type: [
+                {
+                    person: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "Person",
+                    },
+                    character: String,
+                },
+            ],
+            validate: {
+                validator: (arr) => arr.length <= 50,
+                message: "Cast list cannot exceed 50 entries.",
             },
         },
-        creators: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Person",
-                validate: {
-                    validator: (arr) => !arr.length || arr.length <= 10,
-                    message:
-                        "Creators list, if provided, cannot exceed 10 entries.",
-                },
-            },
-        ],
-        cast: [
-            {
-                person: {
+        production: {
+            companies: [
+                {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: "Person",
-                    required: [true, "Person ID is required for cast entry."],
+                    ref: "ProductionCompany",
                 },
-                character: {
-                    type: String,
-                    required: [
-                        true,
-                        "Character name is required for cast entry.",
-                    ],
-                    trim: true,
+            ],
+            networks: [
+                {
+                    name: String,
+                    id: Number, // TMDB's network ID
+                    logo_path: String,
+                    origin_country: String,
                 },
-                _id: false,
-            },
-        ],
-        plot: {
-            type: String,
-            maxlength: [1000, "Plot summary cannot exceed 1000 characters."],
-            trim: true,
+            ],
+            studios: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Studio",
+                },
+            ],
+            distributors: [
+                {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Distributor",
+                },
+            ],
         },
-        platform: {
-            type: String,
-            trim: true,
-            description:
-                "The primary platform (e.g., Netflix, HBO, YouTube) where the series is released.",
-        },
-        firstAired: {
-            type: Date,
-            validate: {
-                validator: (value) => !value || value <= new Date(),
-                message: "First aired date cannot be in the future.",
+        references: {
+            tmdbId: {
+                type: String,
+                unique: true,
+                sparse: true,
             },
-        },
-        lastAired: {
-            type: Date,
-            validate: {
-                validator: (value) => !value || value <= new Date(),
-                message: "Last aired date cannot be in the future.",
-            },
-        },
-        episodesList: [
-            {
-                season: {
-                    type: Number,
-                    required: [true, "Season number is required."],
-                    min: [1, "Season must be at least 1."],
-                },
-                episode: {
-                    type: Number,
-                    required: [true, "Episode number is required."],
-                    min: [1, "Episode must be at least 1."],
-                },
-                title: {
-                    type: String,
-                    required: [true, "Episode title is required."],
-                    trim: true,
-                    maxlength: [
-                        100,
-                        "Episode title cannot exceed 100 characters.",
-                    ],
-                },
-                aired: {
-                    type: Date,
-                    validate: {
-                        validator: (value) => !value || value <= new Date(),
-                        message: "Aired date cannot be in the future.",
-                    },
-                },
-                runtime: {
-                    type: String,
-                    match: [
-                        /^\d+ min$/,
-                        "Runtime must be in the format 'X min' (e.g., '47 min').",
-                    ],
-                },
-                plot: {
-                    type: String,
-                    maxlength: [
-                        500,
-                        "Episode plot cannot exceed 500 characters.",
-                    ],
-                },
-                _id: false,
-            },
-        ],
-        awards: {
-            wins: {
-                type: Number,
-                default: 0,
-                min: [0, "Award wins cannot be negative."],
-            },
-            nominations: {
-                type: Number,
-                default: 0,
-                min: [0, "Award nominations cannot be negative."],
-            },
-            emmys: {
-                wins: {
-                    type: Number,
-                    default: 0,
-                    min: [0, "Emmy wins cannot be negative."],
-                },
-                nominations: {
-                    type: Number,
-                    default: 0,
-                    min: [0, "Emmy nominations cannot be negative."],
-                },
-            },
-            awardsDetails: {
-                // Added from Movie/Book
-                type: [
-                    {
-                        awardName: {
-                            type: String,
-                            required: [true, "Award name is required"],
-                        },
-                        awardFor: {
-                            type: String,
-                            required: false,
-                        },
-                    },
-                ],
-                required: false,
-            },
+            imdbId: String,
         },
         ratings: {
             imdb: {
@@ -343,145 +281,31 @@ const seriesSchema = new mongoose.Schema(
                     max: [100, "Metacritic score cannot exceed 100."],
                 },
             },
-        },
-        boxOffice: {
-            // Added from Movie
-            budget: {
-                type: String,
-                match: [
-                    /^\$?\d+.*$/,
-                    "Budget must be a valid monetary value (e.g., '$1000000').",
-                ],
-            },
-            grossUSA: {
-                type: String,
-                match: [
-                    /^\$?\d+.*$/,
-                    "Gross USA must be a valid monetary value.",
-                ],
-            },
-            grossWorldwide: {
-                type: String,
-                match: [
-                    /^\$?\d+.*$/,
-                    "Gross Worldwide must be a valid monetary value.",
-                ],
-            },
-        },
-        production: {
-            companies: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "ProductionCompany",
+            tmdb: {
+                score: {
+                    type: Number,
+                    min: [0, "TMDB score cannot be less than 0."],
+                    max: [10, "TMDB score cannot exceed 10."],
                 },
-            ],
-            studios: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Studio",
-                },
-            ],
-            distributors: [
-                {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Distributor",
-                },
-            ],
-        },
-        trailer: {
-            // Updated from Movie
-            type: {
-                url: {
-                    type: String,
-                    validate: {
-                        validator: (value) => !value || validator.isURL(value),
-                        message: "Trailer URL must be a valid URL if provided.",
-                    },
-                },
-                language: {
-                    type: String,
+                votes: {
+                    type: Number,
+                    min: [0, "TMDB votes cannot be negative."],
                 },
             },
-            required: false, // Optional, unlike Movie
         },
         poster: {
-            // Updated from Movie/Book
             url: {
                 type: String,
-                required: [
-                    true,
-                    "Poster URL is required for initial series creation.",
-                ],
-                validate: {
-                    validator: (value) => validator.isURL(value),
-                    message: "Poster URL must be a valid URL.",
-                },
+                trim: true,
             },
-            publicId: {
-                type: String,
-                required: [
-                    true,
-                    "Poster Public ID is required for initial series creation.",
-                ],
-            },
+            publicId: String,
         },
-        references: {
-            imdbId: {
+        backdrop: {
+            url: {
                 type: String,
-                required: false,
+                trim: true,
             },
-            tmdbId: {
-                type: String,
-                required: false,
-            },
-        },
-        keywords: {
-            type: [String],
-            validate: {
-                validator: (arr) => !arr.length || arr.length <= 20,
-                message: "Keywords, if provided, cannot exceed 20 entries.",
-            },
-            index: true,
-        },
-        availableOn: {
-            streaming: {
-                type: [
-                    {
-                        platform: {
-                            type: String,
-                        },
-                        link: {
-                            type: String,
-                            validate: {
-                                validator: (value) =>
-                                    !value || validator.isURL(value),
-                                message:
-                                    "Streaming link must be a valid URL if provided.",
-                            },
-                        },
-                    },
-                ],
-                required: false,
-            },
-            purchase: {
-                type: [
-                    {
-                        platform: {
-                            type: String,
-                        },
-                        link: {
-                            type: String,
-                            validate: {
-                                validator: (value) =>
-                                    !value || validator.isURL(value),
-                                message:
-                                    "Purchase link must be a valid URL if provided.",
-                            },
-                        },
-                    },
-                ],
-                required: false,
-            },
+            publicId: String,
         },
         isVerified: {
             type: Boolean,
@@ -494,12 +318,12 @@ const seriesSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Created by is required"],
+            required: false,
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: false, // Optional at creation
+            required: false,
         },
     },
     {
@@ -518,6 +342,7 @@ seriesSchema.plugin(plugins.softDelete);
 seriesSchema.index({ slug: 1 });
 seriesSchema.index({ title: 1, year: 1 });
 seriesSchema.index({ genres: 1, "ratings.imdb.score": -1 });
+seriesSchema.index({ "references.tmdbId": 1 });
 
 // Pre-save hook to generate slug
 seriesSchema.pre("save", async function (next) {
@@ -538,13 +363,10 @@ seriesSchema.pre("save", async function (next) {
     next();
 });
 
-// Pre-save validation for cast, episodesList, and seasonsDetails size
+// Pre-save validation for cast and seasonsDetails size
 seriesSchema.pre("save", function (next) {
     if (this.cast && this.cast.length > 50) {
         return next(new Error("Cast list cannot exceed 50 entries."));
-    }
-    if (this.episodesList && this.episodesList.length > 500) {
-        return next(new Error("Episodes list cannot exceed 500 entries."));
     }
     if (this.seasonsDetails) {
         const totalEpisodes = this.seasonsDetails.reduce(

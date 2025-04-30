@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
-import logoSchema from "./reusableSchemas/logo.schema.js";
 import reusableSchemas from "./reusableSchemas/index.js";
 
 const productionCompanySchema = new mongoose.Schema(
@@ -23,6 +22,12 @@ const productionCompanySchema = new mongoose.Schema(
                 /^[a-z0-9-]+$/,
                 "Slug must contain only lowercase letters, numbers, or hyphens.",
             ],
+        },
+        tmdbId: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true,
         },
         logo: {
             type: reusableSchemas.logoSchema,
@@ -57,12 +62,12 @@ const productionCompanySchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "created by is required"],
+            required: false, // Relaxed requirement
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "updated by is required"],
+            required: false, // Relaxed requirement
         },
     },
     {
@@ -100,6 +105,7 @@ productionCompanySchema.pre("save", function () {
 // Index for efficient querying
 productionCompanySchema.index({ name: 1 });
 productionCompanySchema.index({ slug: 1 });
+productionCompanySchema.index({ tmdbId: 1 }, { sparse: true });
 
 const ProductionCompany = mongoose.model(
     "ProductionCompany",

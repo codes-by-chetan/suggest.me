@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import validator from "mongoose";
+import validator from "validator"; // Correct import
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
 
@@ -39,35 +39,26 @@ const movieSchema = new mongoose.Schema(
         poster: {
             url: {
                 type: String,
-                required: [
-                    true,
-                    "Poster URL is required for initial movie creation.",
-                ],
+                required: false, // Relaxed requirement
+                default: "https://via.placeholder.com/500", // Default placeholder
                 validate: {
-                    validator: (value) => validator.isURL(value),
+                    validator: (value) => !value || validator.isURL(value),
                     message: "Poster must be a valid URL.",
                 },
             },
             publicId: {
                 type: String,
-                required: [
-                    true,
-                    "Poster Public ID is required for initial movie creation.",
-                ],
+                required: false, // Relaxed requirement
+                default: "default-poster",
             },
         },
         rated: {
             type: String,
-            enum: {
-                values: ["G", "PG", "PG-13", "R", "NC-17", "Unrated"],
-                message:
-                    "Rating must be one of: G, PG, PG-13, R, NC-17, Unrated.",
-            },
         },
         released: {
             type: Date,
             validate: {
-                validator: (value) => value <= new Date(),
+                validator: (value) => !value || value <= new Date(),
                 message:
                     "Release date cannot be in the future for existing records.",
             },
@@ -127,10 +118,7 @@ const movieSchema = new mongoose.Schema(
                 },
                 character: {
                     type: String,
-                    required: [
-                        true,
-                        "Character name is required for cast entry.",
-                    ],
+                    required: false,
                     trim: true,
                 },
                 _id: false,
@@ -138,7 +126,7 @@ const movieSchema = new mongoose.Schema(
         ],
         plot: {
             type: String,
-            maxlength: [500, "Plot summary cannot exceed 500 characters."],
+            maxlength: [1500, "Plot summary cannot exceed 1500 characters."],
             trim: true,
         },
         language: {
@@ -149,7 +137,7 @@ const movieSchema = new mongoose.Schema(
             },
         },
         country: {
-            type: String,
+            type: [String],
             trim: true,
         },
         awards: {
@@ -274,8 +262,10 @@ const movieSchema = new mongoose.Schema(
                 language: {
                     type: String,
                     required: [true, "trailer language is required"],
+                    default: "NA",
                 },
             },
+            required: false,
         },
         keywords: {
             type: [String],
@@ -338,12 +328,12 @@ const movieSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "created by is required"],
+            required: false, // Relaxed requirement
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "updated by is required"],
+            required: false, // Relaxed requirement
         },
     },
     {

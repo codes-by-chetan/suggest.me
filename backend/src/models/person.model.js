@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import plugins from "./plugins/index.js";
 import middlewares from "../middlewares/index.js";
-import avatarSchema from "./reusableSchemas/avatar.schema.js";
 import reusableSchemas from "./reusableSchemas/index.js";
 
 const personSchema = new mongoose.Schema(
@@ -23,6 +22,12 @@ const personSchema = new mongoose.Schema(
                 /^[a-z0-9-]+$/,
                 "Slug must contain only lowercase letters, numbers, or hyphens.",
             ],
+        },
+        tmdbId: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true, // Allows multiple documents with null tmdbId
         },
         birthDate: {
             type: Date,
@@ -61,12 +66,12 @@ const personSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "created by is required"],
+            required: false, // Relaxed requirement
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "updated by is required"],
+            required: false, // Relaxed requirement
         },
     },
     {
@@ -85,7 +90,7 @@ personSchema.pre("save", async function (next) {
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
-        let slug = slug;
+        let slug = baseSlug;
         let counter = 1;
         while (
             await this.constructor.findOne({ slug, _id: { $ne: this._id } })
@@ -104,7 +109,8 @@ personSchema.pre("save", function () {
 // Index for efficient querying
 personSchema.index({ name: 1 });
 personSchema.index({ slug: 1 });
-personSchema.index({ professions: 1 }); // For querying by profession
+personSchema.index({ tmdbId: 1 }, { sparse: true });
+personSchema.index({ professions: 1 });
 
 const Person = mongoose.model("Person", personSchema);
 

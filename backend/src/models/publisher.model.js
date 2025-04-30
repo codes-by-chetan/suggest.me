@@ -58,7 +58,7 @@ const publisherSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Created by is required"],
+            required: false,
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,

@@ -23,6 +23,12 @@ const studioSchema = new mongoose.Schema(
                 "Slug must contain only lowercase letters, numbers, or hyphens.",
             ],
         },
+        tmdbId: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true,
+        },
         founded: {
             type: Date,
             validate: {
@@ -56,12 +62,12 @@ const studioSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "created by is required"],
+            required: false, // Relaxed requirement
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "updated by is required"],
+            required: false, // Relaxed requirement
         },
     },
     {
@@ -99,6 +105,7 @@ studioSchema.pre("save", function () {
 // Index for efficient querying
 studioSchema.index({ name: 1 });
 studioSchema.index({ slug: 1 });
+studioSchema.index({ tmdbId: 1 }, { sparse: true });
 
 const Studio = mongoose.model("Studio", studioSchema);
 

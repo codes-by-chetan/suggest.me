@@ -138,7 +138,8 @@ const musicSchema = new mongoose.Schema(
                 required: false,
             },
         ],
-        streams: {
+        spotifyId: { type: String },
+        availableOn: {
             spotify: {
                 plays: { type: String },
                 link: {
@@ -271,9 +272,6 @@ const musicSchema = new mongoose.Schema(
                 },
             },
         },
-        availableOn: {
-            type: [String],
-        },
         recommendedBy: {
             name: { type: String },
             contact: { type: String },
@@ -289,7 +287,7 @@ const musicSchema = new mongoose.Schema(
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Created by field is required."],
+            required: false,
         },
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
