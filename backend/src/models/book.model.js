@@ -10,7 +10,13 @@ const bookSchema = new mongoose.Schema(
             required: [true, "Title is required for initial book creation."],
             trim: true,
             minlength: [1, "Title must be at least 1 character long."],
-            maxlength: [100, "Title cannot exceed 100 characters."],
+            maxlength: [150, "Title cannot exceed 150 characters."],
+            index: true,
+        },
+        subtitle: {
+            type: String,
+            trim: true,
+            maxlength: [150, "Subtitle cannot exceed 150 characters."],
             index: true,
         },
         slug: {
@@ -22,8 +28,7 @@ const bookSchema = new mongoose.Schema(
                 ref: "Person",
                 validate: {
                     validator: (arr) => !arr.length || arr.length <= 5,
-                    message:
-                        "Authors list, if provided, cannot exceed 5 entries.",
+                    message: "Authors list, if provided, cannot exceed 5 entries.",
                 },
             },
         ],
@@ -58,32 +63,46 @@ const bookSchema = new mongoose.Schema(
                 "Published year cannot be more than 5 years in the future.",
             ],
         },
-        isbn: {
-            type: String,
-            unique: true,
-            trim: true,
-            match: [
-                /^\d{3}-?\d{10}$/,
-                "ISBN must be in the format 'XXX-XXXXXXXXXX' (e.g., '978-0261102385').",
-            ],
-        },
+        industryIdentifiers: [
+            {
+                type: {
+                    type: String,
+                    enum: ["ISBN_10", "ISBN_13", "OTHER"],
+                    required: true,
+                },
+                identifier: {
+                    type: String,
+                    required: true,
+                    trim: true,
+                },
+            },
+        ],
         genres: {
             type: [String],
             validate: {
                 validator: (arr) =>
-                    !arr.length || (arr.length > 0 && arr.length <= 5),
-                message:
-                    "Genres, if provided, must be between 1 and 5 entries.",
+                    !arr.length || (arr.length > 0 && arr.length <= 10),
+                message: "Genres, if provided, must be between 1 and 10 entries.",
             },
             index: true,
         },
         language: {
             type: String,
             trim: true,
+            validate: {
+                validator: (value) =>
+                    !value || validator.isISO6391(value.toLowerCase()),
+                message: "Language must be a valid ISO 639-1 code.",
+            },
         },
-        openLibraryId: { type: String },
-        pages: {
+        googleBooksId: {
             type: String,
+            unique: true,
+            sparse: true,
+        },
+        pages: {
+            type: Number,
+            min: [0, "Pages cannot be negative."],
         },
         publisher: {
             type: mongoose.Schema.Types.ObjectId,
@@ -91,8 +110,44 @@ const bookSchema = new mongoose.Schema(
         },
         description: {
             type: String,
-            maxlength: [1000, "Description cannot exceed 1000 characters."],
+            maxlength: [2000, "Description cannot exceed 2000 characters."],
             trim: true,
+        },
+        seriesInfo: {
+            seriesId: {
+                type: String,
+                trim: true,
+            },
+            bookDisplayNumber: {
+                type: String,
+                trim: true,
+            },
+            seriesBookType: {
+                type: String,
+                enum: ["COLLECTED_EDITION", "SINGLE_ISSUE", "OTHER"],
+            },
+        },
+        maturityRating: {
+            type: String,
+            enum: ["NOT_MATURE", "MATURE", "UNKNOWN"],
+            default: "UNKNOWN",
+        },
+        readingModes: {
+            text: {
+                type: Boolean,
+                default: false,
+            },
+            image: {
+                type: Boolean,
+                default: false,
+            },
+        },
+        canonicalLink: {
+            type: String,
+            validate: {
+                validator: (value) => !value || validator.isURL(value),
+                message: "Canonical link must be a valid URL.",
+            },
         },
         awards: {
             wins: {
@@ -228,7 +283,7 @@ const bookSchema = new mongoose.Schema(
                         },
                         link: {
                             type: String,
-                            required: [true, " streaming link is required"],
+                            required: [true, "streaming link is required"],
                             validate: {
                                 validator: (value) =>
                                     !value || validator.isURL(value),
@@ -248,7 +303,7 @@ const bookSchema = new mongoose.Schema(
                         },
                         link: {
                             type: String,
-                            required: [true, " streaming link is required"],
+                            required: [true, "streaming link is required"],
                             validate: {
                                 validator: (value) =>
                                     !value || validator.isURL(value),
@@ -280,7 +335,7 @@ const bookSchema = new mongoose.Schema(
         updatedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: false, // Optional at creation
+            required: false,
         },
         reviews: {
             type: [
@@ -322,7 +377,7 @@ const bookSchema = new mongoose.Schema(
     }
 );
 
-// Plugins (mirroring Movie)
+// Plugins
 bookSchema.plugin(plugins.paginate);
 bookSchema.plugin(plugins.privatePlugin);
 bookSchema.plugin(plugins.softDelete);
@@ -331,6 +386,7 @@ bookSchema.plugin(plugins.softDelete);
 bookSchema.index({ slug: 1 });
 bookSchema.index({ title: 1, publishedYear: 1 });
 bookSchema.index({ genres: 1 });
+bookSchema.index({ googleBooksId: 1 });
 
 // Pre-save hook to generate slug
 bookSchema.pre("save", async function (next) {
@@ -339,7 +395,7 @@ bookSchema.pre("save", async function (next) {
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
-        let slug = baseSlug; // Fixed typo from your Movie model
+        let slug = baseSlug;
         let counter = 1;
         while (
             await this.constructor.findOne({ slug, _id: { $ne: this._id } })
@@ -351,17 +407,15 @@ bookSchema.pre("save", async function (next) {
     next();
 });
 
-// Pre-save validation for characters size
+// Pre-save validation for characters size (removing invalid check)
 bookSchema.pre("save", function (next) {
-    if (this.characters && this.characters.length > 50) {
-        return next(new Error("Characters list cannot exceed 50 entries."));
-    }
+    // Removed characters validation as it's not in schema
     next();
 });
 
-// Pre-save hook for logging (mirroring Movie)
-bookSchema.pre("save", function () {
-    middlewares.dbLogger("Book");
+// Pre-save hook for logging
+bookSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Book").call(this, next);
 });
 
 // Method to mark as verified

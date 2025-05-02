@@ -63,8 +63,8 @@ userRelationshipSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-userRelationshipSchema.pre("save", function () {
-    middlewares.dbLogger("UserRelationship");
+userRelationshipSchema.pre("save", function (next) {
+    return middlewares.dbLogger("UserRelationship").call(this, next);
 });
 
 // Query only active records

@@ -103,8 +103,8 @@ userContentSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-userContentSchema.pre("save", function () {
-    middlewares.dbLogger("UserContent");
+userContentSchema.pre("save", function (next) {
+    return middlewares.dbLogger("UserContent").call(this, next);
 });
 
 // Method to mark as verified

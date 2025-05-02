@@ -158,10 +158,9 @@ notificationSchema.index({ sender: 1 });
 notificationSchema.index({ type: 1, status: 1 });
 
 // Pre-save hook for logging
-notificationSchema.pre("save", function () {
-    middlewares.dbLogger("Notification");
+notificationSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Notification").call(this, next);
 });
-
 // Method to mark as read
 notificationSchema.methods.markAsRead = async function () {
     this.status = "Read";

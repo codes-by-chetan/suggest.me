@@ -98,8 +98,8 @@ distributorSchema.pre("save", async function (next) {
     next();
 });
 
-distributorSchema.pre("save", function () {
-    middlewares.dbLogger("Distributor");
+distributorSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Distributor").call(this, next);
 });
 
 // Index for efficient querying

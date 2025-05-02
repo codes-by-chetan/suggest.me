@@ -122,8 +122,8 @@ userProfileSchema.index({ user: 1 }, { unique: true });
 userProfileSchema.index({ displayName: 1 }, { sparse: true });
 
 // Pre-save hook for logging
-userProfileSchema.pre("save", function () {
-    middlewares.dbLogger("UserProfile");
+userProfileSchema.pre("save", function (next) {
+    return middlewares.dbLogger("UserProfile").call(this, next);
 });
 
 // Utility method to create or update profile

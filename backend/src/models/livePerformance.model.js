@@ -63,9 +63,10 @@ livePerformanceSchema.plugin(plugins.softDelete);
 livePerformanceSchema.index({ music: 1 });
 livePerformanceSchema.index({ event: 1 });
 
-livePerformanceSchema.pre("save", function () {
-    middlewares.dbLogger("LivePerformance");
+livePerformanceSchema.pre("save", function (next) {
+    return middlewares.dbLogger("LivePerformance").call(this, next);
 });
+
 
 livePerformanceSchema.statics.softDelete = async function (id) {
     return this.updateOne({ _id: id }, { isActive: false });

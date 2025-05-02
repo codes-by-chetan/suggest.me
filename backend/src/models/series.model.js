@@ -384,8 +384,8 @@ seriesSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-seriesSchema.pre("save", function () {
-    middlewares.dbLogger("Series");
+seriesSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Series").call(this, next);
 });
 
 // Method to mark as verified

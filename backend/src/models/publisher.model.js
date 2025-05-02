@@ -95,8 +95,8 @@ publisherSchema.pre("save", async function (next) {
 });
 
 // Pre-save hook for logging
-publisherSchema.pre("save", function () {
-    middlewares.dbLogger("Publisher");
+publisherSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Publisher").call(this, next);
 });
 
 // Index for efficient querying

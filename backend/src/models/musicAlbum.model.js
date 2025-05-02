@@ -127,8 +127,8 @@ musicAlbumSchema.pre("save", async function (next) {
     next();
 });
 
-musicAlbumSchema.pre("save", function () {
-    middlewares.dbLogger("MusicAlbum");
+musicAlbumSchema.pre("save", function (next) {
+    return middlewares.dbLogger("MusicAlbum").call(this, next);
 });
 
 musicAlbumSchema.statics.softDelete = async function (id) {

@@ -106,8 +106,8 @@ userSuggestionsSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-userSuggestionsSchema.pre("save", function () {
-    middlewares.dbLogger("Suggestions");
+userSuggestionsSchema.pre("save", function (next) {
+    return middlewares.dbLogger("UserSuggestions").call(this, next);
 });
 
 // Method to mark as verified

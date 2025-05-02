@@ -102,8 +102,8 @@ personSchema.pre("save", async function (next) {
     next();
 });
 
-personSchema.pre("save", function () {
-    middlewares.dbLogger("Person");
+personSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Person").call(this, next);
 });
 
 // Index for efficient querying

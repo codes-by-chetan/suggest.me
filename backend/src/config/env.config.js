@@ -26,6 +26,9 @@ const envVarSchema = joi
         CLOUDINARY_FOLDER: joi.string().description("Cloudinary folder name"),
         TMDB_API_KEY: joi.string().description("TMDB API Access Key"),
         TMDB_AUTH_TOKEN: joi.string().description("TMDB Access Token"),
+        GOOGLE_API_KEY: joi.string().description("Google API Access Key"),
+        OPEN_AI_API_KEY: joi.string().description("Google API Access Key"),
+        SERP_API_KEY: joi.string().description("Google API Access Key"),
     })
     .unknown();
 
@@ -68,10 +71,17 @@ const config = {
     spotify: {
         clientId: process.env.SPOTIFY_CLIENT_ID,
         clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-      },
-      openLibrary: {
+    },
+    openLibrary: {
         baseUrl: "https://openlibrary.org",
-      },
+    },
+    google: {
+        apiKey: envVars.GOOGLE_API_KEY,
+        serpApiKey: envVars.SERP_API_KEY,
+    },
+    openAi: {
+        apiKey: envVars.OPEN_AI_API_KEY,
+    },
 };
 
 export default config;

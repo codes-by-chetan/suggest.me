@@ -98,8 +98,8 @@ productionCompanySchema.pre("save", async function (next) {
     next();
 });
 
-productionCompanySchema.pre("save", function () {
-    middlewares.dbLogger("ProductionCompany");
+productionCompanySchema.pre("save", function (next) {
+    return middlewares.dbLogger("ProductionCompany").call(this, next);;
 });
 
 // Index for efficient querying

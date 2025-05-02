@@ -328,10 +328,9 @@ musicSchema.pre("save", async function (next) {
     next();
 });
 
-musicSchema.pre("save", function () {
-    middlewares.dbLogger("Music");
+musicSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Music").call(this, next);
 });
-
 musicSchema.methods.markAsVerified = async function () {
     this.isVerified = true;
     return this.save();

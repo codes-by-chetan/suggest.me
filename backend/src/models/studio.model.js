@@ -98,8 +98,8 @@ studioSchema.pre("save", async function (next) {
     next();
 });
 
-studioSchema.pre("save", function () {
-    middlewares.dbLogger("Studio");
+studioSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Studio").call(this, next);
 });
 
 // Index for efficient querying

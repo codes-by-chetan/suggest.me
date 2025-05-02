@@ -308,8 +308,8 @@ userSchema.pre("save", function (next) {
 });
 
 // Pre-save hook for logging
-userSchema.pre("save", function () {
-    middlewares.dbLogger("User");
+userSchema.pre("save", function (next) {
+    return middlewares.dbLogger("User").call(this, next);
 });
 
 const User = mongoose.model("User", userSchema);

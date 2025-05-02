@@ -403,8 +403,8 @@ movieSchema.pre(/^find/, function (next) {
     next();
 });
 
-movieSchema.pre("save", function () {
-    middlewares.dbLogger("Movie");
+movieSchema.pre("save", function (next) {
+    return middlewares.dbLogger("Movie").call(this, next);
 });
 
 const Movie = mongoose.model("Movie", movieSchema);
