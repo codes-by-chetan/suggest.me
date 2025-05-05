@@ -1,0 +1,84 @@
+{
+    "statusCode": 200,
+    "data": {
+        "book": {
+            "title": "pride and prejudice",
+            "subtitle": null,
+            "bookType": "Novel",
+            "publishedYear": 1962,
+            "industryIdentifiers": [
+                {
+                    "type": "ISBN_13",
+                    "identifier": "9789352762897"
+                },
+                {
+                    "type": "ISBN_10",
+                    "identifier": "9352762894"
+                }
+            ],
+            "genres": [
+                "Fiction"
+            ],
+            "language": "en",
+            "pages": 434,
+            "description": "Charles Bingley, a wealthy young gentleman has arrived at Netherfield. The news causes a stir in the neighbourhood village of Longbourn, especially the Bennet household. With five unmarried daughters—Jane, Elizabeth, Mary, Kitty, and Lydia—Mrs. Bennet is desperate to attend a ball where Mr. Bingley is expected to be present. Mr. Bingley spends most of the evening dancing with Jane, and develops a fondness for her. His close friend, Mr. Darcy, a haughty man, refuses to dance with Jane’s sister, Elizabeth. What follows is a period of bittersweet exchanges between the prejudiced Elizabeth and the pretentious Darcy till both realise the limitations of their opinions. A witty comedy first published in 1813, Jane Austen’s Pride and Prejudice, originally titled First Impressions, remains one of the most popular novels of English literature.",
+            "coverImage": {
+                "url": "/images/d4403c17-a101-4a23-b8d0-bdee10759cef-google-books.jpg",
+                "publicId": "image-4be42b1b-8dea-4b5f-81d8-b11168bf029c"
+            },
+            "amazonCoverImage": "https://m.media-amazon.com/images/I/81gAjK+Qf0L._SY342_.jpg",
+            "maturityRating": "NOT_MATURE",
+            "ratings": {
+                "goodreads": {
+                    "score": 4.574,
+                    "votes": 7
+                },
+                "amazon": {
+                    "score": 4.3,
+                    "votes": 51
+                }
+            },
+            "sales": {
+                "copiesSold": null,
+                "bestSellerRank": null
+            },
+            "seriesInfo": {
+                "seriesId": null,
+                "bookDisplayNumber": null,
+                "seriesBookType": "OTHER"
+            },
+            "canonicalLink": null,
+            "awards": {
+                "wins": 0,
+                "nominations": 0,
+                "awardsDetails": []
+            },
+            "publisher": "Om Books International"
+        },
+        "author": {
+            "name": "jane austen",
+            "birthDate": "1775-12-16",
+            "birthPlace": null,
+            "biography": "English novelist (1775–1817)",
+            "profileImage": {
+                "url": "/images/d242448b-59df-4c11-b101-de235cb4d526-wikimedia.jpg",
+                "publicId": "image-4a5a1694-548b-4587-a31c-3db5fc950f32"
+            },
+            "professions": [
+                "Author"
+            ]
+        },
+        "publisher": {
+            "name": "Om Books International",
+            "founded": null,
+            "headquarters": "New York City, USA",
+            "website": "https://www.ombooksinternational.com/",
+            "description": null,
+            "logo": null
+        },
+        "errors": []
+    },
+    "message": "Research Complete!!!",
+    "success": true,
+    "redirect": null
+}

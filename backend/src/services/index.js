@@ -3,6 +3,7 @@ import bookService from "./book.service.js";
 import movieService from "./movie.service.js";
 import musicService from "./music.service.js";
 import notificationService from "./notification.service.js";
+import researchService from "./research.service.js";
 import searchService from "./search.service.js";
 import seriesService from "./series.service.js";
 import userService from "./user.service.js";
@@ -20,6 +21,7 @@ const services = {
     seriesService,
     bookService,
     musicService,
+    researchService,
 };
 
 export default services;

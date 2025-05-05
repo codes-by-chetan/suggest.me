@@ -4,6 +4,7 @@ import logsController from "./logs.controller.js";
 import movieController from "./movie.controller.js";
 import musicController from "./music.controller.js";
 import notificationController from "./notification.controller.js";
+import researchController from "./research.controller.js";
 import searchController from "./search.controller.js";
 import seriesController from "./series.controller.js";
 import userController from "./user.controller.js";
@@ -20,6 +21,7 @@ const controllers = {
     seriesController,
     bookController,
     musicController,
+    researchController
 };
 
 export default controllers;

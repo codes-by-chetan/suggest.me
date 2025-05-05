@@ -10,6 +10,7 @@ import moviesRouter from "./movies.routes.js";
 import seriesRouter from "./series.routes.js";
 import bookRouter from "./books.routes.js";
 import musicRouter from "./music.routes.js";
+import researchRouter from "./research.routes.js";
 const router = express.Router();
 
 // Routes index
@@ -57,6 +58,10 @@ const defaultRoutes = [
     {
         path: "/musics",
         route: musicRouter,
+    },
+    {
+        path: "/research",
+        route: researchRouter,
     },
 ];
 

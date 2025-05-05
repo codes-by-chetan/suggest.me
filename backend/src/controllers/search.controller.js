@@ -19,13 +19,17 @@ const searchUser = asyncHandler(async (req, res) => {
     res.status(httpStatus.OK).json(response);
 });
 const searchThroughGlobal = asyncHandler(async (req, res) => {
+    const type = req?.params?.type;
     const { query } = req;
     const { search } = query;
-    console.log(query, "search: ", search)
+    console.log(query, "search: ", search);
     if (!search) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Search query is required");
     }
-    const searchResults = await services.searchService.globalSearch(search);
+    const searchResults = await services.searchService.globalSearch(
+        search,
+        [type ? type : "all"] // contentTypes
+    );
     const response = new ApiResponse(
         httpStatus.OK,
         searchResults,

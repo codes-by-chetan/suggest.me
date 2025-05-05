@@ -27,8 +27,9 @@ const envVarSchema = joi
         TMDB_API_KEY: joi.string().description("TMDB API Access Key"),
         TMDB_AUTH_TOKEN: joi.string().description("TMDB Access Token"),
         GOOGLE_API_KEY: joi.string().description("Google API Access Key"),
-        OPEN_AI_API_KEY: joi.string().description("Google API Access Key"),
-        SERP_API_KEY: joi.string().description("Google API Access Key"),
+        OPEN_AI_API_KEY: joi.string().description("OPEN AI API Access Key"),
+        SERP_API_KEY: joi.string().description("Serp API Access Key"),
+        ENABLE_CACHE_WRITE:joi.string().description("Google API Access Key"),
     })
     .unknown();
 
@@ -82,6 +83,9 @@ const config = {
     openAi: {
         apiKey: envVars.OPEN_AI_API_KEY,
     },
+    cache:{
+        enableCacheWrite: envVars.ENABLE_CACHE_WRITE
+    }
 };
 
 export default config;

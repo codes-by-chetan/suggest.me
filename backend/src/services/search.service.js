@@ -3,6 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import models from "../models/index.js";
 import axios from "axios";
 import config from "../config/env.config.js";
+import logger from "../config/logger.config.js";
 
 // TMDB API configuration
 const TMDB_API_KEY = config.tmdb.apiKey;
@@ -14,7 +15,7 @@ const GOOGLE_BOOKS_BASE_URL = "https://www.googleapis.com/books/v1";
 
 // Function to fetch TMDB data for movies or series
 const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
-    const endpoint = contentType === "movies" ? "/search/movie" : "/search/tv";
+    const endpoint = contentType === "movie" ? "/search/movie" : "/search/tv";
     try {
         const response = await axios.get(`${TMDB_BASE_URL}${endpoint}`, {
             params: {
@@ -27,7 +28,7 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                 Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
             },
         });
-
+        console.log("tmdb res: ", response)
         return response.data.results.map((item) => ({
             tmdbId: item.id.toString(),
             title: item.title || item.name,
@@ -188,28 +189,28 @@ const getSearchableModels = () => {
     return [
         {
             model: models.Movie,
-            name: "movies",
+            name: "movie",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["director", "writers", "cast.person"],
             select: "title slug poster director writers cast references.tmdbId",
         },
         {
             model: models.Series,
-            name: "series",
+            name: "serie",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["creators", "cast.person"],
             select: "title slug poster creators cast references.tmdbId",
         },
         {
-            model: null, // No local model for books
-            name: "books",
+            model: models.Book, // No local model for books
+            name: "book",
             fields: [],
             personFields: [],
             select: "",
             external: "googlebooks",
         },
         {
-            model: null, // No local model for music
+            model: models.Music, // No local model for music
             name: "music",
             fields: [],
             personFields: [],
@@ -218,21 +219,21 @@ const getSearchableModels = () => {
         },
         {
             model: models.MusicAlbum,
-            name: "albums",
+            name: "album",
             fields: ["title", "genres"],
             personFields: [],
             select: "title slug coverImage",
         },
         {
             model: models.MusicVideo,
-            name: "musicVideos",
+            name: "musicVideo",
             fields: [],
             personFields: ["director"],
             select: "music slug director",
         },
         {
             model: models.Video,
-            name: "videos",
+            name: "video",
             fields: ["title", "genres", "description", "keywords"],
             personFields: ["creator"],
             select: "title slug poster creator",
@@ -246,35 +247,35 @@ const getSearchableModels = () => {
         },
         {
             model: models.LivePerformance,
-            name: "performances",
+            name: "performance",
             fields: ["event", "location"],
             personFields: [],
             select: "event slug music",
         },
         {
             model: models.ProductionCompany,
-            name: "productionCompanies",
+            name: "productionCompanie",
             fields: ["name", "description"],
             personFields: [],
             select: "name slug logo",
         },
         {
             model: models.Studio,
-            name: "studios",
+            name: "studio",
             fields: ["name", "description"],
             personFields: [],
             select: "name slug logo",
         },
         {
             model: models.Publisher,
-            name: "publishers",
+            name: "publisher",
             fields: ["name", "description"],
             personFields: [],
             select: "name slug logo",
         },
         {
             model: models.RecordLabel,
-            name: "recordLabels",
+            name: "recordLabel",
             fields: ["name", "description"],
             personFields: [],
             select: "name slug logo",
@@ -284,10 +285,10 @@ const getSearchableModels = () => {
 
 const globalSearch = async (
     searchTerm,
+    contentTypes = [],
     page = 1,
     limit = 10,
-    sortBy = "relevance",
-    contentTypes = []
+    sortBy = "relevance"
 ) => {
     // Validate search term
     console.log("searchTerm: ", searchTerm);
@@ -312,10 +313,12 @@ const globalSearch = async (
     const searchableModels = getSearchableModels();
 
     // Filter models based on contentTypes if provided
-    const modelsToSearch = contentTypes.length
+    let modelsToSearch = contentTypes.length
         ? searchableModels.filter((m) => contentTypes.includes(m.name))
         : searchableModels;
-
+    if (contentTypes.includes("all")) {
+        modelsToSearch = searchableModels;
+    }
     // Step 1: Find matching Person IDs for artist search
     const matchingPersons = await models.Person.find({
         name: regex,
@@ -385,6 +388,7 @@ const globalSearch = async (
                 total += personTotal;
             }
         }
+        // logger.logMessage("debug", `${JSON.stringify(modelConfig)}`)
 
         // External API queries
         if (external === "spotify" && name === "music") {
@@ -395,7 +399,8 @@ const globalSearch = async (
             );
             total += spotifyResults.length;
             results.push(...spotifyResults);
-        } else if (external === "googlebooks" && name === "books") {
+        } else if (external === "googlebooks" && name === "book") {
+            
             const googleBooksResults = await fetchGoogleBooksData(
                 searchTerm,
                 page,
@@ -403,7 +408,7 @@ const globalSearch = async (
             );
             total += googleBooksResults.length;
             results.push(...googleBooksResults);
-        } else if (name === "movies" || name === "series") {
+        } else if (name === "movie" || name === "series") {
             const tmdbResults = await fetchTMDBData(
                 searchTerm,
                 name,
