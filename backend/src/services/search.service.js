@@ -28,7 +28,7 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                 Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
             },
         });
-        console.log("tmdb res: ", response)
+        // console.log("tmdb res: ", response)
         return response.data.results.map((item) => ({
             tmdbId: item.id.toString(),
             title: item.title || item.name,
@@ -196,7 +196,7 @@ const getSearchableModels = () => {
         },
         {
             model: models.Series,
-            name: "serie",
+            name: "series",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["creators", "cast.person"],
             select: "title slug poster creators cast references.tmdbId",
@@ -212,6 +212,14 @@ const getSearchableModels = () => {
         {
             model: models.Music, // No local model for music
             name: "music",
+            fields: [],
+            personFields: [],
+            select: "",
+            external: "spotify",
+        },
+        {
+            model: models.Music, // No local model for music
+            name: "songs",
             fields: [],
             personFields: [],
             select: "",
@@ -388,10 +396,10 @@ const globalSearch = async (
                 total += personTotal;
             }
         }
-        // logger.logMessage("debug", `${JSON.stringify(modelConfig)}`)
+        logger.logMessage("debug", `${JSON.stringify(modelConfig)}`)
 
         // External API queries
-        if (external === "spotify" && name === "music") {
+        if (external === "spotify" && (name === "music" || name === "songs")) {
             const spotifyResults = await fetchSpotifyData(
                 searchTerm,
                 page,
@@ -514,7 +522,7 @@ const globalSearch = async (
 };
 
 const searchUser = async (searchTerm, page = 1, limit = 10) => {
-    console.log("searchTerm:", searchTerm);
+    console.log("user  searchTerm:", searchTerm);
     if (
         !searchTerm ||
         typeof searchTerm !== "string" ||

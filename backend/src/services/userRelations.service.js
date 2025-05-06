@@ -78,7 +78,7 @@ const acceptFollowRequest = async (req, requestId) => {
     const result2 = await notificationService.sendFollowedNotification(
         userIdToFollow,
         userId,
-        [result1]
+        result1.metadata.followRequestId
     );
     await EmmitFollowAcceptedEvent(io, relation.follower, relation);
     await EmmitFollowedYouEvent(io, user._id, relation);
