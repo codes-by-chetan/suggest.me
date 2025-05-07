@@ -42,7 +42,6 @@ const personSchema = new mongoose.Schema(
         },
         biography: {
             type: String,
-            maxlength: [1000, "Biography cannot exceed 1000 characters."],
         },
         profileImage: {
             type: reusableSchemas.avatarSchema,

@@ -1,0 +1,21 @@
+{
+  "movie": {
+    "title": "Inception",
+    "director": "Christopher Nolan",
+    "cast": [],
+    "genres": [],
+    "release_year": null,
+    "runtime": null,
+    "plot_summary": "takes place in these interconnected dream worlds.",
+    "budget": null,
+    "box_office": null,
+    "awards": [
+      "four Oscars"
+    ],
+    "ratings": {
+      "imdb": 8.8,
+      "rotten_tomatoes": 87,
+      "metacritic": 74
+    }
+  }
+}

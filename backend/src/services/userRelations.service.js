@@ -110,10 +110,31 @@ const unfollowUser = async (userId, userIdToUnFollow) => {
     return result;
 };
 
+const getFriends = async (user) => {
+    const friends = await await models.UserRelationship.getFriends(user._id);
+    const populatedFriends = await Promise.all(
+        friends.map(async (friendId) => {
+            const user = await userService.findUserById(friendId);
+            await user.populate("profile");
+            return {
+                _id: user._id,
+                fullName: user.fullName,
+                fullNameString: user.fullNameString,
+                profile: {
+                    avatar: user.profile.avatar,
+                    isVerified: user.profile.isVerified,
+                    displayName: user.profile.displayName,
+                },
+            };
+        })
+    );
+    return populatedFriends;
+};
 const userRelationsService = {
     followUser,
     getRelation,
     acceptFollowRequest,
     unfollowUser,
+    getFriends,
 };
 export default userRelationsService;

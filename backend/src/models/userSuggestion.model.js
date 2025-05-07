@@ -24,9 +24,9 @@ const userSuggestionsSchema = new mongoose.Schema(
         contentType: {
             type: String,
             enum: {
-                values: ["Movie", "Series", "Book", "Music"],
+                values: ["Movie", "Series", "Book", "Music", "Video"],
                 message:
-                    "Content type must be one of: Movie, Series, Book, Music",
+                    "Content type must be one of: Movie, Series, Book, Music, Video",
             },
             required: [true, "Content type is required"],
         },

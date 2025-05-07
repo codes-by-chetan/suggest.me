@@ -7,6 +7,7 @@ import notificationController from "./notification.controller.js";
 import researchController from "./research.controller.js";
 import searchController from "./search.controller.js";
 import seriesController from "./series.controller.js";
+import suggestionController from "./suggestion.controller.js";
 import userController from "./user.controller.js";
 import userRelationsController from "./userRelations.controller.js";
 
@@ -21,7 +22,8 @@ const controllers = {
     seriesController,
     bookController,
     musicController,
-    researchController
+    researchController,
+    suggestionController
 };
 
 export default controllers;

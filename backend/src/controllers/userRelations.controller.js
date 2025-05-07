@@ -58,15 +58,21 @@ const unfollowUser = asyncHandler(async (req, res) => {
         followingId
     );
     const response = new ApiResponse(200, result, "Unfollowed User!!!");
-    
+
     res.status(200).json(response);
 });
-
+const getFriends = asyncHandler(async (req, res) => {
+    const user = req.user;
+    const result = await services.userRelationsService.getFriends(user);
+    const response = new ApiResponse(200, result, "friends fetched!!!");
+    res.status(200).json(response);
+});
 const userRelationsController = {
     followUser,
     getRelation,
     acceptFollowRequest,
     getFollowsYou,
     unfollowUser,
+    getFriends,
 };
 export default userRelationsController;

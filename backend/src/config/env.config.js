@@ -30,6 +30,7 @@ const envVarSchema = joi
         OPEN_AI_API_KEY: joi.string().description("OPEN AI API Access Key"),
         SERP_API_KEY: joi.string().description("Serp API Access Key"),
         ENABLE_CACHE_WRITE:joi.string().description("Google API Access Key"),
+        OMDB_API_KEY:joi.string().description("OMDB API Access Key"),
     })
     .unknown();
 
@@ -82,6 +83,9 @@ const config = {
     },
     openAi: {
         apiKey: envVars.OPEN_AI_API_KEY,
+    },
+    omdb: {
+        apiKey: envVars.OMDB_API_KEY,
     },
     cache:{
         enableCacheWrite: envVars.ENABLE_CACHE_WRITE

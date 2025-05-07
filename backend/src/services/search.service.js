@@ -10,10 +10,48 @@ const TMDB_API_KEY = config.tmdb.apiKey;
 const TMDB_AUTH_TOKEN = config.tmdb.accessToken;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+// OMDb API configuration
+const OMDB_API_KEY = config.omdb.apiKey;
+const OMDB_BASE_URL = "http://www.omdbapi.com/";
+
 // Google Books API configuration
 const GOOGLE_BOOKS_BASE_URL = "https://www.googleapis.com/books/v1";
 
-// Function to fetch TMDB data for movies or series
+// Function to fetch OMDb data for movies or series
+const fetchOMDbData = async (searchTerm, contentType, page, limit) => {
+    try {
+        const response = await axios.get(OMDB_BASE_URL, {
+            params: {
+                apikey: OMDB_API_KEY,
+                s: searchTerm,
+                type: contentType === "movie" ? "movie" : "series",
+                page,
+            },
+        });
+
+        if (response.data.Response === "False") {
+            console.error(`OMDb API error: ${response.data.Error}`);
+            return [];
+        }
+
+        return (
+            response.data.Search?.map((item) => ({
+                imdbId: item.imdbID,
+                title: item.Title,
+                slug: item.Title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                poster: item.Poster && item.Poster !== "N/A" ? item.Poster : "",
+                plot: "", // OMDb search endpoint doesn't provide plot
+                year: item.Year ? parseInt(item.Year.split("–")[0]) : null,
+                matchReason: "OMDb API",
+            })) || []
+        );
+    } catch (error) {
+        console.error(`OMDb API error for ${contentType}:`, error.message);
+        return [];
+    }
+};
+
+// Function to fetch TMDB data for movies or series with OMDb fallback
 const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
     const endpoint = contentType === "movie" ? "/search/movie" : "/search/tv";
     try {
@@ -28,9 +66,9 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                 Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
             },
         });
-        // console.log("tmdb res: ", response)
         return response.data.results.map((item) => ({
-            tmdbId: item.id.toString(),
+            tmdbId: item.id,
+            imdbId: item.imdb_id || item.external_ids?.imdb_id || "",
             title: item.title || item.name,
             slug: item.title
                 ? item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")
@@ -48,7 +86,12 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
         }));
     } catch (error) {
         console.error(`TMDB API error for ${contentType}:`, error.message);
-        return [];
+        console.error(`TMDB API error for ${contentType}:`, error);
+        logger.logMessage(
+            "warn",
+            `Falling back to OMDb API for ${contentType} search: ${searchTerm}`
+        );
+        return await fetchOMDbData(searchTerm, contentType, page, limit);
     }
 };
 
@@ -192,14 +235,14 @@ const getSearchableModels = () => {
             name: "movie",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["director", "writers", "cast.person"],
-            select: "title slug poster director writers cast references.tmdbId",
+            select: "title slug poster director writers cast references.tmdbId year",
         },
         {
             model: models.Series,
             name: "series",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["creators", "cast.person"],
-            select: "title slug poster creators cast references.tmdbId",
+            select: "title slug poster creators cast references.tmdbId year",
         },
         {
             model: models.Book, // No local model for books
@@ -396,7 +439,7 @@ const globalSearch = async (
                 total += personTotal;
             }
         }
-        logger.logMessage("debug", `${JSON.stringify(modelConfig)}`)
+        logger.logMessage("debug", `${JSON.stringify(modelConfig)}`);
 
         // External API queries
         if (external === "spotify" && (name === "music" || name === "songs")) {
@@ -408,7 +451,6 @@ const globalSearch = async (
             total += spotifyResults.length;
             results.push(...spotifyResults);
         } else if (external === "googlebooks" && name === "book") {
-            
             const googleBooksResults = await fetchGoogleBooksData(
                 searchTerm,
                 page,
@@ -426,7 +468,9 @@ const globalSearch = async (
             const existingTmdbIds = await model
                 .find({
                     "references.tmdbId": {
-                        $in: tmdbResults.map((r) => r.tmdbId),
+                        $in: tmdbResults
+                            .filter((r) => r.tmdbId)
+                            .map((r) => r.tmdbId),
                     },
                 })
                 .select("references.tmdbId")
@@ -445,7 +489,10 @@ const globalSearch = async (
                 results.map((item) => [
                     item._id
                         ? item._id.toString()
-                        : item.tmdbId || item.spotifyId || item.googleBooksId,
+                        : item.tmdbId ||
+                          item.spotifyId ||
+                          item.googleBooksId ||
+                          item.omdbId,
                     item,
                 ])
             ).values()
@@ -479,6 +526,7 @@ const globalSearch = async (
                 if (a.matchReason.includes("Person fields")) aScore += 2;
                 if (b.matchReason.includes("Person fields")) bScore += 2;
                 if (a.matchReason === "TMDB API") aScore -= 1;
+                if (a.matchReason === "OMDb API") aScore -= 2; // Lower priority for OMDb
                 if (b.matchReason === "Spotify API") aScore -= 1;
                 if (b.matchReason === "Google Books API") aScore -= 1;
                 return bScore - aScore;
@@ -562,10 +610,18 @@ const searchUser = async (searchTerm, page = 1, limit = 10) => {
 
     const users = await models.User.find(query)
         .populate("profile")
-        .select("fullName userName email profile _id fullNameString")
+        .select("fullName userName email profile _id")
         .skip((page - 1) * limit)
         .limit(limit)
         .lean();
+
+    // Add the virtual field `fullNameString` manually since virtuals are not included in `.lean()`
+    users.forEach((user) => {
+        if (user.fullName && typeof user.fullName === "object") {
+            user.fullNameString =
+                `${user.fullName.firstName || ""} ${user.fullName.lastName || ""}`.trim();
+        }
+    });
 
     console.log("Found users:", users);
 

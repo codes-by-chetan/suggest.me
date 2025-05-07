@@ -10,6 +10,10 @@ const TMDB_API_KEY = config.tmdb.apiKey;
 const TMDB_AUTH_TOKEN = config.tmdb.accessToken;
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+// OMDb API configuration
+const OMDB_API_KEY = config.omdb.apiKey;
+const OMDB_BASE_URL = "http://www.omdbapi.com/";
+
 // Helper function to create or find a Person with detailed TMDB data
 const getOrCreatePerson = async (tmdbPerson, userId) => {
   if (!tmdbPerson || !tmdbPerson.id) return null;
@@ -21,12 +25,8 @@ const getOrCreatePerson = async (tmdbPerson, userId) => {
   // Fetch detailed person data from TMDB
   try {
     const response = await axios.get(`${TMDB_BASE_URL}/person/${tmdbPerson.id}`, {
-      params: {
-        api_key: TMDB_API_KEY,
-      },
-      headers: {
-        Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
-      },
+      params: { api_key: TMDB_API_KEY },
+      headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
     });
 
     const personData = response.data;
@@ -53,7 +53,6 @@ const getOrCreatePerson = async (tmdbPerson, userId) => {
     return person._id;
   } catch (error) {
     console.error(`TMDB API error for person ${tmdbPerson.id}:`, error.message);
-    // Fallback to basic data if TMDB fails
     person = await models.Person.create({
       name: tmdbPerson.name,
       tmdbId: tmdbPerson.id.toString(),
@@ -74,19 +73,13 @@ const getOrCreatePerson = async (tmdbPerson, userId) => {
 const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
   if (!tmdbCompany || !tmdbCompany.id) return null;
 
-  // Check if company exists in database
   let company = await models.ProductionCompany.findOne({ tmdbId: tmdbCompany.id.toString() });
   if (company) return company._id;
 
-  // Fetch detailed company data from TMDB
   try {
     const response = await axios.get(`${TMDB_BASE_URL}/company/${tmdbCompany.id}`, {
-      params: {
-        api_key: TMDB_API_KEY,
-      },
-      headers: {
-        Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
-      },
+      params: { api_key: TMDB_API_KEY },
+      headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
     });
 
     const companyData = response.data;
@@ -112,7 +105,6 @@ const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
     return company._id;
   } catch (error) {
     console.error(`TMDB API error for company ${tmdbCompany.id}:`, error.message);
-    // Fallback to basic data if TMDB fails
     company = await models.ProductionCompany.create({
       name: tmdbCompany.name,
       tmdbId: tmdbCompany.id.toString(),
@@ -128,6 +120,145 @@ const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
   }
 };
 
+// Helper function to fetch series by IMDb ID from TMDB
+const fetchFromTmdbByImdb = async (imdbId) => {
+  try {
+    const response = await axios.get(`${TMDB_BASE_URL}/find/${imdbId}`, {
+      params: {
+        api_key: TMDB_API_KEY,
+        external_source: "imdb_id",
+      },
+      headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
+    });
+
+    const seriesResult = response.data.tv_results[0];
+    if (!seriesResult || !seriesResult.id) {
+      return null;
+    }
+
+    // Fetch full series details using TMDB ID
+    return await fetchFromTmdb(seriesResult.id);
+  } catch (error) {
+    console.error(`TMDB API error for IMDb ID ${imdbId}:`, error.message);
+    return null;
+  }
+};
+
+// Helper function to fetch series details from OMDb
+const fetchFromOmdb = async (imdbId) => {
+  try {
+    const response = await axios.get(OMDB_BASE_URL, {
+      params: {
+        apikey: OMDB_API_KEY,
+        i: imdbId,
+        type: "series",
+      },
+    });
+
+    if (response.data.Response === "False") {
+      console.error(`OMDb API error for IMDb ID ${imdbId}: ${response.data.Error}`);
+      return null;
+    }
+
+    const series = response.data;
+
+    // Map OMDb data to Series schema
+    const omdbSeriesDetails = {
+      title: series.Title || "Untitled",
+      tmdbId: null,
+      slug: series.Title
+        ? series.Title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+        : `series-${imdbId}`,
+      plot: series.Plot || "",
+      year: series.Year ? parseInt(series.Year.split("–")[0]) : null,
+      released: series.Released && series.Released !== "N/A" ? new Date(series.Released) : null,
+      runtime: series.Runtime && series.Runtime !== "N/A" ? [parseInt(series.Runtime)] : [],
+      genres: series.Genre ? series.Genre.split(", ").slice(0, 5) : [],
+      creators: series.Director && series.Director !== "N/A"
+        ? await Promise.all(
+            series.Director.split(", ").slice(0, 5).map(async (name) => {
+              const person = await models.Person.create({
+                name,
+                slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+                professions: ["Creator"],
+                isActive: true,
+                createdBy: null,
+                updatedBy: null,
+              });
+              return person._id;
+            })
+          )
+        : [],
+      cast: series.Actors && series.Actors !== "N/A"
+        ? await Promise.all(
+            series.Actors.split(", ").slice(0, 50).map(async (name) => {
+              const person = await models.Person.create({
+                name,
+                slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+                professions: ["Actor"],
+                isActive: true,
+                createdBy: null,
+                updatedBy: null,
+              });
+              return { person: person._id, character: "" };
+            })
+          )
+        : [],
+      poster: series.Poster && series.Poster !== "N/A"
+        ? { url: series.Poster, publicId: series.Poster }
+        : null,
+      backdrop: null,
+      language: series.Language ? series.Language.split(", ").slice(0, 5) : [],
+      country: series.Country ? series.Country.split(", ") : [],
+      rated: series.Rated && series.Rated !== "N/A" ? series.Rated : "Unrated",
+      production: {
+        companies: series.Production && series.Production !== "N/A"
+          ? await Promise.all(
+              series.Production.split(", ").map(async (name) => {
+                const company = await models.ProductionCompany.create({
+                  name,
+                  slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+                  isActive: true,
+                  createdBy: null,
+                  updatedBy: null,
+                });
+                return company._id;
+              })
+            )
+          : [],
+        networks: [],
+        studios: [],
+        distributors: [],
+      },
+      references: {
+        tmdbId: null,
+        imdbId: series.imdbID || imdbId,
+      },
+      keywords: series.Plot ? series.Plot.split(" ").slice(0, 20) : [],
+      seasons: series.totalSeasons ? parseInt(series.totalSeasons) : 1,
+      episodes: null,
+      seasonsDetails: [],
+      status: series.Status || "Ongoing",
+      seriesType: "Other",
+      ratings: {
+        imdb: {
+          score: series.imdbRating && series.imdbRating !== "N/A" ? parseFloat(series.imdbRating) : 0,
+          votes: series.imdbVotes && series.imdbVotes !== "N/A" ? parseInt(series.imdbVotes.replace(/,/g, "")) : 0,
+        },
+      },
+      isActive: true,
+      isVerified: false,
+      createdBy: null,
+      updatedBy: null,
+    };
+
+    return omdbSeriesDetails;
+  } catch (error) {
+    console.error(`OMDb API error for IMDb ID ${imdbId}:`, error.message);
+    return null;
+  }
+};
+
 // Helper function to fetch series details from TMDB
 const fetchFromTmdb = async (tmdbId) => {
   try {
@@ -136,9 +267,7 @@ const fetchFromTmdb = async (tmdbId) => {
         api_key: TMDB_API_KEY,
         append_to_response: "credits,content_ratings,images,keywords,external_ids",
       },
-      headers: {
-        Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
     });
 
     const series = response.data;
@@ -174,7 +303,7 @@ const fetchFromTmdb = async (tmdbId) => {
     const validCompanies = productionCompanies.filter((c) => c !== null);
 
     // Map studios (assume same as production companies for now)
-    const studios = validCompanies; // Adjust if TMDB provides specific studio data
+    const studios = validCompanies;
 
     // Map distributors (not directly available in TMDB, placeholder)
     const distributors = [];
@@ -286,9 +415,9 @@ const getSeriesDetails = async (seriesId, userId) => {
   // Query the database
   let query = {};
   if (isValidObjectId) {
-    query = { $or: [{ _id: seriesId }, { "references.tmdbId": seriesId }] };
+    query = { $or: [{ _id: seriesId }, { "references.tmdbId": seriesId }, { "references.imdbId": seriesId }] };
   } else {
-    query = { "references.tmdbId": seriesId };
+    query = { $or: [{ "references.tmdbId": seriesId }, { "references.imdbId": seriesId }] };
   }
 
   let series = await models.Series.findOne(query)
@@ -305,34 +434,76 @@ const getSeriesDetails = async (seriesId, userId) => {
     return series;
   }
 
-  // Fetch from TMDB if not found in database
-  const tmdbSeriesDetails = await fetchFromTmdb(seriesId);
-  if (!tmdbSeriesDetails) {
-    throw new ApiError(httpStatus.NOT_FOUND, "Series not found");
+  // Fetch from TMDB by TMDB ID
+  let tmdbSeriesDetails = await fetchFromTmdb(seriesId);
+  if (tmdbSeriesDetails) {
+    tmdbSeriesDetails.createdBy = userId || null;
+    tmdbSeriesDetails.updatedBy = userId || null;
+    try {
+      const newSeries = await models.Series.create(tmdbSeriesDetails);
+      const populatedSeries = await models.Series.findById(newSeries._id)
+        .populate("creators")
+        .populate("cast.person")
+        .populate("production.companies")
+        .populate("production.studios")
+        .populate("production.distributors")
+        .populate("createdBy")
+        .populate("updatedBy")
+        .lean();
+      return populatedSeries;
+    } catch (error) {
+      console.error("Error saving series to database:", error.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to save series to database");
+    }
   }
 
-  // Set createdBy and updatedBy
-  tmdbSeriesDetails.createdBy = userId || null;
-  tmdbSeriesDetails.updatedBy = userId || null;
-
-  // Save to database
-  try {
-    const newSeries = await models.Series.create(tmdbSeriesDetails);
-    // Populate the saved series
-    const populatedSeries = await models.Series.findById(newSeries._id)
-      .populate("creators")
-      .populate("cast.person")
-      .populate("production.companies")
-      .populate("production.studios")
-      .populate("production.distributors")
-      .populate("createdBy")
-      .populate("updatedBy")
-      .lean();
-    return populatedSeries;
-  } catch (error) {
-    console.error("Error saving series to database:", error.message);
-    throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to save series to database");
+  // Retry with IMDb ID using TMDB
+  tmdbSeriesDetails = await fetchFromTmdbByImdb(seriesId);
+  if (tmdbSeriesDetails) {
+    tmdbSeriesDetails.createdBy = userId || null;
+    tmdbSeriesDetails.updatedBy = userId || null;
+    try {
+      const newSeries = await models.Series.create(tmdbSeriesDetails);
+      const populatedSeries = await models.Series.findById(newSeries._id)
+        .populate("creators")
+        .populate("cast.person")
+        .populate("production.companies")
+        .populate("production.studios")
+        .populate("production.distributors")
+        .populate("createdBy")
+        .populate("updatedBy")
+        .lean();
+      return populatedSeries;
+    } catch (error) {
+      console.error("Error saving series to database:", error.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to save series to database");
+    }
   }
+
+  // Fallback to OMDb by IMDb ID
+  const omdbSeriesDetails = await fetchFromOmdb(seriesId);
+  if (omdbSeriesDetails) {
+    omdbSeriesDetails.createdBy = userId || null;
+    omdbSeriesDetails.updatedBy = userId || null;
+    try {
+      const newSeries = await models.Series.create(omdbSeriesDetails);
+      const populatedSeries = await models.Series.findById(newSeries._id)
+        .populate("creators")
+        .populate("cast.person")
+        .populate("production.companies")
+        .populate("production.studios")
+        .populate("production.distributors")
+        .populate("createdBy")
+        .populate("updatedBy")
+        .lean();
+      return populatedSeries;
+    } catch (error) {
+      console.error("Error saving series to database:", error.message);
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, "Failed to save series to database");
+    }
+  }
+
+  throw new ApiError(httpStatus.NOT_FOUND, "Series not found");
 };
 
 const seriesService = {

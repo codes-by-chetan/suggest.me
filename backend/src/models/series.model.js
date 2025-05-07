@@ -150,7 +150,8 @@ const seriesSchema = new mongoose.Schema(
                 "Documentary Series",
                 "Reality Show",
                 "Talk Show",
-                "Scripted", // Added for TMDB's type
+                "Scripted",
+                "Miniseries", // Added for TMDB's type
                 "Other",
             ],
             default: "Other",

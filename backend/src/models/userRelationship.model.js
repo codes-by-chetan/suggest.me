@@ -163,6 +163,73 @@ userRelationshipSchema.statics.isFollowing = async function (userAId, userBId) {
     return !!relationship; // Returns true if userA follows userB, else false
 };
 
+// Utility method to get friends of a user
+userRelationshipSchema.statics.getFriends = async function (userId) {
+    const friends = await this.aggregate([
+        {
+            $match: {
+                $or: [
+                    { follower: new mongoose.Types.ObjectId(userId) },
+                    { following: new mongoose.Types.ObjectId(userId) },
+                ],
+                status: "Accepted",
+                isActive: true,
+                deleted: false,
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                followers: {
+                    $addToSet: {
+                        $cond: [
+                            { $eq: ["$following", new mongoose.Types.ObjectId(userId)] },
+                            "$follower",
+                            null,
+                        ],
+                    },
+                },
+                followings: {
+                    $addToSet: {
+                        $cond: [
+                            { $eq: ["$follower", new mongoose.Types.ObjectId(userId)] },
+                            "$following",
+                            null,
+                        ],
+                    },
+                },
+            },
+        },
+        {
+            $project: {
+                friends: {
+                    $setIntersection: ["$followers", "$followings"],
+                },
+            },
+        },
+        {
+            $unwind: "$friends",
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "friends",
+                foreignField: "_id",
+                as: "friendDetails",
+            },
+        },
+        {
+            $unwind: "$friendDetails",
+        },
+        {
+            $replaceRoot: { newRoot: "$friendDetails" },
+        },
+    ]);
+    
+    const friendsArray = friends.map(friend => friend._id);
+
+    return friendsArray;
+};
 // Utility method to get restricted profile data based on follow status
 userRelationshipSchema.statics.getProfileAccess = async function (
     viewerId,

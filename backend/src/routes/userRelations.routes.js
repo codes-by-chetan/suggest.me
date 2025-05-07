@@ -28,5 +28,7 @@ router.get(
     "/follows/you/:followingId",
     controllers.userRelationsController.getFollowsYou
 );
+
+router.get("/friends", controllers.userRelationsController.getFriends);
 const userRelationsRouter = router;
 export default userRelationsRouter;
