@@ -144,7 +144,7 @@ const userSchema = new mongoose.Schema(
 
 // Virtual for full name string
 userSchema.virtual("fullNameString").get(function () {
-    return `${this.fullName.firstName} ${this.fullName.lastName}`;
+    return `${this.fullName?.firstName} ${this.fullName?.lastName}`;
 });
 
 userSchema.plugin(plugins.softDelete);

@@ -92,12 +92,13 @@ const createSuggestion = async (user, content, note, recipients) => {
             `Content details fetch karne mein gadbad ho gayi: ${error.message}`
         );
     }
-
+    const recipientsIds = recipients.map((r) => r._id);
     const validRecipients = recipients?.length
         ? await models.User.find({
-              _id: { $in: recipients.map((r) => r._id || r) },
+              _id: { $in: recipientsIds },
           }).select("_id")
         : [];
+    console.log("valid recipients : ", validRecipients);
     if (recipients?.length && validRecipients.length !== recipients.length) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
@@ -138,10 +139,7 @@ const createSuggestion = async (user, content, note, recipients) => {
 
 const getSuggestionsByUser = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Bhai, user ID galat hai!"
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
     const suggestions = await models.UserSuggestions.find({
@@ -167,15 +165,20 @@ const getSuggestionsByUser = async (userId) => {
         contentId: suggestion.content?._id.toString(),
         title: suggestion.content?.title || "Unknown Title",
         type: suggestion.contentType.toLowerCase(),
-        imageUrl: suggestion.content?.poster?.url || suggestion.content?.coverImage?.url,
-        year: suggestion.content?.year?.toString() || suggestion.content?.publishedYear?.toString(),
+        imageUrl:
+            suggestion.content?.poster?.url ||
+            suggestion.content?.coverImage?.url,
+        year:
+            suggestion.content?.year?.toString() ||
+            suggestion.content?.publishedYear?.toString(),
         creator:
             suggestion.content?.director?.map((d) => d.name).join(", ") ||
             suggestion.content?.creator?.map((c) => c.name).join(", ") ||
             suggestion.content?.author?.map((a) => a.name).join(", ") ||
             suggestion.content?.artists?.map((a) => a.name).join(", ") ||
             "",
-        description: suggestion.content?.plot || suggestion.content?.description,
+        description:
+            suggestion.content?.plot || suggestion.content?.description,
         suggestedTo: suggestion.recipients.map((recipient) => ({
             id: recipient._id.toString(),
             name: recipient.fullNameString,
@@ -188,10 +191,7 @@ const getSuggestionsByUser = async (userId) => {
 
 const getSuggestionsForUser = async (userId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Bhai, user ID galat hai!"
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
     const suggestions = await models.UserSuggestions.find({
@@ -217,15 +217,20 @@ const getSuggestionsForUser = async (userId) => {
         contentId: suggestion.content?._id.toString(),
         title: suggestion.content?.title || "Unknown Title",
         type: suggestion.contentType.toLowerCase(),
-        imageUrl: suggestion.content?.poster?.url || suggestion.content?.coverImage?.url,
-        year: suggestion.content?.year?.toString() || suggestion.content?.publishedYear?.toString(),
+        imageUrl:
+            suggestion.content?.poster?.url ||
+            suggestion.content?.coverImage?.url,
+        year:
+            suggestion.content?.year?.toString() ||
+            suggestion.content?.publishedYear?.toString(),
         creator:
             suggestion.content?.director?.map((d) => d.name).join(", ") ||
             suggestion.content?.creator?.map((c) => c.name).join(", ") ||
             suggestion.content?.author?.map((a) => a.name).join(", ") ||
             suggestion.content?.artists?.map((a) => a.name).join(", ") ||
             "",
-        description: suggestion.content?.plot || suggestion.content?.description,
+        description:
+            suggestion.content?.plot || suggestion.content?.description,
         suggestedBy: {
             id: suggestion.sender._id.toString(),
             name: suggestion.sender.fullNameString,

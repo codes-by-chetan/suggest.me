@@ -89,7 +89,7 @@ userSuggestionsSchema.plugin(plugins.privatePlugin);
 userSuggestionsSchema.plugin(plugins.softDelete);
 
 userSuggestionsSchema.index(
-    { sender: 1, recipient: 1, content: 1 },
+    { sender: 1, recipients: 1, content: 1 },
     { unique: true }
 );
 userSuggestionsSchema.index({ sender: 1, status: 1 });
