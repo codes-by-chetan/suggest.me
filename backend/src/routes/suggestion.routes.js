@@ -7,6 +7,9 @@ const router = express.Router();
 router.use(middlewares.authMiddleware);
 
 router.post("/suggest", controllers.suggestionController.suggestContent);
+router.get("/suggestion/details/:suggestionId", controllers.suggestionController.getSuggestionDetails);
+router.get("/suggested/by/you", controllers.suggestionController.getSuggestionsSentByYou);
+router.get("/suggested/to/you", controllers.suggestionController.getSuggestionsForYou);
 
 const suggestionRouter = router;
 export default suggestionRouter;

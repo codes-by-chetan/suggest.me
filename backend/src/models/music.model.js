@@ -39,6 +39,23 @@ const musicSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "MusicAlbum",
         },
+        recordLabel: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "RecordLabel",
+            required: false,
+        },
+        musicVideo: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "MusicVideo",
+            required: false,
+        },
+        productionCompanies: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "ProductionCompany",
+                required: false,
+            },
+        ],
         releaseYear: {
             type: Number,
             required: [true, "Release year is required."],
@@ -356,6 +373,9 @@ musicSchema.statics.findPopulatedById = async function (id) {
         .populate("artist")
         .populate("featuredArtists")
         .populate("album")
+        .populate("recordLabel")
+        .populate("musicVideo")
+        .populate("productionCompanies")
         .populate("writers")
         .populate("producers")
         .populate("engineers")

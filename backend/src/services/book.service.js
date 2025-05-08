@@ -23,7 +23,10 @@ const SERPAPI_BASE_URL = "https://serpapi.com/search.json";
 // === Utility: Slug generator ===
 const generateSlug = (name, fallback = "unknown") => {
     try {
-        const raw = name && typeof name === "string" && name.trim() ? name.trim() : fallback;
+        const raw =
+            name && typeof name === "string" && name.trim()
+                ? name.trim()
+                : fallback;
         const slug = translitSlug(raw, { lowercase: true, separator: "-" });
         return slug.length ? slug : fallback;
     } catch (error) {
@@ -75,15 +78,20 @@ const findMissingFields = (record, modelType) => {
             ],
         };
         const fields = requiredFields[modelType] || [];
-        return fields.filter(f => 
-            !record[f] || 
-            (Array.isArray(record[f]) && record[f].length === 0) ||
-            (f === "coverImage" && record[f]?.url?.includes("via.placeholder.com")) ||
-            (f === "profileImage" && !record[f]?.url) ||
-            (f === "logo" && !record[f]?.url)
+        return fields.filter(
+            (f) =>
+                !record[f] ||
+                (Array.isArray(record[f]) && record[f].length === 0) ||
+                (f === "coverImage" &&
+                    record[f]?.url?.includes("via.placeholder.com")) ||
+                (f === "profileImage" && !record[f]?.url) ||
+                (f === "logo" && !record[f]?.url)
         );
     } catch (error) {
-        console.error(`Error finding missing fields for ${modelType}:`, error.message);
+        console.error(
+            `Error finding missing fields for ${modelType}:`,
+            error.message
+        );
         return [];
     }
 };
@@ -111,11 +119,15 @@ const searchWeb = async (query, num = 3) => {
             console.warn(`SerpApi error for query ${query}: ${data.error}`);
             return [];
         }
-        const urls = (data.organic_results || []).map(r => r.link).filter(link => link);
+        const urls = (data.organic_results || [])
+            .map((r) => r.link)
+            .filter((link) => link);
         console.debug(`SerpApi URLs: ${urls.join(", ") || "none"}`);
         return urls;
     } catch (error) {
-        console.warn(`Failed to search web for query ${query}: ${error.message}`);
+        console.warn(
+            `Failed to search web for query ${query}: ${error.message}`
+        );
         return [];
     }
 };
@@ -126,7 +138,10 @@ const scrapePage = async (url) => {
         console.debug(`Scraping page: ${url}`);
         const { data: html } = await axios.get(url, { timeout: 5000 });
         const $ = load(html);
-        const text = $("p").map((i, el) => $(el).text()).get().join("\n");
+        const text = $("p")
+            .map((i, el) => $(el).text())
+            .get()
+            .join("\n");
         console.debug(`Scraped text length: ${text.length}`);
         return text;
     } catch (error) {
@@ -139,7 +154,7 @@ const scrapePage = async (url) => {
 const extractFieldsFromText = async (text, fields) => {
     try {
         console.debug(`Extracting fields: ${fields.join(", ")}`);
-        const prompt = `Extract the following fields from the text below in JSON:\n${fields.map(f => `- ${f}`).join("\n")}\n\nText:\n"""${text}\"\"\"`;
+        const prompt = `Extract the following fields from the text below in JSON:\n${fields.map((f) => `- ${f}`).join("\n")}\n\nText:\n"""${text}\"\"\"`;
         const resp = await openai.chat.completions.create({
             model: config.openAi.model || "gpt-4o-mini",
             messages: [{ role: "user", content: prompt }],
@@ -154,7 +169,10 @@ const extractFieldsFromText = async (text, fields) => {
         console.debug(`Extracted fields: ${JSON.stringify(result)}`);
         return result;
     } catch (error) {
-        console.warn(`OpenAI error for fields ${fields.join(", ")}:`, error.message);
+        console.warn(
+            `OpenAI error for fields ${fields.join(", ")}:`,
+            error.message
+        );
         return {};
     }
 };
@@ -167,7 +185,8 @@ const mergeRecords = (original, extracted) => {
             if (
                 !merged[key] ||
                 (Array.isArray(merged[key]) && merged[key].length === 0) ||
-                (key === "coverImage" && merged[key]?.url?.includes("via.placeholder.com")) ||
+                (key === "coverImage" &&
+                    merged[key]?.url?.includes("via.placeholder.com")) ||
                 (key === "profileImage" && !merged[key]?.url) ||
                 (key === "logo" && !merged[key]?.url)
             ) {
@@ -190,14 +209,20 @@ const fetchHighQualityCoverImage = async (bookTitle, authors) => {
         for (const url of urls) {
             const { data: html } = await axios.get(url, { timeout: 5000 });
             const $ = load(html);
-            const img = $("img").filter((i, el) => {
-                const src = $(el).attr("src");
-                return src && (src.includes("cover") || src.includes("book"));
-            }).first();
+            const img = $("img")
+                .filter((i, el) => {
+                    const src = $(el).attr("src");
+                    return (
+                        src && (src.includes("cover") || src.includes("book"))
+                    );
+                })
+                .first();
             const imgUrl = img.attr("src");
             if (imgUrl && imgUrl.startsWith("http")) {
                 const response = await axios.head(imgUrl);
-                const contentLength = parseInt(response.headers["content-length"] || "0");
+                const contentLength = parseInt(
+                    response.headers["content-length"] || "0"
+                );
                 if (contentLength > 50000) {
                     const cover = {
                         url: imgUrl,
@@ -211,7 +236,10 @@ const fetchHighQualityCoverImage = async (bookTitle, authors) => {
         console.debug(`No high-quality cover found for ${bookTitle}`);
         return null;
     } catch (error) {
-        console.warn(`Failed to fetch high-quality cover for ${bookTitle}:`, error.message);
+        console.warn(
+            `Failed to fetch high-quality cover for ${bookTitle}:`,
+            error.message
+        );
         return null;
     }
 };
@@ -254,11 +282,14 @@ const enrichData = async (record, modelType, queryContext = "") => {
         const enriched = mergeRecords(record, extracted);
 
         const update = {};
-        missing.forEach(f => {
+        missing.forEach((f) => {
             if (enriched[f] !== undefined) update[f] = enriched[f];
         });
         if (Object.keys(update).length) {
-            console.debug(`Updating ${modelType} ${record._id} with:`, JSON.stringify(update, null, 2));
+            console.debug(
+                `Updating ${modelType} ${record._id} with:`,
+                JSON.stringify(update, null, 2)
+            );
             await models[modelType].updateOne({ _id: record._id }, update);
             const updated = await models[modelType].findById(record._id).lean();
             console.debug(`Updated ${modelType} ${record._id}`);
@@ -267,7 +298,10 @@ const enrichData = async (record, modelType, queryContext = "") => {
         console.debug(`No updates for ${modelType} ${record._id}`);
         return record;
     } catch (error) {
-        console.error(`Error enriching ${modelType} ${record._id || "unknown"}:`, error.message);
+        console.error(
+            `Error enriching ${modelType} ${record._id || "unknown"}:`,
+            error.message
+        );
         return record;
     }
 };
@@ -277,18 +311,26 @@ const enrichData = async (record, modelType, queryContext = "") => {
 const fetchAuthorDetailsFromOpenLibrary = async (authorName) => {
     try {
         console.debug(`Fetching Open Library data for author: ${authorName}`);
-        const searchResponse = await axios.get(`${OPEN_LIBRARY_BASE_URL}/search/authors.json`, {
-            params: { q: authorName },
-        });
+        const searchResponse = await axios.get(
+            `${OPEN_LIBRARY_BASE_URL}/search/authors.json`,
+            {
+                params: { q: authorName },
+            }
+        );
         const authors = searchResponse.data.docs || [];
         if (!authors.length) {
             console.debug(`No Open Library data for ${authorName}`);
             return null;
         }
 
-        const author = authors.find(a => a.name.toLowerCase() === authorName.toLowerCase()) || authors[0];
+        const author =
+            authors.find(
+                (a) => a.name.toLowerCase() === authorName.toLowerCase()
+            ) || authors[0];
         const authorKey = author.key; // e.g., "/OL118077A"
-        const authorResponse = await axios.get(`${OPEN_LIBRARY_BASE_URL}/authors/${authorKey}.json`);
+        const authorResponse = await axios.get(
+            `${OPEN_LIBRARY_BASE_URL}/authors/${authorKey}.json`
+        );
 
         const data = authorResponse.data;
         const birthDate = data.birth_date ? new Date(data.birth_date) : null;
@@ -296,17 +338,22 @@ const fetchAuthorDetailsFromOpenLibrary = async (authorName) => {
             name: data.personal_name || data.name || authorName,
             birthDate: birthDate && !isNaN(birthDate) ? birthDate : null,
             birthPlace: data.location || null,
-            biography: typeof data.bio === "string" ? data.bio.slice(0, 1000) : null,
-            profileImage: data.photos && data.photos.length
-                ? {
-                      url: `https://covers.openlibrary.org/a/id/${data.photos[0]}-M.jpg`,
-                      publicId: `author-${data.photos[0]}`,
-                  }
-                : null,
+            biography:
+                typeof data.bio === "string" ? data.bio.slice(0, 1000) : null,
+            profileImage:
+                data.photos && data.photos.length
+                    ? {
+                          url: `https://covers.openlibrary.org/a/id/${data.photos[0]}-M.jpg`,
+                          publicId: `author-${data.photos[0]}`,
+                      }
+                    : null,
             professions: ["Author"],
         };
     } catch (error) {
-        console.warn(`Open Library API error for author ${authorName}:`, error.message);
+        console.warn(
+            `Open Library API error for author ${authorName}:`,
+            error.message
+        );
         return null;
     }
 };
@@ -330,7 +377,10 @@ const fetchAuthorDetailsFromWikidata = async (authorName) => {
             return null;
         }
 
-        const author = results.find(r => r.label.toLowerCase() === authorName.toLowerCase()) || results[0];
+        const author =
+            results.find(
+                (r) => r.label.toLowerCase() === authorName.toLowerCase()
+            ) || results[0];
         const entityId = author.id;
 
         const entityResponse = await axios.get(WIKIDATA_API_URL, {
@@ -364,16 +414,27 @@ const fetchAuthorDetailsFromWikidata = async (authorName) => {
             professions: ["Author"],
         };
     } catch (error) {
-        console.warn(`Wikidata API error for author ${authorName}:`, error.message);
+        console.warn(
+            `Wikidata API error for author ${authorName}:`,
+            error.message
+        );
         return null;
     }
 };
 
 // Create or find a Person with enriched data
-const getOrCreatePerson = async (authorName, googleBooksId = null, userId = null) => {
+const getOrCreatePerson = async (
+    authorName,
+    googleBooksId = null,
+    userId = null
+) => {
     try {
         console.debug(`Creating/Updating Person: ${authorName}`);
-        if (!authorName || typeof authorName !== "string" || !authorName.trim()) {
+        if (
+            !authorName ||
+            typeof authorName !== "string" ||
+            !authorName.trim()
+        ) {
             console.warn("Invalid author name, skipping:", authorName);
             return null;
         }
@@ -412,12 +473,19 @@ const getOrCreatePerson = async (authorName, googleBooksId = null, userId = null
         }
 
         console.debug(`Enriching Person: ${person._id}`);
-        const enrichedPerson = await enrichData(person.toObject(), "Person", `${authorName} author`);
+        const enrichedPerson = await enrichData(
+            person.toObject(),
+            "Person",
+            `${authorName} author`
+        );
         const result = await models.Person.findById(enrichedPerson._id);
         console.debug(`Person processed: ${result._id}`);
         return result;
     } catch (error) {
-        console.error(`Error in getOrCreatePerson for ${authorName}:`, error.message);
+        console.error(
+            `Error in getOrCreatePerson for ${authorName}:`,
+            error.message
+        );
         return null;
     }
 };
@@ -426,19 +494,28 @@ const getOrCreatePerson = async (authorName, googleBooksId = null, userId = null
 // Fetch publisher details from Open Library
 const fetchPublisherDetailsFromOpenLibrary = async (publisherName) => {
     try {
-        console.debug(`Fetching Open Library data for publisher: ${publisherName}`);
-        const response = await axios.get(`${OPEN_LIBRARY_BASE_URL}/publishers/${encodeURIComponent(publisherName)}.json`);
+        console.debug(
+            `Fetching Open Library data for publisher: ${publisherName}`
+        );
+        const response = await axios.get(
+            `${OPEN_LIBRARY_BASE_URL}/publishers/${encodeURIComponent(publisherName)}.json`
+        );
         const data = response.data;
         return {
             name: data.name || publisherName,
             founded: data.founded ? new Date(data.founded) : null,
             headquarters: data.publish_places?.[0] || null,
-            description: data.description ? data.description.slice(0, 1000) : null,
+            description: data.description
+                ? data.description.slice(0, 1000)
+                : null,
             website: data.website || null,
             logo: null,
         };
     } catch (error) {
-        console.warn(`Open Library API error for publisher ${publisherName}:`, error.message);
+        console.warn(
+            `Open Library API error for publisher ${publisherName}:`,
+            error.message
+        );
         return null;
     }
 };
@@ -447,14 +524,22 @@ const fetchPublisherDetailsFromOpenLibrary = async (publisherName) => {
 const getOrCreatePublisher = async (publisherName, userId) => {
     try {
         console.debug(`Creating/Updating Publisher: ${publisherName}`);
-        if (!publisherName || typeof publisherName !== "string" || !publisherName.trim()) {
-            console.warn("Invalid publisher name, using default:", publisherName);
+        if (
+            !publisherName ||
+            typeof publisherName !== "string" ||
+            !publisherName.trim()
+        ) {
+            console.warn(
+                "Invalid publisher name, using default:",
+                publisherName
+            );
             publisherName = "Unknown Publisher";
         }
 
         let publisher = await models.Publisher.findOne({ name: publisherName });
         if (!publisher) {
-            const publisherDetails = await fetchPublisherDetailsFromOpenLibrary(publisherName);
+            const publisherDetails =
+                await fetchPublisherDetailsFromOpenLibrary(publisherName);
             const defaultDetails = {
                 name: publisherName,
                 slug: generateSlug(publisherName, `publisher-${publisherName}`),
@@ -467,13 +552,20 @@ const getOrCreatePublisher = async (publisherName, userId) => {
                 createdBy: userId || null,
                 updatedBy: userId || null,
             };
-            const finalDetails = { ...defaultDetails, ...(publisherDetails || {}) };
+            const finalDetails = {
+                ...defaultDetails,
+                ...(publisherDetails || {}),
+            };
             console.debug(`Creating new Publisher: ${publisherName}`);
             publisher = await models.Publisher.create(finalDetails);
         }
 
         console.debug(`Enriching Publisher: ${publisher._id}`);
-        const enrichedPublisher = await enrichData(publisher.toObject(), "Publisher", `${publisherName} publisher`);
+        const enrichedPublisher = await enrichData(
+            publisher.toObject(),
+            "Publisher",
+            `${publisherName} publisher`
+        );
         if (!enrichedPublisher || !enrichedPublisher._id) {
             console.warn(`Enrichment failed for publisher ${publisherName}`);
             return publisher;
@@ -482,7 +574,10 @@ const getOrCreatePublisher = async (publisherName, userId) => {
         console.debug(`Publisher processed: ${result._id}`);
         return result;
     } catch (error) {
-        console.error(`Error in getOrCreatePublisher for ${publisherName}:`, error.message);
+        console.error(
+            `Error in getOrCreatePublisher for ${publisherName}:`,
+            error.message
+        );
         return null;
     }
 };
@@ -492,9 +587,12 @@ const getOrCreatePublisher = async (publisherName, userId) => {
 const fetchFromGoogleBooks = async (googleBooksId) => {
     try {
         console.debug(`Fetching Google Books data for ID: ${googleBooksId}`);
-        const response = await axios.get(`${GOOGLE_BOOKS_BASE_URL}/volumes/${googleBooksId}`, {
-            params: { key: config.google.apiKey }
-        });
+        const response = await axios.get(
+            `${GOOGLE_BOOKS_BASE_URL}/volumes/${googleBooksId}`,
+            {
+                params: { key: config.google.apiKey },
+            }
+        );
         const book = response.data;
         console.debug(`Google Books response received for ${googleBooksId}`);
 
@@ -509,15 +607,22 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
         const authorIds = await Promise.all(
             authors.slice(0, 5).map(async (authorName) => {
                 try {
-                    const person = await getOrCreatePerson(authorName, null, null);
+                    const person = await getOrCreatePerson(
+                        authorName,
+                        null,
+                        null
+                    );
                     return person?._id || null;
                 } catch (error) {
-                    console.warn(`Skipping author ${authorName}:`, error.message);
+                    console.warn(
+                        `Skipping author ${authorName}:`,
+                        error.message
+                    );
                     return null;
                 }
             })
         );
-        const validAuthors = authorIds.filter(id => id !== null);
+        const validAuthors = authorIds.filter((id) => id !== null);
         if (!validAuthors.length) {
             console.warn(`No valid authors found for ${googleBooksId}`);
         }
@@ -547,9 +652,11 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
             "light novel": "Light Novel",
         };
         const getBookType = (categories = []) => {
-            const lower = categories.map(s => s.toLowerCase());
-            for (const [keyword, type] of Object.entries(subjectToBookTypeMap)) {
-                if (lower.some(cat => cat.includes(keyword))) return type;
+            const lower = categories.map((s) => s.toLowerCase());
+            for (const [keyword, type] of Object.entries(
+                subjectToBookTypeMap
+            )) {
+                if (lower.some((cat) => cat.includes(keyword))) return type;
             }
             return "Other";
         };
@@ -557,15 +664,26 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
         console.debug(`Book type: ${bookType}`);
 
         const genres = volumeInfo.categories
-            ? volumeInfo.categories.slice(0, 10).map(cat => cat.split("/").pop().trim())
+            ? volumeInfo.categories
+                  .slice(0, 10)
+                  .map((cat) => cat.split("/").pop().trim())
             : [];
         console.debug(`Genres: ${genres.join(", ") || "none"}`);
 
-        console.debug(`Fetching cover image for ${volumeInfo.title || googleBooksId}`);
-        const coverImage = await fetchHighQualityCoverImage(volumeInfo.title || `Book-${googleBooksId}`, authors) ||
+        console.debug(
+            `Fetching cover image for ${volumeInfo.title || googleBooksId}`
+        );
+        const coverImage =
+            (await fetchHighQualityCoverImage(
+                volumeInfo.title || `Book-${googleBooksId}`,
+                authors
+            )) ||
             (volumeInfo.imageLinks?.thumbnail
                 ? {
-                      url: volumeInfo.imageLinks.thumbnail.replace("http://", "https://"),
+                      url: volumeInfo.imageLinks.thumbnail.replace(
+                          "http://",
+                          "https://"
+                      ),
                       publicId: googleBooksId,
                   }
                 : {
@@ -579,11 +697,13 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
             subtitle: volumeInfo.subtitle || "",
             googleBooksId,
             slug: generateSlug(volumeInfo.title, `book-${googleBooksId}`),
-            description: volumeInfo.description ? volumeInfo.description.slice(0, 2000) : "",
+            description: volumeInfo.description
+                ? volumeInfo.description.slice(0, 2000)
+                : "",
             publishedYear: volumeInfo.publishedDate
                 ? new Date(volumeInfo.publishedDate).getFullYear()
                 : new Date().getFullYear(),
-            industryIdentifiers: identifiers.map(id => ({
+            industryIdentifiers: identifiers.map((id) => ({
                 type: id.type,
                 identifier: id.identifier,
             })),
@@ -597,8 +717,11 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
             seriesInfo: volumeInfo.seriesInfo
                 ? {
                       seriesId: volumeInfo.seriesInfo.seriesId || "",
-                      bookDisplayNumber: volumeInfo.seriesInfo.bookDisplayNumber || "",
-                      seriesBookType: volumeInfo.seriesInfo.volumeSeries?.[0]?.seriesBookType || "OTHER",
+                      bookDisplayNumber:
+                          volumeInfo.seriesInfo.bookDisplayNumber || "",
+                      seriesBookType:
+                          volumeInfo.seriesInfo.volumeSeries?.[0]
+                              ?.seriesBookType || "OTHER",
                   }
                 : {},
             maturityRating: volumeInfo.maturityRating || "UNKNOWN",
@@ -618,7 +741,10 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
         console.debug(`Book details prepared for ${googleBooksId}`);
         return bookDetails;
     } catch (error) {
-        console.error(`Error in fetchFromGoogleBooks for ${googleBooksId}:`, error.message);
+        console.error(
+            `Error in fetchFromGoogleBooks for ${googleBooksId}:`,
+            error.message
+        );
         return null;
     }
 };
@@ -627,10 +753,15 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
 const enrichBookData = async (book) => {
     try {
         console.debug(`Enriching book: ${book._id || book.googleBooksId}`);
-        const authors = (book.author || []).map(a => a.name || "").join(" ") || "unknown author";
+        const authors =
+            (book.author || []).map((a) => a.name || "").join(" ") ||
+            "unknown author";
         return await enrichData(book, "Book", `${book.title} ${authors}`);
     } catch (error) {
-        console.error(`Error in enrichBookData for book ${book._id || book.googleBooksId}:`, error.message);
+        console.error(
+            `Error in enrichBookData for book ${book._id || book.googleBooksId}:`,
+            error.message
+        );
         return book;
     }
 };
@@ -651,17 +782,34 @@ const createBook = async (bookData, userId) => {
         console.debug(`Book enriched: ${book._id}`);
         return populated;
     } catch (error) {
-        console.error(`Error in createBook for ${bookData.title}:`, error.message);
-        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, `Failed to create book: ${error.message}`);
+        console.error(
+            `Error in createBook for ${bookData.title}:`,
+            error.message
+        );
+        throw new ApiError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            `Failed to create book: ${error.message}`
+        );
     }
 };
 
 // Fetch and store authors from Google Books
-const fetchAuthorsFromGoogleBooks = async (searchTerm, limit = 10, userId = null) => {
+const fetchAuthorsFromGoogleBooks = async (
+    searchTerm,
+    limit = 10,
+    userId = null
+) => {
     try {
         console.debug(`Fetching authors for search: ${searchTerm}`);
-        if (!searchTerm || typeof searchTerm !== "string" || !searchTerm.trim()) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Author search term is required and must be a string");
+        if (
+            !searchTerm ||
+            typeof searchTerm !== "string" ||
+            !searchTerm.trim()
+        ) {
+            throw new ApiError(
+                httpStatus.BAD_REQUEST,
+                "Author search term is required and must be a string"
+            );
         }
 
         const response = await axios.get(`${GOOGLE_BOOKS_BASE_URL}/volumes`, {
@@ -675,40 +823,70 @@ const fetchAuthorsFromGoogleBooks = async (searchTerm, limit = 10, userId = null
 
         const books = response.data.items || [];
         const authorNames = new Set();
-        books.forEach(book => {
+        books.forEach((book) => {
             const authors = book.volumeInfo?.authors || [];
-            authors.forEach(author => authorNames.add(author));
+            authors.forEach((author) => authorNames.add(author));
         });
 
-        console.debug(`Author names found: ${Array.from(authorNames).join(", ") || "none"}`);
+        console.debug(
+            `Author names found: ${Array.from(authorNames).join(", ") || "none"}`
+        );
         const authors = await Promise.all(
-            Array.from(authorNames).slice(0, limit).map(async authorName => {
-                try {
-                    return await getOrCreatePerson(authorName, null, userId);
-                } catch (error) {
-                    console.warn(`Skipping author ${authorName}:`, error.message);
-                    return null;
-                }
-            })
+            Array.from(authorNames)
+                .slice(0, limit)
+                .map(async (authorName) => {
+                    try {
+                        return await getOrCreatePerson(
+                            authorName,
+                            null,
+                            userId
+                        );
+                    } catch (error) {
+                        console.warn(
+                            `Skipping author ${authorName}:`,
+                            error.message
+                        );
+                        return null;
+                    }
+                })
         );
 
-        const validAuthors = authors.filter(author => author !== null);
-        console.debug(`Valid authors: ${validAuthors.map(a => a._id).join(", ") || "none"}`);
+        const validAuthors = authors.filter((author) => author !== null);
+        console.debug(
+            `Valid authors: ${validAuthors.map((a) => a._id).join(", ") || "none"}`
+        );
         return await models.Person.find({
-            _id: { $in: validAuthors.map(a => a._id) },
+            _id: { $in: validAuthors.map((a) => a._id) },
         }).lean();
     } catch (error) {
-        console.error(`Error in fetchAuthorsFromGoogleBooks for ${searchTerm}:`, error.message);
-        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, `Failed to fetch authors: ${error.message}`);
+        console.error(
+            `Error in fetchAuthorsFromGoogleBooks for ${searchTerm}:`,
+            error.message
+        );
+        throw new ApiError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            `Failed to fetch authors: ${error.message}`
+        );
     }
 };
 
 // Fetch and store publishers from Google Books
-const fetchPublishersFromGoogleBooks = async (searchTerm, limit = 10, userId = null) => {
+const fetchPublishersFromGoogleBooks = async (
+    searchTerm,
+    limit = 10,
+    userId = null
+) => {
     try {
         console.debug(`Fetching publishers for search: ${searchTerm}`);
-        if (!searchTerm || typeof searchTerm !== "string" || !searchTerm.trim()) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Publisher search term is required and must be a string");
+        if (
+            !searchTerm ||
+            typeof searchTerm !== "string" ||
+            !searchTerm.trim()
+        ) {
+            throw new ApiError(
+                httpStatus.BAD_REQUEST,
+                "Publisher search term is required and must be a string"
+            );
         }
 
         const response = await axios.get(`${GOOGLE_BOOKS_BASE_URL}/volumes`, {
@@ -722,31 +900,51 @@ const fetchPublishersFromGoogleBooks = async (searchTerm, limit = 10, userId = n
 
         const books = response.data.items || [];
         const publisherNames = new Set();
-        books.forEach(book => {
+        books.forEach((book) => {
             const publisher = book.volumeInfo?.publisher;
             if (publisher && publisher.trim()) publisherNames.add(publisher);
         });
 
-        console.debug(`Publisher names found: ${Array.from(publisherNames).join(", ") || "none"}`);
+        console.debug(
+            `Publisher names found: ${Array.from(publisherNames).join(", ") || "none"}`
+        );
         const publishers = await Promise.all(
-            Array.from(publisherNames).slice(0, limit).map(async publisherName => {
-                try {
-                    return await getOrCreatePublisher(publisherName, userId);
-                } catch (error) {
-                    console.warn(`Skipping publisher ${publisherName}:`, error.message);
-                    return null;
-                }
-            })
+            Array.from(publisherNames)
+                .slice(0, limit)
+                .map(async (publisherName) => {
+                    try {
+                        return await getOrCreatePublisher(
+                            publisherName,
+                            userId
+                        );
+                    } catch (error) {
+                        console.warn(
+                            `Skipping publisher ${publisherName}:`,
+                            error.message
+                        );
+                        return null;
+                    }
+                })
         );
 
-        const validPublishers = publishers.filter(publisher => publisher !== null);
-        console.debug(`Valid publishers: ${validPublishers.map(p => p._id).join(", ") || "none"}`);
+        const validPublishers = publishers.filter(
+            (publisher) => publisher !== null
+        );
+        console.debug(
+            `Valid publishers: ${validPublishers.map((p) => p._id).join(", ") || "none"}`
+        );
         return await models.Publisher.find({
-            _id: { $in: validPublishers.map(p => p._id) },
+            _id: { $in: validPublishers.map((p) => p._id) },
         }).lean();
     } catch (error) {
-        console.error(`Error in fetchPublishersFromGoogleBooks for ${searchTerm}:`, error.message);
-        throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, `Failed to fetch publishers: ${error.message}`);
+        console.error(
+            `Error in fetchPublishersFromGoogleBooks for ${searchTerm}:`,
+            error.message
+        );
+        throw new ApiError(
+            httpStatus.INTERNAL_SERVER_ERROR,
+            `Failed to fetch publishers: ${error.message}`
+        );
     }
 };
 
@@ -777,7 +975,10 @@ const enrichAllAuthors = async () => {
             try {
                 await enrichData(p, "Person", `${p.name} author`);
             } catch (error) {
-                console.warn(`Failed to enrich person ${p._id}:`, error.message);
+                console.warn(
+                    `Failed to enrich person ${p._id}:`,
+                    error.message
+                );
             }
         }
         console.debug("Completed enrichAllAuthors");
@@ -795,7 +996,10 @@ const enrichAllPublishers = async () => {
             try {
                 await enrichData(p, "Publisher", `${p.name} publisher`);
             } catch (error) {
-                console.warn(`Failed to enrich publisher ${p._id}:`, error.message);
+                console.warn(
+                    `Failed to enrich publisher ${p._id}:`,
+                    error.message
+                );
             }
         }
         console.debug("Completed enrichAllPublishers");
@@ -811,53 +1015,80 @@ const enrichAllEntities = async (modelType) => {
         const cursor = models[modelType].find({}).lean().cursor();
         for await (const record of cursor) {
             try {
-                await enrichData(record, modelType, `${record.name} ${modelType.toLowerCase()}`);
+                await enrichData(
+                    record,
+                    modelType,
+                    `${record.name} ${modelType.toLowerCase()}`
+                );
             } catch (error) {
-                console.warn(`Failed to enrich ${modelType} ${record._id}:`, error.message);
+                console.warn(
+                    `Failed to enrich ${modelType} ${record._id}:`,
+                    error.message
+                );
             }
         }
         console.debug(`Completed enrichAllEntities for ${modelType}`);
     } catch (error) {
-        console.error(`Error in enrichAllEntities for ${modelType}:`, error.message);
+        console.error(
+            `Error in enrichAllEntities for ${modelType}:`,
+            error.message
+        );
     }
 };
 
 // Get book details
-const getBookDetails = async (bookId, userId) => {
+const getBookDetails = async ({ id, userId }) => {
     try {
-        console.debug(`Fetching book details for ID: ${bookId}`);
-        if (!bookId || typeof bookId !== "string") {
+        console.debug(`Fetching book details for ID: ${id}`);
+        if (!id || typeof id !== "string") {
             throw new ApiError(httpStatus.BAD_REQUEST, "Book ID is required");
         }
-        const isOid = mongoose.isValidObjectId(bookId);
-        const q = isOid ? { $or: [{ _id: bookId }, { googleBooksId: bookId }] } : { googleBooksId: bookId };
-        let book = await models.Book.findOne(q).populate("author").populate("publisher").lean();
-        
+        const isOid = mongoose.isValidObjectId(id);
+        const q = isOid
+            ? { $or: [{ _id: id }, { googleBooksId: id }] }
+            : { googleBooksId: id };
+        let book = await models.Book.findOne(q)
+            .populate("author")
+            .populate("publisher")
+            .lean();
+
         if (book) {
             console.debug(`Book found in DB: ${book._id}`);
             return await enrichBookData(book);
         }
 
-        console.debug(`Book not found in DB, fetching from Google Books: ${bookId}`);
-        const fromGB = await fetchFromGoogleBooks(bookId);
+        console.debug(
+            `Book not found in DB, fetching from Google Books: ${id}`
+        );
+        const fromGB = await fetchFromGoogleBooks(id);
         console.debug("hello");
         if (!fromGB) {
-            console.warn(`Book not found for ${bookId}`);
+            console.warn(`Book not found for ${id}`);
             throw new ApiError(httpStatus.NOT_FOUND, "Book not found");
         }
         Object.assign(fromGB, { createdBy: userId, updatedBy: userId });
 
-        console.debug(`Creating new book for ${bookId}`);
+        console.debug(`Creating new book for ${id}`);
         return await createBook(fromGB, userId);
     } catch (error) {
-        console.error(`Error in getBookDetails for ${bookId}:`, error.message);
-        throw error instanceof ApiError ? error : new ApiError(httpStatus.INTERNAL_SERVER_ERROR, `Failed to fetch book details: ${error.message}`);
+        console.error(`Error in getBookDetails for ${id}:`, error.message);
+        throw error instanceof ApiError
+            ? error
+            : new ApiError(
+                  httpStatus.INTERNAL_SERVER_ERROR,
+                  `Failed to fetch book details: ${error.message}`
+              );
     }
 };
 
 // Global unhandled promise rejection handler
 process.on("unhandledRejection", (reason, promise) => {
-    console.error("Unhandled Rejection at:", promise, "reason:", reason?.stack || reason);
+    console.error(
+        "Unhandled Rejection at:",
+        promise,
+        "reason:",
+        reason?.stack || reason
+    );
 });
 
 export default {

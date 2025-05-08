@@ -6,7 +6,11 @@ import ApiError from "../utils/ApiError.js";
 
 const getSeriesDetails = asyncHandler(async (req, res) => {
     const seriesId = req.params.seriesId;
-    const result = await services.seriesService.getSeriesDetails(seriesId);
+    let data = { id: seriesId };
+    if (req?.user) {
+        data["userId"] = req.user._id;
+    }
+    const result = await services.seriesService.getSeriesDetails(data);
     const response = new ApiResponse(200, result, "Series details fetched!!!");
     res.status(200).json(response);
 });

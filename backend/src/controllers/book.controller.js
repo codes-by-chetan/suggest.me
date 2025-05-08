@@ -6,7 +6,11 @@ import ApiError from "../utils/ApiError.js";
 
 const getBookDetails = asyncHandler(async (req, res) => {
     const bookId = req.params.bookId;
-    const result = await services.bookService.getBookDetails(bookId);
+    let data = { id: bookId };
+    if (req?.user) {
+        data["userId"] = req.user._id;
+    }
+    const result = await services.bookService.getBookDetails(data);
     const response = new ApiResponse(200, result, "Book details fetched!!!");
     res.status(200).json(response);
 });

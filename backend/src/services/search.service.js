@@ -596,6 +596,17 @@ const searchUser = async (searchTerm, page = 1, limit = 10) => {
         { "fullName.lastName": { $regex: sanitizedTerm, $options: "i" } },
     ];
 
+    // Add a condition for fullNameString by combining firstName and lastName
+    queryConditions.push({
+        $expr: {
+            $regexMatch: {
+                input: { $concat: ["$fullName.firstName", " ", "$fullName.lastName"] },
+                regex: sanitizedTerm,
+                options: "i",
+            },
+        },
+    });
+
     // Build query
     const query = {
         $or: queryConditions,

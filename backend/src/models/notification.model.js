@@ -70,7 +70,7 @@ const notificationSchema = new mongoose.Schema(
                         "Content type is required if related content is provided.",
                     ],
                 },
-                contentId: {
+                content: {
                     type: mongoose.Schema.Types.ObjectId,
                     refPath: "contentType",
                     required: [
@@ -91,10 +91,6 @@ const notificationSchema = new mongoose.Schema(
         },
         actionUrl: {
             type: String,
-            validate: {
-                validator: (value) => !value || validator.isURL(value),
-                message: "Action URL must be a valid URL if provided.",
-            },
         },
         metadata: {
             type: {

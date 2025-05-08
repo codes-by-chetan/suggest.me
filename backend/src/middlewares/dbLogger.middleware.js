@@ -66,9 +66,9 @@ function dbLogger(modelName) {
                 await log.save();
                 next();
             }
-            if (modelName !== "RequestLog") {
-              console.log("logging  in the db changes : ", modelName, "log : ", log)                           
-            }
+            // if (modelName !== "RequestLog") {
+            //   console.log("logging  in the db changes : ", modelName, "log : ", log)                           
+            // }
         } catch (error) {
             console.log("Error logging transaction:", error);
             next(error); // Pass the error to the next middleware

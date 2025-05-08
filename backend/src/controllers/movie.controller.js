@@ -6,7 +6,11 @@ import ApiError from "../utils/ApiError.js";
 
 const getMovieDetails = asyncHandler(async (req, res) => {
     const movieId = req.params.movieId;
-    const result = await services.movieService.getMovieDetails(movieId);
+    let data = { id: movieId };
+    if (req?.user) {
+        data["userId"] = req.user._id;
+    }
+    const result = await services.movieService.getMovieDetails(data);
     const response = new ApiResponse(200, result, "Movie details fetched!!!");
     res.status(200).json(response);
 });

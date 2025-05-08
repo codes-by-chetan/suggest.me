@@ -10,12 +10,14 @@ const userSuggestionsSchema = new mongoose.Schema(
             required: [true, "Sender reference is required"],
             index: true,
         },
-        recipient: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            required: [true, "Recipient reference is required"],
-            index: true,
-        },
+        recipients: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: [true, "Recipient reference is required"],
+                index: true,
+            },
+        ],
         content: {
             type: mongoose.Schema.Types.ObjectId,
             refPath: "contentType",

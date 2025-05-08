@@ -116,30 +116,35 @@ const sendFollowedNotification = async (
 
     return true;
 };
-const sendSuggestionNotification = async (recipientId, senderId, content) => {
-    const sender = await models.User.findById(senderId);
-    const recipient = await models.User.findById(recipientId);
-
-    const notification = new models.Notification({
-        recipient: recipient._id,
-        sender: sender._id,
-        type: "Suggestion",
-        message: `${sender.fullNameString} suggested you watch 'Epic Adventure Video'.`,
-        relatedContent: { contentType: "Video", contentId: video._id },
-        actionUrl: "https://www.youtube.com/watch?v=xyz123",
-        metadata: { suggestionType: "Video" },
-        createdBy: sender._id,
+const sendSuggestionNotification = async (suggestion) => {
+    const sender = suggestion.sender;
+    const recipients = suggestion.recipients;
+    const content = suggestion.content;
+    recipients.map(async (recipient) => {
+        const notification = new models.Notification({
+            recipient: recipient._id,
+            sender: sender._id,
+            type: "Suggestion",
+            message: `${sender.fullNameString} suggested ${content.title} ${recipients.length > 1 ? `to you and ${recipients.length - 1} more peoples` : `to you`}`,
+            relatedContent: {
+                contentType: suggestion.contentType,
+                content: content._id,
+            },
+            actionUrl: `/suggested-to-me/suggestion/${suggestion._id}`,
+            metadata: { suggestionType: suggestion.contentType },
+            createdBy: sender._id,
+        });
+        await notification.save();
+        await notification.populate({
+            path: "sender",
+            select: "_id fullName fullNameString profile",
+            populate: {
+                path: "profile",
+                select: "avatar",
+            },
+        });
+        await sendNotification(io, recipient._id, [notification]);
     });
-    await notification.save();
-    await notification.populate({
-        path: "sender",
-        select: "_id fullName fullNameString profile",
-        populate: {
-            path: "profile",
-            select: "avatar",
-        },
-    });
-    await sendNotification(io, recipientId, [notification]);
 
     return true;
 };
