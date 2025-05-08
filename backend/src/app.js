@@ -40,10 +40,10 @@ app.use(middlewares.requestLoggerMiddleware);
 app.use(express.static(path.join(__dirname, "../public")));
 
 app.get("/", (req, res) => {
-    if (req.body.demoError) {
+    if (req.body?.demoError) {
         throw new ApiError(409, "error response demo");
     }
-    if (req.body.demoReq) {
+    if (req.body?.demoReq) {
         const response = new ApiResponse(
             200,
             null,
