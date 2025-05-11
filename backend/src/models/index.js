@@ -1,4 +1,5 @@
 import Book from "./book.model.js";
+import Chat from "./chat.model.js";
 import DbLogs from "./dbLogs.model.js";
 import Distributor from "./distributor.model.js";
 import LivePerformance from "./livePerformance.model.js";
@@ -44,6 +45,7 @@ const models = {
     Video,
     UserRelationship,
     Notification,
+    Chat
 };
 
 export default models;
