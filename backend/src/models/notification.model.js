@@ -96,7 +96,14 @@ const notificationSchema = new mongoose.Schema(
             type: {
                 suggestionType: {
                     type: String,
-                    enum: ["Movie", "Book", "Series", "Video", "Other"],
+                    enum: [
+                        "Movie",
+                        "Book",
+                        "Music",
+                        "Series",
+                        "Video",
+                        "Other",
+                    ],
                     required: false,
                 },
                 commentText: {
@@ -112,7 +119,7 @@ const notificationSchema = new mongoose.Schema(
                 },
                 followRequestId: {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref:"UserRelationship",
+                    ref: "UserRelationship",
                 },
             },
             required: false, // Additional context for specific notification types
