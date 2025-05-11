@@ -113,7 +113,7 @@ const createSuggestion = async (user, content, note, recipients) => {
               ? "Series"
               : content.type === "book"
                 ? "Book"
-                : content.type === "music"
+                : content.type === "music" || content.type === "songs"
                   ? "Music"
                   : "Video";
     const suggestion = await models.UserSuggestions.create({
