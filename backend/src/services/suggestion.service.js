@@ -33,6 +33,7 @@ const getSuggestionDetails = async (suggestionId, userId) => {
         $or: [{ sender: userId }, { recipients: userId }],
     });
     await suggestion.populate("content");
+    await suggestion.populate("content.album content.artist content.publisher");
     await suggestion.populate({
         path: "sender recipients",
         select: "_id fullName fullNameString profile",
