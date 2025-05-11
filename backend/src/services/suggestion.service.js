@@ -15,6 +15,7 @@ const getContent = {
     book: bookService.getBookDetails,
     series: seriesService.getSeriesDetails,
     music: musicService.getMusicDetails,
+    songs: musicService.getMusicDetails,
     video: null,
     anime: null,
 };
