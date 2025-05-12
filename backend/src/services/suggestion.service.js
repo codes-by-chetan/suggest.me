@@ -149,6 +149,7 @@ const getSuggestionsByUser = async (userId) => {
         deleted: false,
     })
         .populate("content")
+        .populate("content.album content.artist content.publisher")
         .populate({
             path: "sender recipients",
             select: "_id fullName fullNameString profile",
@@ -202,6 +203,7 @@ const getSuggestionsForUser = async (userId) => {
         deleted: false,
     })
         .populate("content")
+        .populate("content.album content.artist content.publisher")
         .populate({
             path: "sender recipients",
             select: "_id fullName fullNameString profile",
