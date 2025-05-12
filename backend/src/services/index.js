@@ -1,5 +1,8 @@
 import authService from "./auth.service.js";
 import bookService from "./book.service.js";
+import chatService from "./chat.service.js";
+import encryptionKeyService from "./encryptionKey.service.js";
+import messageService from "./message.service.js";
 import movieService from "./movie.service.js";
 import musicService from "./music.service.js";
 import notificationService from "./notification.service.js";
@@ -24,6 +27,9 @@ const services = {
     musicService,
     researchService,
     suggestionService,
+    chatService,
+    encryptionKeyService,
+    messageService
 };
 
 export default services;

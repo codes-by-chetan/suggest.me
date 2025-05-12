@@ -1,5 +1,6 @@
 import authController from "./auth.controller.js";
 import bookController from "./book.controller.js";
+import chatController from "./chat.controller.js";
 import logsController from "./logs.controller.js";
 import movieController from "./movie.controller.js";
 import musicController from "./music.controller.js";
@@ -23,7 +24,8 @@ const controllers = {
     bookController,
     musicController,
     researchController,
-    suggestionController
+    suggestionController,
+    chatController,
 };
 
 export default controllers;

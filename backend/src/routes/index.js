@@ -12,6 +12,7 @@ import bookRouter from "./books.routes.js";
 import musicRouter from "./music.routes.js";
 import researchRouter from "./research.routes.js";
 import suggestionRouter from "./suggestion.routes.js";
+import chatRouter from "./chat.routes.js";
 const router = express.Router();
 
 // Routes index
@@ -67,6 +68,10 @@ const defaultRoutes = [
     {
         path: "/suggestions",
         route: suggestionRouter,
+    },
+    {
+        path: "/chats",
+        route: chatRouter,
     }
 ];
 

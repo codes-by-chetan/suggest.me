@@ -178,7 +178,8 @@ const getSuggestionsByUser = async (userId) => {
                     suggestion.content?.album?.coverImage?.url,
                 year:
                     suggestion.content?.year?.toString() ||
-                    suggestion.content?.publishedYear?.toString(),
+                    suggestion.content?.publishedYear?.toString() ||
+                    suggestion.content?.releaseYear?.toString(),
                 creator:
                     suggestion.content?.director
                         ?.map((d) => d.name)
@@ -244,7 +245,8 @@ const getSuggestionsForUser = async (userId) => {
                     suggestion.content?.album?.coverImage?.url,
                 year:
                     suggestion.content?.year?.toString() ||
-                    suggestion.content?.publishedYear?.toString(),
+                    suggestion.content?.publishedYear?.toString()||
+                    suggestion.content?.releaseYear?.toString(),
                 creator:
                     suggestion.content?.director
                         ?.map((d) => d.name)
