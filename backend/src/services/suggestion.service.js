@@ -149,48 +149,62 @@ const getSuggestionsByUser = async (userId) => {
         deleted: false,
     })
         .populate("content")
-        .populate("content.album content.artist content.publisher")
         .populate({
             path: "sender recipients",
             select: "_id fullName fullNameString profile",
-        })
-        .populate({
-            path: "sender.profile recipients.profile",
-            select: "avatar isVerified displayName bio",
         });
-
     if (!suggestions.length) {
         return [];
     }
 
-    return suggestions.map((suggestion) => ({
-        id: suggestion._id.toString(),
-        contentId: suggestion.content?._id.toString(),
-        title: suggestion.content?.title || "Unknown Title",
-        type: suggestion.contentType.toLowerCase(),
-        imageUrl:
-            suggestion.content?.poster?.url ||
-            suggestion.content?.coverImage?.url ||
-            suggestion.content?.album?.coverImage?.url,
-        year:
-            suggestion.content?.year?.toString() ||
-            suggestion.content?.publishedYear?.toString(),
-        creator:
-            suggestion.content?.director?.map((d) => d.name).join(", ") ||
-            suggestion.content?.creator?.map((c) => c.name).join(", ") ||
-            suggestion.content?.author?.map((a) => a.name).join(", ") ||
-            suggestion.content?.artists?.map((a) => a.name).join(", ") ||
-            "",
-        description:
-            suggestion.content?.plot || suggestion.content?.description,
-        suggestedTo: suggestion.recipients.map((recipient) => ({
-            id: recipient._id.toString(),
-            name: recipient.fullNameString,
-            avatar: recipient.profile?.avatar?.url,
-        })),
-        suggestedAt: suggestion.createdAt.toISOString(),
-        status: null, // Status not implemented in schema, defaulting to null
-    }));
+    const populatedSuggestions = await Promise.all(
+        suggestions.map(async (suggestion) => {
+            await suggestion.populate(
+                "content.album content.artist content.publisher"
+            );
+            await suggestion.populate({
+                path: "sender.profile recipients.profile",
+                select: "avatar isVerified displayName bio",
+            });
+
+            return {
+                id: suggestion._id.toString(),
+                contentId: suggestion.content?._id.toString(),
+                title: suggestion.content?.title || "Unknown Title",
+                type: suggestion.contentType.toLowerCase(),
+                imageUrl:
+                    suggestion.content?.poster?.url ||
+                    suggestion.content?.coverImage?.url ||
+                    suggestion.content?.album?.coverImage?.url,
+                year:
+                    suggestion.content?.year?.toString() ||
+                    suggestion.content?.publishedYear?.toString(),
+                creator:
+                    suggestion.content?.director
+                        ?.map((d) => d.name)
+                        .join(", ") ||
+                    suggestion.content?.creator
+                        ?.map((c) => c.name)
+                        .join(", ") ||
+                    suggestion.content?.author?.map((a) => a.name).join(", ") ||
+                    suggestion.content?.artists
+                        ?.map((a) => a.name)
+                        .join(", ") ||
+                    "",
+                description:
+                    suggestion.content?.plot || suggestion.content?.description,
+                suggestedTo: suggestion.recipients.map((recipient) => ({
+                    id: recipient._id.toString(),
+                    name: recipient.fullNameString,
+                    avatar: recipient.profile?.avatar?.url,
+                })),
+                suggestedAt: suggestion.createdAt.toISOString(),
+                status: null, // Status not implemented in schema, defaulting to null
+            };
+        })
+    );
+
+    return populatedSuggestions;
 };
 
 const getSuggestionsForUser = async (userId) => {
@@ -203,48 +217,59 @@ const getSuggestionsForUser = async (userId) => {
         deleted: false,
     })
         .populate("content")
-        .populate("content.album content.artist content.publisher")
         .populate({
             path: "sender recipients",
             select: "_id fullName fullNameString profile",
-        })
-        .populate({
-            path: "sender.profile recipients.profile",
-            select: "avatar isVerified displayName bio",
         });
-
     if (!suggestions.length) {
         return [];
     }
-
-    return suggestions.map((suggestion) => ({
-        id: suggestion._id.toString(),
-        contentId: suggestion.content?._id.toString(),
-        title: suggestion.content?.title || "Unknown Title",
-        type: suggestion.contentType.toLowerCase(),
-        imageUrl:
-            suggestion.content?.poster?.url ||
-            suggestion.content?.coverImage?.url ||
-            suggestion.content?.album?.coverImage?.url,
-        year:
-            suggestion.content?.year?.toString() ||
-            suggestion.content?.publishedYear?.toString(),
-        creator:
-            suggestion.content?.director?.map((d) => d.name).join(", ") ||
-            suggestion.content?.creator?.map((c) => c.name).join(", ") ||
-            suggestion.content?.author?.map((a) => a.name).join(", ") ||
-            suggestion.content?.artists?.map((a) => a.name).join(", ") ||
-            "",
-        description:
-            suggestion.content?.plot || suggestion.content?.description,
-        suggestedBy: {
-            id: suggestion.sender._id.toString(),
-            name: suggestion.sender.fullNameString,
-            avatar: suggestion.sender.profile?.avatar?.url,
-        },
-        suggestedAt: suggestion.createdAt.toISOString(),
-        status: null, // Status not implemented in schema, defaulting to null
-    }));
+    const populatedSuggestions = await Promise.all(
+        suggestions.map(async (suggestion) => {
+            await suggestion.populate(
+                "content.album content.artist content.publisher"
+            );
+            await suggestion.populate({
+                path: "sender.profile recipients.profile",
+                select: "avatar isVerified displayName bio",
+            });
+            return {
+                id: suggestion._id.toString(),
+                contentId: suggestion.content?._id.toString(),
+                title: suggestion.content?.title || "Unknown Title",
+                type: suggestion.contentType.toLowerCase(),
+                imageUrl:
+                    suggestion.content?.poster?.url ||
+                    suggestion.content?.coverImage?.url ||
+                    suggestion.content?.album?.coverImage?.url,
+                year:
+                    suggestion.content?.year?.toString() ||
+                    suggestion.content?.publishedYear?.toString(),
+                creator:
+                    suggestion.content?.director
+                        ?.map((d) => d.name)
+                        .join(", ") ||
+                    suggestion.content?.creator
+                        ?.map((c) => c.name)
+                        .join(", ") ||
+                    suggestion.content?.author?.map((a) => a.name).join(", ") ||
+                    suggestion.content?.artists
+                        ?.map((a) => a.name)
+                        .join(", ") ||
+                    "",
+                description:
+                    suggestion.content?.plot || suggestion.content?.description,
+                suggestedBy: {
+                    id: suggestion.sender._id.toString(),
+                    name: suggestion.sender.fullNameString,
+                    avatar: suggestion.sender.profile?.avatar?.url,
+                },
+                suggestedAt: suggestion.createdAt.toISOString(),
+                status: null, // Status not implemented in schema, defaulting to null
+            };
+        })
+    );
+    return populatedSuggestions;
 };
 
 const suggestionService = {
