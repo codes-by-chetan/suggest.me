@@ -169,7 +169,8 @@ const getSuggestionsByUser = async (userId) => {
         type: suggestion.contentType.toLowerCase(),
         imageUrl:
             suggestion.content?.poster?.url ||
-            suggestion.content?.coverImage?.url,
+            suggestion.content?.coverImage?.url ||
+            suggestion.content?.album?.coverImage?.url,
         year:
             suggestion.content?.year?.toString() ||
             suggestion.content?.publishedYear?.toString(),
@@ -221,7 +222,8 @@ const getSuggestionsForUser = async (userId) => {
         type: suggestion.contentType.toLowerCase(),
         imageUrl:
             suggestion.content?.poster?.url ||
-            suggestion.content?.coverImage?.url,
+            suggestion.content?.coverImage?.url ||
+            suggestion.content?.album?.coverImage?.url,
         year:
             suggestion.content?.year?.toString() ||
             suggestion.content?.publishedYear?.toString(),
