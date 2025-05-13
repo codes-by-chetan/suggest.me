@@ -33,8 +33,6 @@ const sessionSchema = new mongoose.Schema({
     tokenId: {
         type: String,
         required: [true, "Token ID is required"],
-        unique: true,
-        index: true,
     },
     deviceInfo: {
         browser: { type: String, trim: true },

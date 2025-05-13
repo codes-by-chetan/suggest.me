@@ -91,8 +91,9 @@ const createPrivateChat = async (userId1, userId2, createdBy) => {
         );
 
         // Store encrypted keys
-        await EncryptionKeyService.createKeysForChat(chat._id, participants, encryptedKeys, createdBy);
-
+        const keys = await EncryptionKeyService.createKeysForChat(chat._id, participants, encryptedKeys, createdBy);
+        console.log(keys);
+        
         // Emit socket event
         await emitNewChat(io, chat);
 
@@ -221,7 +222,17 @@ const getUserChats = async (userId) => {
         const chats = await Chat.find({
             participants: userId,
             deleted: false,
-        }).populate("participants").lean();
+        });
+
+        const filteredData = await Promise.all(
+            chats.map(async (chat)=>{
+                await chat.populate("partiparticipants")
+                await Promise.all(chat.participants.map(async (participant)=>{
+                    await participant.popu
+                })) 
+            })
+        )
+
         return chats;
     } catch (error) {
         logger.logMessage("error", `Failed to fetch chats for user ${userId}: ${error.message}`);
