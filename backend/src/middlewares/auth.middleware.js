@@ -14,35 +14,51 @@ import constants from "../constants/index.js";
  */
 const authMiddleware = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers["authorization"];
-    // console.log(req.headers,authHeader)
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-        throw new ApiError(401, "Access token is missing or invalid");
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Access token is missing or invalid");
     }
-    let decoded;
 
+    let decoded;
     try {
         decoded = jwt.verify(token, config.jwt.secret);
-        // console.log("decoded user ===>>",decoded);
     } catch (err) {
         console.log(err.message);
         if (err.message === "jwt expired") {
-            throw new ApiError(httpStatus.UNAUTHORIZED, "session expired");
+            throw new ApiError(httpStatus.UNAUTHORIZED, "Session expired");
         }
-        
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid token");
     }
-    const user = await models.User.findById(decoded?.id); // Assuming the token contains the user ID
 
+    const user = await models.User.findById(decoded?.id);
     if (!user) {
-        throw new ApiError(404, "User not found");
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
     } else if (user.status === constants.UserStatus.Inactive) {
-        throw new ApiError(403, "User is inactive");
+        throw new ApiError(httpStatus.FORBIDDEN, "User is inactive");
     } else if (user.deleted) {
-        throw new ApiError(403, "User is deleted");
+        throw new ApiError(httpStatus.FORBIDDEN, "User is deleted");
     }
-    // console.log(user)
+
+    // Find the current session
+    const session = user.sessions.find(
+        (s) => s.tokenId === decoded.jti && s.isActive && s.expiresAt > new Date()
+    );
+    if (!session) {
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Session not found or expired");
+    }
+
+    // Set user and session details in req
     req.user = user;
+    req.session = {
+        tokenId: session.tokenId,
+        keyId: session.keyId,
+        deviceInfo: session.deviceInfo,
+        ipAddress: session.ipAddress,
+        loginAt: session.loginAt,
+        expiresAt: session.expiresAt,
+    };
+
     next();
 });
 
