@@ -16,11 +16,28 @@ const messageSchema = new mongoose.Schema(
             required: [true, "Sender reference is required"],
             index: true,
         },
-        content: {
-            type: String,
-            required: [true, "Message content is required"],
-            trim: true, // Encrypted content as base64 or hex string
-        },
+        contentData: [
+            {
+                session: {
+                    type: String,
+                    required: [
+                        function () {
+                            return this.isEncrypted === true;
+                        },
+                        "Session reference is required for encrypted messages",
+                    ],
+                },
+                content: {
+                    type: String,
+                    required: [true, "Message content is required"],
+                    trim: true, // Encrypted content as base64 or hex string
+                },
+                isEncrypted: {
+                    type: Boolean,
+                    default: false,
+                },
+            },
+        ],
         suggestion: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "UserSuggestions",

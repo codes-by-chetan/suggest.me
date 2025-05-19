@@ -105,31 +105,8 @@ const createPrivateChat = async (userId1, userId2, createdBy) => {
             );
         }
 
-        // Generate symmetric key
-        const symmetricKey = generateSymmetricKey();
-
         // Create the chat
         const chat = await Chat.createPrivateChat(userId1, userId2, createdBy);
-
-        // Encrypt symmetric key for each participant
-        const participants = [userId1, userId2];
-        const encryptedKeys = await Promise.all(
-            participants.map(async (userId) => {
-                const publicKey = await getUserPublicKey(userId);
-                return crypto
-                    .publicEncrypt(publicKey, symmetricKey)
-                    .toString("base64");
-            })
-        );
-
-        // Store encrypted keys
-        const keys = await EncryptionKeyService.createKeysForChat(
-            chat._id,
-            participants,
-            encryptedKeys,
-            createdBy
-        );
-        console.log(keys);
 
         // Emit socket event
         await emitNewChat(io, chat);
@@ -140,6 +117,7 @@ const createPrivateChat = async (userId1, userId2, createdBy) => {
             "error",
             `Failed to create private chat: ${error.message}`
         );
+        console.log(error);
         throw error instanceof ApiError
             ? error
             : new ApiError(

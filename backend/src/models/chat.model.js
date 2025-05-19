@@ -37,12 +37,7 @@ const chatSchema = new mongoose.Schema(
             },
             required: false,
         },
-        encryptionKey: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "EncryptionKey",
-            required: false, //not required for initial chat creation
-            index: true,
-        },
+    
         isActive: {
             type: Boolean,
             default: true,

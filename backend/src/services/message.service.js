@@ -185,10 +185,6 @@ const getMessages = async (chatId, userId, page = 1, limit = 100) => {
             );
         }
 
-        const symmetricKey = await EncryptionKeyService.getSymmetricKeyForChat(
-            chatId,
-            userId
-        );
         const messages = await Message.find({ chat: chatId })
             .sort({ createdAt: -1 }) // Sort by latest first
             .skip((page - 1) * limit)

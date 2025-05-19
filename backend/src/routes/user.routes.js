@@ -23,6 +23,6 @@ router.post(
     ]),
     controllers.userController.updateUserAvatar
 );
-router.use("keys", keysRouter);
+router.use("/keys", keysRouter);
 const userRouter = router;
 export default userRouter;
