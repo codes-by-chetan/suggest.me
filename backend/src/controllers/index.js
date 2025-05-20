@@ -10,6 +10,7 @@ import searchController from "./search.controller.js";
 import seriesController from "./series.controller.js";
 import suggestionController from "./suggestion.controller.js";
 import userController from "./user.controller.js";
+import userContentController from "./userContent.controller.js";
 import userKeyController from "./userKey.controller.js";
 import userRelationsController from "./userRelations.controller.js";
 
@@ -28,6 +29,7 @@ const controllers = {
     suggestionController,
     chatController,
     userKeyController,
+    userContentController,
 };
 
 export default controllers;

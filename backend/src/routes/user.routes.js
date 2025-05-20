@@ -5,6 +5,7 @@ import validate from "../middlewares/validate.js";
 import middleware from "../middlewares/index.js";
 import userRelationsRouter from "./userRelations.routes.js";
 import keysRouter from "./keys.routes.js";
+import userContentRouter from "./userContent.routes.js";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.post(
     controllers.userController.updateUserAvatar
 );
 router.use("/keys", keysRouter);
+router.use("/content", userContentRouter);
 const userRouter = router;
 export default userRouter;

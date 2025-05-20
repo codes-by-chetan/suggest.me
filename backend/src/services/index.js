@@ -11,6 +11,7 @@ import searchService from "./search.service.js";
 import seriesService from "./series.service.js";
 import suggestionService from "./suggestion.service.js";
 import userService from "./user.service.js";
+import userContentService from "./userContent.service.js";
 import userKeyService from "./userKey.service.js";
 import userProfileService from "./userProfile.service.js";
 import userRelationsService from "./userRelations.service.js";
@@ -32,6 +33,7 @@ const services = {
     encryptionKeyService,
     messageService,
     userKeyService,
+    userContentService
 };
 
 export default services;
