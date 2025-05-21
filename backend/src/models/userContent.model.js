@@ -46,7 +46,7 @@ const userContentSchema = new mongoose.Schema(
         },
         suggestion: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Suggestions",
+            ref: "UserSuggestions",
             required: false,
             index: true,
         },

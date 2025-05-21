@@ -127,6 +127,11 @@ const seriesSchema = new mongoose.Schema(
                     "Release date cannot be in the future for existing records.",
             },
         },
+        plot: {
+            type: String,
+            maxlength: [1500, "Plot summary cannot exceed 1500 characters."],
+            trim: true,
+        },
         runtime: {
             type: [Number], // Changed to array to support TMDB's episode_run_time
             validate: {
@@ -340,10 +345,8 @@ seriesSchema.plugin(plugins.privatePlugin);
 seriesSchema.plugin(plugins.softDelete);
 
 // Indexes for performance
-seriesSchema.index({ slug: 1 });
 seriesSchema.index({ title: 1, year: 1 });
 seriesSchema.index({ genres: 1, "ratings.imdb.score": -1 });
-seriesSchema.index({ "references.tmdbId": 1 });
 
 // Pre-save hook to generate slug
 seriesSchema.pre("save", async function (next) {

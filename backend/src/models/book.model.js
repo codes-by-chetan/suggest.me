@@ -386,7 +386,6 @@ bookSchema.plugin(plugins.softDelete);
 bookSchema.index({ slug: 1 });
 bookSchema.index({ title: 1, publishedYear: 1 });
 bookSchema.index({ genres: 1 });
-bookSchema.index({ googleBooksId: 1 });
 
 // Pre-save hook to generate slug
 bookSchema.pre("save", async function (next) {

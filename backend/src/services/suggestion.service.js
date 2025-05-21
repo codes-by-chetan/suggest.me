@@ -139,139 +139,192 @@ const createSuggestion = async (user, content, note, recipients) => {
     return suggestion;
 };
 
-const getSuggestionsByUser = async (userId) => {
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
-    }
+const mapSuggestionToContentItem = async (suggestion) => {
+    await suggestion.populate("content.album content.artist content.publisher");
+    await suggestion.populate({
+        path: "sender.profile recipients.profile",
+        select: "avatar isVerified displayName bio",
+    });
 
-    const suggestions = await models.UserSuggestions.find({
-        sender: userId,
-        deleted: false,
-    })
-        .populate("content")
-        .populate({
-            path: "sender recipients",
-            select: "_id fullName fullNameString profile",
-        });
-    if (!suggestions.length) {
-        return [];
-    }
-
-    const populatedSuggestions = await Promise.all(
-        suggestions.map(async (suggestion) => {
-            await suggestion.populate(
-                "content.album content.artist content.publisher"
-            );
-            await suggestion.populate({
-                path: "sender.profile recipients.profile",
-                select: "avatar isVerified displayName bio",
-            });
-
-            return {
-                id: suggestion._id.toString(),
-                contentId: suggestion.content?._id.toString(),
-                title: suggestion.content?.title || "Unknown Title",
-                type: suggestion.contentType.toLowerCase(),
-                imageUrl:
-                    suggestion.content?.poster?.url ||
-                    suggestion.content?.coverImage?.url ||
-                    suggestion.content?.album?.coverImage?.url,
-                year:
-                    suggestion.content?.year?.toString() ||
-                    suggestion.content?.publishedYear?.toString() ||
-                    suggestion.content?.releaseYear?.toString(),
-                creator:
-                    suggestion.content?.director
-                        ?.map((d) => d.name)
-                        .join(", ") ||
-                    suggestion.content?.creator
-                        ?.map((c) => c.name)
-                        .join(", ") ||
-                    suggestion.content?.author?.map((a) => a.name).join(", ") ||
-                    suggestion.content?.artists
-                        ?.map((a) => a.name)
-                        .join(", ") ||
-                    "",
-                description:
-                    suggestion.content?.plot || suggestion.content?.description,
-                suggestedTo: suggestion.recipients.map((recipient) => ({
-                    id: recipient._id.toString(),
-                    name: recipient.fullNameString,
-                    avatar: recipient.profile?.avatar?.url,
-                })),
-                suggestedAt: suggestion.createdAt.toISOString(),
-                status: null, // Status not implemented in schema, defaulting to null
-            };
-        })
-    );
-
-    return populatedSuggestions;
+    return {
+        id: suggestion._id.toString(),
+        contentId: suggestion.content?._id.toString(),
+        title: suggestion.content?.title || "Unknown Title",
+        type: suggestion.contentType.toLowerCase(),
+        imageUrl:
+            suggestion.content?.poster?.url ||
+            suggestion.content?.coverImage?.url ||
+            suggestion.content?.album?.coverImage?.url,
+        year:
+            suggestion.content?.year?.toString() ||
+            suggestion.content?.publishedYear?.toString() ||
+            suggestion.content?.releaseYear?.toString(),
+        creator:
+            suggestion.content?.director?.map((d) => d.name).join(", ") ||
+            suggestion.content?.creator?.map((c) => c.name).join(", ") ||
+            suggestion.content?.author?.map((a) => a.name).join(", ") ||
+            suggestion.content?.artists?.map((a) => a.name).join(", ") ||
+            "",
+        description:
+            suggestion.content?.plot || suggestion.content?.description || suggestion.content?.overview,
+        suggestedTo: suggestion.recipients.map((recipient) => ({
+            id: recipient._id.toString(),
+            name: recipient.fullNameString || "Unknown",
+            avatar: recipient.profile?.avatar?.url,
+        })),
+        suggestedAt: suggestion.createdAt.toISOString(),
+        status: null, // Status not implemented in schema, defaulting to null
+    };
 };
 
-const getSuggestionsForUser = async (userId) => {
+const mapSuggestionForUserToContentItem = async (suggestion) => {
+    await suggestion.populate("content.album content.artist content.publisher");
+    await suggestion.populate({
+        path: "sender.profile recipients.profile",
+        select: "avatar isVerified displayName bio",
+    });
+
+    return {
+        id: suggestion._id.toString(),
+        contentId: suggestion.content?._id.toString(),
+        title: suggestion.content?.title || "Unknown Title",
+        type: suggestion.contentType.toLowerCase(),
+        imageUrl:
+            suggestion.content?.poster?.url ||
+            suggestion.content?.coverImage?.url ||
+            suggestion.content?.album?.coverImage?.url,
+        year:
+            suggestion.content?.year?.toString() ||
+            suggestion.content?.publishedYear?.toString() ||
+            suggestion.content?.releaseYear?.toString(),
+        creator:
+            suggestion.content?.director?.map((d) => d.name).join(", ") ||
+            suggestion.content?.creator?.map((c) => c.name).join(", ") ||
+            suggestion.content?.author?.map((a) => a.name).join(", ") ||
+            suggestion.content?.artists?.map((a) => a.name).join(", ") ||
+            "",
+        description:
+            suggestion.content?.plot || suggestion.content?.description || suggestion.content?.overview,
+        suggestedBy: {
+            id: suggestion.sender._id.toString(),
+            name: suggestion.sender.fullNameString || "Unknown",
+            avatar: suggestion.sender.profile?.avatar?.url,
+        },
+        suggestedAt: suggestion.createdAt.toISOString(),
+        status: null, // Status not implemented in schema, defaulting to null
+    };
+};
+
+const getSuggestionsByUser = async (userId, { page = 1, limit = 12, type } = {}) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
-    const suggestions = await models.UserSuggestions.find({
-        recipients: userId,
-        deleted: false,
-    })
-        .populate("content")
-        .populate({
-            path: "sender recipients",
-            select: "_id fullName fullNameString profile",
-        });
-    if (!suggestions.length) {
-        return [];
+    if (page < 1 || limit < 1) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, page ya limit galat hai!");
     }
-    const populatedSuggestions = await Promise.all(
-        suggestions.map(async (suggestion) => {
-            await suggestion.populate(
-                "content.album content.artist content.publisher"
-            );
-            await suggestion.populate({
-                path: "sender.profile recipients.profile",
-                select: "avatar isVerified displayName bio",
-            });
-            return {
-                id: suggestion._id.toString(),
-                contentId: suggestion.content?._id.toString(),
-                title: suggestion.content?.title || "Unknown Title",
-                type: suggestion.contentType.toLowerCase(),
-                imageUrl:
-                    suggestion.content?.poster?.url ||
-                    suggestion.content?.coverImage?.url ||
-                    suggestion.content?.album?.coverImage?.url,
-                year:
-                    suggestion.content?.year?.toString() ||
-                    suggestion.content?.publishedYear?.toString()||
-                    suggestion.content?.releaseYear?.toString(),
-                creator:
-                    suggestion.content?.director
-                        ?.map((d) => d.name)
-                        .join(", ") ||
-                    suggestion.content?.creator
-                        ?.map((c) => c.name)
-                        .join(", ") ||
-                    suggestion.content?.author?.map((a) => a.name).join(", ") ||
-                    suggestion.content?.artists
-                        ?.map((a) => a.name)
-                        .join(", ") ||
-                    "",
-                description:
-                    suggestion.content?.plot || suggestion.content?.description,
-                suggestedBy: {
-                    id: suggestion.sender._id.toString(),
-                    name: suggestion.sender.fullNameString,
-                    avatar: suggestion.sender.profile?.avatar?.url,
-                },
-                suggestedAt: suggestion.createdAt.toISOString(),
-                status: null, // Status not implemented in schema, defaulting to null
-            };
-        })
-    );
-    return populatedSuggestions;
+
+    const typeMap = {
+        movie: "Movie",
+        series: "Series",
+        book: "Book",
+        music: "Music",
+        video: "Video",
+    };
+    const contentType = type ? typeMap[type.toLowerCase()] : undefined;
+    if (type && !contentType) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            `Bhai, yeh type ${type} galat hai! Valid options: movie, series, book, music, video`
+        );
+    }
+
+    const filter = { sender: userId, deleted: false };
+    if (contentType) {
+        filter.contentType = contentType;
+    }
+
+    const options = {
+        page,
+        limit,
+        populate: [
+            "content",
+            {
+                path: "sender recipients",
+                select: "_id fullName fullNameString profile",
+            },
+        ],
+        sortBy: "createdAt:desc",
+    };
+
+    const { results, totalResults, totalPages, page: currentPage, limit: currentLimit } =
+        await models.UserSuggestions.paginate(filter, options);
+
+    const data = await Promise.all(results.map(mapSuggestionToContentItem));
+
+    return {
+        success: true,
+        data,
+        total: totalResults ?? 0,
+        page: currentPage ?? page,
+        limit: currentLimit ?? limit,
+    };
+};
+
+const getSuggestionsForUser = async (userId, { page = 1, limit = 12, type } = {}) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
+    }
+
+    if (page < 1 || limit < 1) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, page ya limit galat hai!");
+    }
+
+    const typeMap = {
+        movie: "Movie",
+        series: "Series",
+        book: "Book",
+        music: "Music",
+        video: "Video",
+    };
+    const contentType = type ? typeMap[type.toLowerCase()] : undefined;
+    if (type && !contentType) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            `Bhai, yeh type ${type} galat hai! Valid options: movie, series, book, music, video`
+        );
+    }
+
+    const filter = { recipients: userId, deleted: false };
+    if (contentType) {
+        filter.contentType = contentType;
+    }
+
+    const options = {
+        page,
+        limit,
+        populate: [
+            "content",
+            {
+                path: "sender recipients",
+                select: "_id fullName fullNameString profile",
+            },
+        ],
+        sortBy: "createdAt:desc",
+    };
+
+    const { results, totalResults, totalPages, page: currentPage, limit: currentLimit } =
+        await models.UserSuggestions.paginate(filter, options);
+
+    const data = await Promise.all(results.map(mapSuggestionForUserToContentItem));
+
+    return {
+        success: true,
+        data,
+        total: totalResults ?? 0,
+        page: currentPage ?? page,
+        limit: currentLimit ?? limit,
+    };
 };
 
 const suggestionService = {

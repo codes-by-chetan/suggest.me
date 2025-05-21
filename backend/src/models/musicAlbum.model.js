@@ -105,8 +105,6 @@ const musicAlbumSchema = new mongoose.Schema(
 musicAlbumSchema.plugin(plugins.paginate);
 musicAlbumSchema.plugin(plugins.privatePlugin);
 musicAlbumSchema.plugin(plugins.softDelete);
-
-musicAlbumSchema.index({ slug: 1 });
 musicAlbumSchema.index({ title: 1, releaseYear: 1 });
 
 musicAlbumSchema.pre("save", async function (next) {

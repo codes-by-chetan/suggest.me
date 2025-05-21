@@ -265,7 +265,6 @@ videoSchema.plugin(plugins.privatePlugin);
 videoSchema.plugin(plugins.softDelete);
 
 // Indexes for performance
-videoSchema.index({ slug: 1 });
 videoSchema.index({ title: 1, publishedDate: 1 });
 videoSchema.index({ genres: 1, "engagement.views": -1 });
 
@@ -287,6 +286,7 @@ videoSchema.pre("save", async function (next) {
     }
     next();
 });
+
 
 // Pre-save validation for creator size
 videoSchema.pre("save", function (next) {

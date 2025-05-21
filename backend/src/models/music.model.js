@@ -80,7 +80,6 @@ const musicSchema = new mongoose.Schema(
                 message:
                     "Genres, if provided, must be between 1 and 5 entries.",
             },
-            index: true,
         },
         mood: {
             type: [String],
@@ -323,7 +322,6 @@ musicSchema.plugin(plugins.paginate);
 musicSchema.plugin(plugins.privatePlugin);
 musicSchema.plugin(plugins.softDelete);
 
-musicSchema.index({ slug: 1 });
 musicSchema.index({ title: 1, releaseYear: 1 });
 musicSchema.index({ genres: 1 });
 

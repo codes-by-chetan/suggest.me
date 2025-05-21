@@ -104,7 +104,6 @@ studioSchema.pre("save", function (next) {
 
 // Index for efficient querying
 studioSchema.index({ name: 1 });
-studioSchema.index({ slug: 1 });
 studioSchema.index({ tmdbId: 1 }, { sparse: true });
 
 const Studio = mongoose.model("Studio", studioSchema);

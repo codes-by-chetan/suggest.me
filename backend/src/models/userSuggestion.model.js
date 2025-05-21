@@ -32,26 +32,40 @@ const userSuggestionsSchema = new mongoose.Schema(
             },
             required: [true, "Content type is required"],
         },
-        status: {
-            type: String,
-            enum: {
-                values: [
-                    "WantToConsume",
-                    "Consuming",
-                    "Consumed",
-                    "NotInterested",
-                ],
-                message:
-                    "Status must be one of: WantToConsume, Consuming, Consumed, NotInterested",
-            },
-            required: false,
-        },
         note: {
             type: String,
             trim: true,
             maxlength: [500, "Note cannot exceed 500 characters"],
             required: false,
         },
+        comments: [
+            {
+                user: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                    required: [true, "User reference is required"],
+                },
+                comment: {
+                    type: String,
+                    required: [true, "Comment is required"],
+                    trim: true,
+                    maxlength: [100, "Comment cannot exceed 500 characters"],
+                },
+            },
+        ],
+        reaction: [
+            {
+                user: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                    required: [true, "User reference is required"],
+                },
+                reaction: {
+                    type: String,
+                    required: [true, "Reaction type is required"],
+                },
+            },
+        ],
         userContent: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "UserContent",
@@ -92,8 +106,6 @@ userSuggestionsSchema.index(
     { sender: 1, recipients: 1, content: 1 },
     { unique: true }
 );
-userSuggestionsSchema.index({ sender: 1, status: 1 });
-userSuggestionsSchema.index({ recipient: 1, status: 1 });
 userSuggestionsSchema.index({ content: 1 });
 userSuggestionsSchema.index({ userContent: 1 });
 

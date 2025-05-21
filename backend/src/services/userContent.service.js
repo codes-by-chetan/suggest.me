@@ -14,6 +14,47 @@ const getContent = {
     Music: musicService.getMusicDetails,
 };
 
+const mapContentItem = (userContent) => ({
+    id: userContent._id.toString(),
+    userContentId: userContent._id.toString(),
+    contentId: userContent.content?._id.toString(),
+    title: userContent.content?.title || "Unknown Title",
+    type: userContent.contentType.toLowerCase(),
+    imageUrl:
+        userContent.content?.poster?.url ||
+        userContent.content?.coverImage?.url ||
+        userContent.content?.album?.coverImage?.url,
+    year:
+        userContent.content?.year?.toString() ||
+        userContent.content?.publishedYear?.toString() ||
+        userContent.content?.releaseYear?.toString(),
+    creator:
+        userContent.content?.director
+            ?.map((d) => d.name)
+            .join(", ") ||
+        userContent.content?.creator
+            ?.map((c) => c.name)
+            .join(", ") ||
+        userContent.content?.author?.map((a) => a.name).join(", ") ||
+        userContent.content?.artists
+            ?.map((a) => a.name)
+            .join(", ") ||
+        "",
+    description:
+        userContent.content?.plot || userContent.content?.description,
+    status: userContent.status,
+    addedAt: userContent.addedAt.toISOString(),
+    suggestionId: userContent.suggestion?._id.toString() || null,
+    suggestedBy:
+        userContent.createdBy && userContent.createdBy.profile
+            ? {
+                  id: userContent.createdBy._id.toString(),
+                  name: userContent.createdBy.fullNameString || "Unknown",
+                  avatar: userContent.createdBy.profile.avatar?.url,
+              }
+            : { id: "unknown", name: "Unknown" },
+});
+
 const addContent = async (user, content, status = "WantToConsume", suggestionId) => {
     if (!content?.id || !content?.type) {
         throw new ApiError(
@@ -22,7 +63,7 @@ const addContent = async (user, content, status = "WantToConsume", suggestionId)
         );
     }
 
-    if (!getContent[content.type]) {
+    if (!getContent[content?.type]) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
             `Yeh ${content.type} type ka content nahi support karta!`
@@ -111,37 +152,7 @@ const addContent = async (user, content, status = "WantToConsume", suggestionId)
     });
     await userContent.populate("suggestion");
 
-    return {
-        id: userContent._id.toString(),
-        contentId: userContent.content?._id.toString(),
-        title: userContent.content?.title || "Unknown Title",
-        type: userContent.contentType.toLowerCase(),
-        imageUrl:
-            userContent.content?.poster?.url ||
-            userContent.content?.coverImage?.url ||
-            userContent.content?.album?.coverImage?.url,
-        year:
-            userContent.content?.year?.toString() ||
-            userContent.content?.publishedYear?.toString() ||
-            userContent.content?.releaseYear?.toString(),
-        creator:
-            userContent.content?.director
-                ?.map((d) => d.name)
-                .join(", ") ||
-            userContent.content?.creator
-                ?.map((c) => c.name)
-                .join(", ") ||
-            userContent.content?.author?.map((a) => a.name).join(", ") ||
-            userContent.content?.artists
-                ?.map((a) => a.name)
-                .join(", ") ||
-            "",
-        description:
-            userContent.content?.plot || userContent.content?.description,
-        status: userContent.status,
-        addedAt: userContent.addedAt.toISOString(),
-        suggestionId: userContent.suggestion?._id.toString() || null,
-    };
+    return mapContentItem(userContent);
 };
 
 const updateContentStatus = async (userId, contentId, status) => {
@@ -172,7 +183,7 @@ const updateContentStatus = async (userId, contentId, status) => {
     }
 
     const userContent = await models.UserContent.findOneAndUpdate(
-        { user: userId, content: contentId },
+        { user: userId, _id: contentId },
         { status, lastUpdatedAt: Date.now(), updatedBy: userId },
         { new: true }
     );
@@ -195,40 +206,10 @@ const updateContentStatus = async (userId, contentId, status) => {
     });
     await userContent.populate("suggestion");
 
-    return {
-        id: userContent._id.toString(),
-        contentId: userContent.content?._id.toString(),
-        title: userContent.content?.title || "Unknown Title",
-        type: userContent.contentType.toLowerCase(),
-        imageUrl:
-            userContent.content?.poster?.url ||
-            userContent.content?.coverImage?.url ||
-            userContent.content?.album?.coverImage?.url,
-        year:
-            userContent.content?.year?.toString() ||
-            userContent.content?.publishedYear?.toString() ||
-            userContent.content?.releaseYear?.toString(),
-        creator:
-            userContent.content?.director
-                ?.map((d) => d.name)
-                .join(", ") ||
-            userContent.content?.creator
-                ?.map((c) => c.name)
-                .join(", ") ||
-            userContent.content?.author?.map((a) => a.name).join(", ") ||
-            userContent.content?.artists
-                ?.map((a) => a.name)
-                .join(", ") ||
-            "",
-        description:
-            userContent.content?.plot || userContent.content?.description,
-        status: userContent.status,
-        addedAt: userContent.addedAt.toISOString(),
-        suggestionId: userContent.suggestion?._id.toString() || null,
-    };
+    return mapContentItem(userContent);
 };
 
-const getUserContent = async (userId) => {
+const getUserContent = async (userId, { page = 1, limit = 12, type } = {}) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
@@ -236,53 +217,64 @@ const getUserContent = async (userId) => {
         );
     }
 
-    const contentList = await models.UserContent.find({ user: userId })
-        .populate("content")
-        .populate({
-            path: "user createdBy updatedBy",
-            select: "_id fullName fullNameString profile",
-        })
-        .populate({
-            path: "user.profile createdBy.profile updatedBy.profile",
-            select: "avatar isVerified displayName bio",
-        })
-        .populate("suggestion");
-
-    if (!contentList.length) {
-        return [];
+    // Validate page and limit
+    if (page < 1 || limit < 1) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, page ya limit galat hai!"
+        );
     }
 
-    return contentList.map((userContent) => ({
-        id: userContent._id.toString(),
-        contentId: userContent.content?._id.toString(),
-        title: userContent.content?.title || "Unknown Title",
-        type: userContent.contentType.toLowerCase(),
-        imageUrl:
-            userContent.content?.poster?.url ||
-            userContent.content?.coverImage?.url ||
-            userContent.content?.album?.coverImage?.url,
-        year:
-            userContent.content?.year?.toString() ||
-            userContent.content?.publishedYear?.toString() ||
-            userContent.content?.releaseYear?.toString(),
-        creator:
-            userContent.content?.director
-                ?.map((d) => d.name)
-                .join(", ") ||
-            userContent.content?.creator
-                ?.map((c) => c.name)
-                .join(", ") ||
-            userContent.content?.author?.map((a) => a.name).join(", ") ||
-            userContent.content?.artists
-                ?.map((a) => a.name)
-                .join(", ") ||
-            "",
-        description:
-            userContent.content?.plot || userContent.content?.description,
-        status: userContent.status,
-        addedAt: userContent.addedAt.toISOString(),
-        suggestionId: userContent.suggestion?._id.toString() || null,
-    }));
+    // Map frontend type (lowercase) to backend contentType (capitalized)
+    const typeMap = {
+        movie: "Movie",
+        series: "Series",
+        book: "Book",
+        music: "Music",
+    };
+    const contentType = type ? typeMap[type.toLowerCase()] : undefined;
+    if (type && !contentType) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            `Bhai, yeh type ${type} galat hai! Valid options: movie, series, book, music`
+        );
+    }
+
+    const filter = { user: userId };
+    if (contentType) {
+        filter.contentType = contentType;
+    }
+
+    const options = {
+        page,
+        limit,
+        populate: [
+            "content",
+            {
+                path: "user createdBy updatedBy",
+                select: "_id fullName fullNameString profile",
+            },
+            {
+                path: "user.profile createdBy.profile updatedBy.profile",
+                select: "avatar isVerified displayName bio",
+            },
+            "suggestion",
+        ],
+        sortBy: "addedAt:desc", // Sort by addedAt descending
+    };
+
+    const { results, totalResults, totalPages, page: currentPage, limit: currentLimit } =
+        await models.UserContent.paginate(filter, options);
+
+    const data = results.map(mapContentItem);
+
+    return {
+        success: true,
+        data,
+        total: totalResults,
+        page: currentPage,
+        limit: currentLimit,
+    };
 };
 
 const getContentById = async (contentId) => {
@@ -312,37 +304,7 @@ const getContentById = async (contentId) => {
         );
     }
 
-    return {
-        id: userContent._id.toString(),
-        contentId: userContent.content?._id.toString(),
-        title: userContent.content?.title || "Unknown Title",
-        type: userContent.contentType.toLowerCase(),
-        imageUrl:
-            userContent.content?.poster?.url ||
-            userContent.content?.coverImage?.url ||
-            userContent.content?.album?.coverImage?.url,
-        year:
-            userContent.content?.year?.toString() ||
-            userContent.content?.publishedYear?.toString() ||
-            userContent.content?.releaseYear?.toString(),
-        creator:
-            userContent.content?.director
-                ?.map((d) => d.name)
-                .join(", ") ||
-            userContent.content?.creator
-                ?.map((c) => c.name)
-                .join(", ") ||
-            userContent.content?.author?.map((a) => a.name).join(", ") ||
-            userContent.content?.artists
-                ?.map((a) => a.name)
-                .join(", ") ||
-            "",
-        description:
-            userContent.content?.plot || userContent.content?.description,
-        status: userContent.status,
-        addedAt: userContent.addedAt.toISOString(),
-        suggestionId: userContent.suggestion?._id.toString() || null,
-    };
+    return mapContentItem(userContent);
 };
 
 const deleteContent = async (contentId) => {
@@ -374,37 +336,77 @@ const deleteContent = async (contentId) => {
     });
     await userContent.populate("suggestion");
 
-    return {
-        id: userContent._id.toString(),
-        contentId: userContent.content?._id.toString(),
-        title: userContent.content?.title || "Unknown Title",
-        type: userContent.contentType.toLowerCase(),
-        imageUrl:
-            userContent.content?.poster?.url ||
-            userContent.content?.coverImage?.url ||
-            userContent.content?.album?.coverImage?.url,
-        year:
-            userContent.content?.year?.toString() ||
-            userContent.content?.publishedYear?.toString() ||
-            userContent.content?.releaseYear?.toString(),
-        creator:
-            userContent.content?.director
-                ?.map((d) => d.name)
-                .join(", ") ||
-            userContent.content?.creator
-                ?.map((c) => c.name)
-                .join(", ") ||
-            userContent.content?.author?.map((a) => a.name).join(", ") ||
-            userContent.content?.artists
-                ?.map((a) => a.name)
-                .join(", ") ||
-            "",
-        description:
-            userContent.content?.plot || userContent.content?.description,
-        status: userContent.status,
-        addedAt: userContent.addedAt.toISOString(),
-        suggestionId: userContent.suggestion?._id.toString() || null,
-    };
+    return mapContentItem(userContent);
+};
+
+const checkContent = async (userId, contentId, suggestionId) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, user ID galat hai!"
+        );
+    }
+
+    if (!contentId && !suggestionId) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, content ID ya suggestion ID, kuch toh daal!"
+        );
+    }
+
+    if (contentId && !mongoose.Types.ObjectId.isValid(contentId)) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, content ID galat hai!"
+        );
+    }
+
+    if (suggestionId && !mongoose.Types.ObjectId.isValid(suggestionId)) {
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, suggestion ID galat hai!"
+        );
+    }
+
+    let userContent;
+    if (contentId) {
+        userContent = await models.UserContent.findOne({
+            user: userId,
+            content: contentId,
+        });
+    } else if (suggestionId) {
+        const suggestion = await models.UserSuggestions.findOne({
+            _id: suggestionId,
+            recipients: userId,
+        });
+        if (!suggestion) {
+            throw new ApiError(
+                httpStatus.BAD_REQUEST,
+                "Yeh suggestion nahi mili ya tu iska recipient nahi hai!"
+            );
+        }
+        userContent = await models.UserContent.findOne({
+            user: userId,
+            suggestion: suggestionId,
+        });
+    }
+
+    if (!userContent) {
+        return null;
+    }
+
+    await userContent.populate("content");
+    await userContent.populate({
+        path: "user createdBy updatedBy",
+        select: "_id fullName fullNameString profile",
+    });
+    await userContent.populate({
+        path: "user.profile createdBy.profile updatedBy.profile",
+        select: "avatar isVerified displayName bio",
+    });
+    await userContent.populate("suggestion");
+
+    return mapContentItem(userContent);
 };
 
 const userContentService = {
@@ -413,6 +415,7 @@ const userContentService = {
     getUserContent,
     getContentById,
     deleteContent,
+    checkContent,
 };
 
 export default userContentService;

@@ -104,7 +104,6 @@ distributorSchema.pre("save", function (next) {
 
 // Index for efficient querying
 distributorSchema.index({ name: 1 });
-distributorSchema.index({ slug: 1 });
 distributorSchema.index({ tmdbId: 1 }, { sparse: true });
 
 const Distributor = mongoose.model("Distributor", distributorSchema);

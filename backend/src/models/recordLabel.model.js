@@ -119,7 +119,7 @@ recordLabelSchema.plugin(plugins.privatePlugin);
 recordLabelSchema.plugin(plugins.softDelete);
 
 // Indexes for performance
-recordLabelSchema.index({ slug: 1 });
+
 recordLabelSchema.index({ name: 1 });
 recordLabelSchema.index({ artists: 1 });
 

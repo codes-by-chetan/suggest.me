@@ -107,7 +107,6 @@ personSchema.pre("save", function (next) {
 
 // Index for efficient querying
 personSchema.index({ name: 1 });
-personSchema.index({ slug: 1 });
 personSchema.index({ tmdbId: 1 }, { sparse: true });
 personSchema.index({ professions: 1 });
 

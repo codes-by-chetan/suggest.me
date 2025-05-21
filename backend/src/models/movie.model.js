@@ -348,7 +348,6 @@ movieSchema.plugin(plugins.privatePlugin);
 movieSchema.plugin(plugins.softDelete);
 
 // Indexes for performance
-movieSchema.index({ slug: 1 });
 movieSchema.index({ title: 1, year: 1 });
 movieSchema.index({ genres: 1, "ratings.imdb.score": -1 });
 

@@ -101,7 +101,6 @@ publisherSchema.pre("save", function (next) {
 
 // Index for efficient querying
 publisherSchema.index({ name: 1 });
-publisherSchema.index({ slug: 1 });
 
 // Soft delete method
 publisherSchema.statics.softDelete = async function (id) {

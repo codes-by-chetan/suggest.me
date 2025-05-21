@@ -104,7 +104,6 @@ productionCompanySchema.pre("save", function (next) {
 
 // Index for efficient querying
 productionCompanySchema.index({ name: 1 });
-productionCompanySchema.index({ slug: 1 });
 productionCompanySchema.index({ tmdbId: 1 }, { sparse: true });
 
 const ProductionCompany = mongoose.model(
