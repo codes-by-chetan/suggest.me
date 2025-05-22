@@ -6,6 +6,7 @@ import movieService from "./movie.service.js";
 import seriesService from "./series.service.js";
 import bookService from "./book.service.js";
 import musicService from "./music.service.js";
+import { populate } from "dotenv";
 
 const getContent = {
     Movie: movieService.getMovieDetails,
@@ -21,27 +22,34 @@ const mapContentItem = (userContent) => ({
     title: userContent.content?.title || "Unknown Title",
     type: userContent.contentType.toLowerCase(),
     imageUrl:
-        userContent.content?.poster?.url ||
-        userContent.content?.coverImage?.url ||
-        userContent.content?.album?.coverImage?.url,
+        userContent.contentType.toLowerCase() === "music"
+            ? userContent.content?.album?.coverImage?.url
+            : userContent.content?.poster?.url ||
+              userContent.content?.coverImage?.url ||
+              userContent.content?.album?.coverImage?.url,
     year:
         userContent.content?.year?.toString() ||
         userContent.content?.publishedYear?.toString() ||
         userContent.content?.releaseYear?.toString(),
     creator:
-        userContent.content?.director
-            ?.map((d) => d.name)
-            .join(", ") ||
-        userContent.content?.creator
-            ?.map((c) => c.name)
-            .join(", ") ||
+        userContent.content?.director?.map((d) => d.name).join(", ") ||
+        userContent.content?.creator?.map((c) => c.name).join(", ") ||
         userContent.content?.author?.map((a) => a.name).join(", ") ||
-        userContent.content?.artists
-            ?.map((a) => a.name)
-            .join(", ") ||
+        userContent.content?.production?.companies
+                ?.map((a) => a.name)
+                .join(", ") ||
+        (userContent.contentType.toLowerCase() === "music"
+            ? [
+                  userContent.content?.artist?.name,
+                  ...(userContent.content?.featuredArtists?.map(
+                      (a) => a.name
+                  ) || []),
+              ]
+                  .filter(Boolean)
+                  .join(", ")
+            : "") ||
         "",
-    description:
-        userContent.content?.plot || userContent.content?.description,
+    description: userContent.content?.plot || userContent.content?.description,
     status: userContent.status,
     addedAt: userContent.addedAt.toISOString(),
     suggestionId: userContent.suggestion?._id.toString() || null,
@@ -55,7 +63,12 @@ const mapContentItem = (userContent) => ({
             : { id: "unknown", name: "Unknown" },
 });
 
-const addContent = async (user, content, status = "WantToConsume", suggestionId) => {
+const addContent = async (
+    user,
+    content,
+    status = "WantToConsume",
+    suggestionId
+) => {
     if (!content?.id || !content?.type) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
@@ -141,26 +154,50 @@ const addContent = async (user, content, status = "WantToConsume", suggestionId)
         );
     }
 
-    await userContent.populate("content");
-    await userContent.populate({
-        path: "user createdBy updatedBy",
-        select: "_id fullName fullNameString profile",
-    });
-    await userContent.populate({
-        path: "user.profile createdBy.profile updatedBy.profile",
-        select: "avatar isVerified displayName bio",
-    });
-    await userContent.populate("suggestion");
+    const populateOptions = [
+        {
+            path: "content",
+            ...(userContent.contentType === "Music"
+                ? {
+                      populate: [
+                          { path: "album" },
+                          { path: "artist" },
+                          { path: "featuredArtists" },
+                      ],
+                  }
+                : userContent.contentType === "Book"
+                  ? {
+                        populate: [{ path: "author" }],
+                    }
+                  : userContent.contentType === "Series"
+                    ? {
+                          populate: [
+                              { path: "production", populate: "companies" },
+                          ],
+                      }
+                    : {
+                          populate: [{ path: "director" }, { path: "writers" }],
+                      }),
+        },
+        {
+            path: "user createdBy updatedBy",
+            select: "_id fullName fullNameString profile",
+        },
+        {
+            path: "user.profile createdBy.profile updatedBy.profile",
+            select: "avatar isVerified displayName bio",
+        },
+        "suggestion",
+    ];
+
+    await userContent.populate(populateOptions);
 
     return mapContentItem(userContent);
 };
 
 const updateContentStatus = async (userId, contentId, status) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Bhai, user ID galat hai!"
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
     if (!mongoose.Types.ObjectId.isValid(contentId)) {
         throw new ApiError(
@@ -195,26 +232,50 @@ const updateContentStatus = async (userId, contentId, status) => {
         );
     }
 
-    await userContent.populate("content");
-    await userContent.populate({
-        path: "user createdBy updatedBy",
-        select: "_id fullName fullNameString profile",
-    });
-    await userContent.populate({
-        path: "user.profile createdBy.profile updatedBy.profile",
-        select: "avatar isVerified displayName bio",
-    });
-    await userContent.populate("suggestion");
+    const populateOptions = [
+        {
+            path: "content",
+            ...(userContent.contentType === "Music"
+                ? {
+                      populate: [
+                          { path: "album" },
+                          { path: "artist" },
+                          { path: "featuredArtists" },
+                      ],
+                  }
+                : userContent.contentType === "Book"
+                  ? {
+                        populate: [{ path: "author" }],
+                    }
+                  : userContent.contentType === "Series"
+                    ? {
+                          populate: [
+                              { path: "production", populate: "companies" },
+                          ],
+                      }
+                    : {
+                          populate: [{ path: "director" }, { path: "writers" }],
+                      }),
+        },
+        {
+            path: "user createdBy updatedBy",
+            select: "_id fullName fullNameString profile",
+        },
+        {
+            path: "user.profile createdBy.profile updatedBy.profile",
+            select: "avatar isVerified displayName bio",
+        },
+        "suggestion",
+    ];
+
+    await userContent.populate(populateOptions);
 
     return mapContentItem(userContent);
 };
 
 const getUserContent = async (userId, { page = 1, limit = 12, type } = {}) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Bhai, user ID galat hai!"
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
     // Validate page and limit
@@ -263,8 +324,42 @@ const getUserContent = async (userId, { page = 1, limit = 12, type } = {}) => {
         sortBy: "addedAt:desc", // Sort by addedAt descending
     };
 
-    const { results, totalResults, totalPages, page: currentPage, limit: currentLimit } =
-        await models.UserContent.paginate(filter, options);
+    const {
+        results,
+        totalResults,
+        totalPages,
+        page: currentPage,
+        limit: currentLimit,
+    } = await models.UserContent.paginate(filter, options);
+
+    // Conditionally populate music-specific fields
+    for (const userContent of results) {
+        if (userContent.contentType === "Music") {
+            await userContent.populate({
+                path: "content",
+                populate: [
+                    { path: "album" },
+                    { path: "artist" },
+                    { path: "featuredArtists" },
+                ],
+            });
+        } else if (userContent.contentType === "Book") {
+            await userContent.populate({
+                path: "content",
+                populate: [{ path: "author" }],
+            });
+        } else if (userContent.contentType === "Series") {
+            await userContent.populate({
+                path: "content",
+                populate: [{ path: "production", populate: "companies" }],
+            });
+        } else {
+            await userContent.populate({
+                path: "content",
+                populate: [{ path: "director" }, { path: "writers" }],
+            });
+        }
+    }
 
     const data = results.map(mapContentItem);
 
@@ -298,10 +393,18 @@ const getContentById = async (contentId) => {
         .populate("suggestion");
 
     if (!userContent) {
-        throw new ApiError(
-            httpStatus.NOT_FOUND,
-            "Yeh content nahi mila!"
-        );
+        throw new ApiError(httpStatus.NOT_FOUND, "Yeh content nahi mila!");
+    }
+
+    if (userContent.contentType === "Music") {
+        await userContent.populate({
+            path: "content",
+            populate: [
+                { path: "album" },
+                { path: "artist" },
+                { path: "featuredArtists" },
+            ],
+        });
     }
 
     return mapContentItem(userContent);
@@ -317,34 +420,41 @@ const deleteContent = async (contentId) => {
 
     const userContent = await models.UserContent.findById(contentId);
     if (!userContent) {
-        throw new ApiError(
-            httpStatus.NOT_FOUND,
-            "Yeh content nahi mila!"
-        );
+        throw new ApiError(httpStatus.NOT_FOUND, "Yeh content nahi mila!");
     }
 
     await models.UserContent.softDelete(contentId);
 
-    await userContent.populate("content");
-    await userContent.populate({
-        path: "user createdBy updatedBy",
-        select: "_id fullName fullNameString profile",
-    });
-    await userContent.populate({
-        path: "user.profile createdBy.profile updatedBy.profile",
-        select: "avatar isVerified displayName bio",
-    });
-    await userContent.populate("suggestion");
+    const populateOptions = [
+        {
+            path: "content",
+            ...(userContent.contentType === "Music" && {
+                populate: [
+                    { path: "album" },
+                    { path: "artist" },
+                    { path: "featuredArtists" },
+                ],
+            }),
+        },
+        {
+            path: "user createdBy updatedBy",
+            select: "_id fullName fullNameString profile",
+        },
+        {
+            path: "user.profile createdBy.profile updatedBy.profile",
+            select: "avatar isVerified displayName bio",
+        },
+        "suggestion",
+    ];
+
+    await userContent.populate(populateOptions);
 
     return mapContentItem(userContent);
 };
 
 const checkContent = async (userId, contentId, suggestionId) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(
-            httpStatus.BAD_REQUEST,
-            "Bhai, user ID galat hai!"
-        );
+        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
     if (!contentId && !suggestionId) {
@@ -395,16 +505,29 @@ const checkContent = async (userId, contentId, suggestionId) => {
         return null;
     }
 
-    await userContent.populate("content");
-    await userContent.populate({
-        path: "user createdBy updatedBy",
-        select: "_id fullName fullNameString profile",
-    });
-    await userContent.populate({
-        path: "user.profile createdBy.profile updatedBy.profile",
-        select: "avatar isVerified displayName bio",
-    });
-    await userContent.populate("suggestion");
+    const populateOptions = [
+        {
+            path: "content",
+            ...(userContent.contentType === "Music" && {
+                populate: [
+                    { path: "album" },
+                    { path: "artist" },
+                    { path: "featuredArtists" },
+                ],
+            }),
+        },
+        {
+            path: "user createdBy updatedBy",
+            select: "_id fullName fullNameString profile",
+        },
+        {
+            path: "user.profile createdBy.profile updatedBy.profile",
+            select: "avatar isVerified displayName bio",
+        },
+        "suggestion",
+    ];
+
+    await userContent.populate(populateOptions);
 
     return mapContentItem(userContent);
 };

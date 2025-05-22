@@ -5,6 +5,10 @@ import axios from "axios";
 import config from "../config/env.config.js";
 import logger from "../config/logger.config.js";
 
+// In-memory cache for search results (can be replaced with Redis in production)
+const searchCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL
+
 // TMDB API configuration
 const TMDB_API_KEY = config.tmdb.apiKey;
 const TMDB_AUTH_TOKEN = config.tmdb.accessToken;
@@ -30,24 +34,27 @@ const fetchOMDbData = async (searchTerm, contentType, page, limit) => {
         });
 
         if (response.data.Response === "False") {
-            console.error(`OMDb API error: ${response.data.Error}`);
-            return [];
+            logger.logMessage("warn", `OMDb API error: ${response.data.Error}`);
+            return { data: [], total: 0 };
         }
 
-        return (
-            response.data.Search?.map((item) => ({
-                imdbId: item.imdbID,
-                title: item.Title,
-                slug: item.Title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-                poster: item.Poster && item.Poster !== "N/A" ? item.Poster : "",
-                plot: "", // OMDb search endpoint doesn't provide plot
-                year: item.Year ? parseInt(item.Year.split("–")[0]) : null,
-                matchReason: "OMDb API",
-            })) || []
-        );
+        const data = (response.data.Search || []).map((item) => ({
+            imdbId: item.imdbID,
+            title: item.Title,
+            slug: item.Title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            poster: item.Poster && item.Poster !== "N/A" ? item.Poster : "",
+            plot: "", // OMDb search endpoint doesn't provide plot
+            year: item.Year ? parseInt(item.Year.split("–")[0]) : null,
+            matchReason: "OMDb API",
+        }));
+
+        return {
+            data,
+            total: parseInt(response.data.totalResults || 0),
+        };
     } catch (error) {
-        console.error(`OMDb API error for ${contentType}:`, error.message);
-        return [];
+        logger.logMessage("error", `OMDb API error for ${contentType}: ${error.message}`);
+        return { data: [], total: 0 };
     }
 };
 
@@ -66,7 +73,8 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                 Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
             },
         });
-        return response.data.results.map((item) => ({
+
+        const data = response.data.results.map((item) => ({
             tmdbId: item.id,
             imdbId: item.imdb_id || item.external_ids?.imdb_id || "",
             title: item.title || item.name,
@@ -84,13 +92,14 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                   : null,
             matchReason: "TMDB API",
         }));
+
+        return {
+            data,
+            total: response.data.total_results || 0,
+        };
     } catch (error) {
-        console.error(`TMDB API error for ${contentType}:`, error.message);
-        console.error(`TMDB API error for ${contentType}:`, error);
-        logger.logMessage(
-            "warn",
-            `Falling back to OMDb API for ${contentType} search: ${searchTerm}`
-        );
+        logger.logMessage("error", `TMDB API error for ${contentType}: ${error.message}`);
+        logger.logMessage("warn", `Falling back to OMDb API for ${contentType} search: ${searchTerm}`);
         return await fetchOMDbData(searchTerm, contentType, page, limit);
     }
 };
@@ -114,7 +123,7 @@ const getSpotifyAccessToken = async () => {
         );
         return response.data.access_token;
     } catch (error) {
-        console.error("Spotify token error:", error.message);
+        logger.logMessage("error", `Spotify token error: ${error.message}`);
         throw new ApiError(
             httpStatus.INTERNAL_SERVER_ERROR,
             "Failed to authenticate with Spotify API"
@@ -178,10 +187,13 @@ const fetchSpotifyData = async (searchTerm, page, limit) => {
             matchReason: "Spotify API",
         }));
 
-        return [...tracks, ...albums, ...artists];
+        const data = [...tracks, ...albums, ...artists];
+        const total = response.data.tracks.total + response.data.albums.total + response.data.artists.total;
+
+        return { data, total };
     } catch (error) {
-        console.error("Spotify API error:", error.message);
-        return [];
+        logger.logMessage("error", `Spotify API error: ${error.message}`);
+        return { data: [], total: 0 };
     }
 };
 
@@ -197,28 +209,31 @@ const fetchGoogleBooksData = async (searchTerm, page, limit) => {
             },
         });
 
-        return (
-            response.data.items?.map((item) => ({
-                googleBooksId: item.id,
-                title: item.volumeInfo.title || "Untitled",
-                slug: item.volumeInfo.title
-                    ? item.volumeInfo.title
-                          .toLowerCase()
-                          .replace(/[^a-z0-9]+/g, "-")
-                    : `book-${item.id}`,
-                poster: item.volumeInfo.imageLinks?.thumbnail || "",
-                plot: item.volumeInfo.authors
-                    ? item.volumeInfo.authors.join(", ")
-                    : "",
-                year: item.volumeInfo.publishedDate
-                    ? parseInt(item.volumeInfo.publishedDate.split("-")[0])
-                    : null,
-                matchReason: "Google Books API",
-            })) || []
-        );
+        const data = (response.data.items || []).map((item) => ({
+            googleBooksId: item.id,
+            title: item.volumeInfo.title || "Untitled",
+            slug: item.volumeInfo.title
+                ? item.volumeInfo.title
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-")
+                : `book-${item.id}`,
+            poster: item.volumeInfo.imageLinks?.thumbnail || "",
+            plot: item.volumeInfo.authors
+                ? item.volumeInfo.authors.join(", ")
+                : "",
+            year: item.volumeInfo.publishedDate
+                ? parseInt(item.volumeInfo.publishedDate.split("-")[0])
+                : null,
+            matchReason: "Google Books API",
+        }));
+
+        return {
+            data,
+            total: response.data.totalItems || 0,
+        };
     } catch (error) {
-        console.error("Google Books API error:", error.message);
-        return [];
+        logger.logMessage("error", `Google Books API error: ${error.message}`);
+        return { data: [], total: 0 };
     }
 };
 
@@ -235,37 +250,42 @@ const getSearchableModels = () => {
             name: "movie",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["director", "writers", "cast.person"],
-            select: "title slug poster director writers cast references.tmdbId year",
+            select: "title slug poster director writers cast references.tmdbId references.imdbId year",
+            uniqueField: ["references.tmdbId", "references.imdbId"],
         },
         {
             model: models.Series,
             name: "series",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["creators", "cast.person"],
-            select: "title slug poster creators cast references.tmdbId year",
+            select: "title slug poster creators cast references.tmdbId references.imdbId year",
+            uniqueField: ["references.tmdbId", "references.imdbId"],
         },
         {
-            model: models.Book, // No local model for books
+            model: models.Book,
             name: "book",
-            fields: [],
-            personFields: [],
-            select: "",
+            fields: ["title", "genres", "description"],
+            personFields: ["author"],
+            select: "title slug coverImage author googleBooksId publishedYear",
+            uniqueField: ["googleBooksId"],
             external: "googlebooks",
         },
         {
-            model: models.Music, // No local model for music
+            model: models.Music,
             name: "music",
-            fields: [],
-            personFields: [],
-            select: "",
+            fields: ["title", "genres"],
+            personFields: ["artist", "featuredArtists"],
+            select: "title slug artist featuredArtists album spotifyId releaseYear",
+            uniqueField: ["spotifyId"],
             external: "spotify",
         },
         {
-            model: models.Music, // No local model for music
+            model: models.Music,
             name: "songs",
-            fields: [],
-            personFields: [],
-            select: "",
+            fields: ["title", "genres"],
+            personFields: ["artist", "featuredArtists"],
+            select: "title slug artist featuredArtists album spotifyId releaseYear",
+            uniqueField: ["spotifyId"],
             external: "spotify",
         },
         {
@@ -274,13 +294,7 @@ const getSearchableModels = () => {
             fields: ["title", "genres"],
             personFields: [],
             select: "title slug coverImage",
-        },
-        {
-            model: models.MusicVideo,
-            name: "musicVideo",
-            fields: [],
-            personFields: ["director"],
-            select: "music slug director",
+            uniqueField: [],
         },
         {
             model: models.Video,
@@ -288,6 +302,7 @@ const getSearchableModels = () => {
             fields: ["title", "genres", "description", "keywords"],
             personFields: ["creator"],
             select: "title slug poster creator",
+            uniqueField: [],
         },
         {
             model: models.Person,
@@ -295,54 +310,20 @@ const getSearchableModels = () => {
             fields: ["name", "biography", "professions"],
             personFields: [],
             select: "name slug profileImage",
-        },
-        {
-            model: models.LivePerformance,
-            name: "performance",
-            fields: ["event", "location"],
-            personFields: [],
-            select: "event slug music",
-        },
-        {
-            model: models.ProductionCompany,
-            name: "productionCompanie",
-            fields: ["name", "description"],
-            personFields: [],
-            select: "name slug logo",
-        },
-        {
-            model: models.Studio,
-            name: "studio",
-            fields: ["name", "description"],
-            personFields: [],
-            select: "name slug logo",
-        },
-        {
-            model: models.Publisher,
-            name: "publisher",
-            fields: ["name", "description"],
-            personFields: [],
-            select: "name slug logo",
-        },
-        {
-            model: models.RecordLabel,
-            name: "recordLabel",
-            fields: ["name", "description"],
-            personFields: [],
-            select: "name slug logo",
+            uniqueField: [],
         },
     ];
 };
 
-const globalSearch = async (
+const globalSearch = async ({
+    searchType,
     searchTerm,
     contentTypes = [],
     page = 1,
     limit = 10,
-    sortBy = "relevance"
-) => {
+    sortBy = "relevance",
+}) => {
     // Validate search term
-    console.log("searchTerm: ", searchTerm);
     if (
         !searchTerm ||
         typeof searchTerm !== "string" ||
@@ -360,6 +341,14 @@ const globalSearch = async (
         .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(sanitizedTerm, "i");
 
+    // Generate cache key
+    const cacheKey = `globalSearch:${searchType}:${searchTerm}:${contentTypes.join(",")}:${page}:${limit}:${sortBy}`;
+    const cachedResult = searchCache.get(cacheKey);
+    if (cachedResult) {
+        logger.logMessage("info", `Cache hit for search: ${cacheKey}`);
+        return cachedResult;
+    }
+
     // Get searchable models
     const searchableModels = getSearchableModels();
 
@@ -370,20 +359,18 @@ const globalSearch = async (
     if (contentTypes.includes("all")) {
         modelsToSearch = searchableModels;
     }
+
     // Step 1: Find matching Person IDs for artist search
-    const matchingPersons = await models.Person.find({
-        name: regex,
-        isActive: true,
-    })
-        .select("_id")
-        .lean();
-    const personIds = matchingPersons.map((p) => p._id);
+    const matchingPersons = await models.Person.paginate(
+        { name: regex, isActive: true },
+        { page: 1, limit: 100, select: "_id" }
+    );
+    const personIds = matchingPersons.results.map((p) => p._id);
 
     // Prepare search queries
     const searchQueries = modelsToSearch.map(async (modelConfig) => {
-        const { model, name, fields, personFields, select, external } =
-            modelConfig;
-        const results = [];
+        const { model, name, fields, personFields, select, external, uniqueField } = modelConfig;
+        let allResults = [];
         let total = 0;
 
         // Local DB queries
@@ -394,21 +381,19 @@ const globalSearch = async (
                     $or: fields.map((field) => ({ [field]: regex })),
                     isActive: true,
                 };
-                const textTotal = await model.countDocuments(textQuery);
-                const textResults = await model
-                    .find(textQuery)
-                    .select(`${select} references.tmdbId`)
-                    .skip((page - 1) * limit)
-                    .limit(limit)
-                    .lean()
-                    .then((docs) =>
-                        docs.map((doc) => ({
-                            ...doc,
-                            matchReason: "Text fields",
-                        }))
-                    );
-                results.push(...textResults);
-                total += textTotal;
+                const textResults = await model.paginate(textQuery, {
+                    page,
+                    limit,
+                    select: `${select}`,
+                    populate: personFields.map((field) => field.split(".")[0]),
+                });
+                allResults.push(
+                    ...textResults.results.map((doc) => ({
+                        ...doc.toObject(),
+                        matchReason: "Text fields",
+                    }))
+                );
+                total += textResults.totalResults;
             }
 
             // Query 2: Search on person-related fields
@@ -421,78 +406,79 @@ const globalSearch = async (
                     ),
                     isActive: true,
                 };
-                const personTotal = await model.countDocuments(personQuery);
-                const personResults = await model
-                    .find(personQuery)
-                    .select(`${select} references.tmdbId`)
-                    .populate(personFields.map((field) => field.split(".")[0]))
-                    .skip((page - 1) * limit)
-                    .limit(limit)
-                    .lean()
-                    .then((docs) =>
-                        docs.map((doc) => ({
-                            ...doc,
-                            matchReason: `Person fields (${personFields.join(", ")})`,
-                        }))
-                    );
-                results.push(...personResults);
-                total += personTotal;
+                const personResults = await model.paginate(personQuery, {
+                    page,
+                    limit,
+                    select: `${select}`,
+                    populate: personFields.map((field) => field.split(".")[0]),
+                });
+                allResults.push(
+                    ...personResults.results.map((doc) => ({
+                        ...doc.toObject(),
+                        matchReason: `Person fields (${personFields.join(", ")})`,
+                    }))
+                );
+                total += personResults.totalResults;
             }
         }
-        logger.logMessage("debug", `${JSON.stringify(modelConfig)}`);
+
+        // Collect unique identifiers from DB results
+        const uniqueIds = {};
+        uniqueField.forEach((field) => {
+            uniqueIds[field] = new Set(
+                allResults
+                    .filter((item) => item[field.split(".")[1]]) // e.g., references.tmdbId
+                    .map((item) => item[field.split(".")[0]][field.split(".")[1]])
+            );
+        });
 
         // External API queries
+        let externalResults = [];
+        let externalTotal = 0;
         if (external === "spotify" && (name === "music" || name === "songs")) {
-            const spotifyResults = await fetchSpotifyData(
-                searchTerm,
-                page,
-                limit
-            );
-            total += spotifyResults.length;
-            results.push(...spotifyResults);
+            const spotifyData = await fetchSpotifyData(searchTerm, page, limit);
+            externalResults = spotifyData.data;
+            externalTotal = spotifyData.total;
         } else if (external === "googlebooks" && name === "book") {
-            const googleBooksResults = await fetchGoogleBooksData(
-                searchTerm,
-                page,
-                limit
-            );
-            total += googleBooksResults.length;
-            results.push(...googleBooksResults);
+            const googleBooksData = await fetchGoogleBooksData(searchTerm, page, limit);
+            externalResults = googleBooksData.data;
+            externalTotal = googleBooksData.total;
         } else if (name === "movie" || name === "series") {
-            const tmdbResults = await fetchTMDBData(
-                searchTerm,
-                name,
-                page,
-                limit
-            );
-            const existingTmdbIds = await model
-                .find({
-                    "references.tmdbId": {
-                        $in: tmdbResults
-                            .filter((r) => r.tmdbId)
-                            .map((r) => r.tmdbId),
-                    },
-                })
-                .select("references.tmdbId")
-                .lean()
-                .then((docs) => docs.map((doc) => doc.references.tmdbId));
-            const filteredTmdbResults = tmdbResults.filter(
-                (result) => !existingTmdbIds.includes(result.tmdbId)
-            );
-            total += filteredTmdbResults.length;
-            results.push(...filteredTmdbResults);
+            const tmdbData = await fetchTMDBData(searchTerm, name, page, limit);
+            externalResults = tmdbData.data;
+            externalTotal = tmdbData.total;
         }
+
+        // Filter out external results that already exist in DB
+        const filteredExternalResults = externalResults.filter((result) => {
+            if (uniqueField.includes("references.tmdbId") && result.tmdbId) {
+                return !uniqueIds["references.tmdbId"].has(result.tmdbId);
+            }
+            if (uniqueField.includes("references.imdbId") && result.imdbId) {
+                return !uniqueIds["references.imdbId"].has(result.imdbId);
+            }
+            if (uniqueField.includes("spotifyId") && result.spotifyId) {
+                return !uniqueIds["spotifyId"].has(result.spotifyId);
+            }
+            if (uniqueField.includes("googleBooksId") && result.googleBooksId) {
+                return !uniqueIds["googleBooksId"].has(result.googleBooksId);
+            }
+            return true;
+        });
+
+        allResults.push(...filteredExternalResults);
+        total += filteredExternalResults.length;
 
         // Deduplicate results by _id, tmdbId, spotifyId, or googleBooksId
         const uniqueResults = Array.from(
             new Map(
-                results.map((item) => [
+                allResults.map((item) => [
                     item._id
                         ? item._id.toString()
                         : item.tmdbId ||
                           item.spotifyId ||
                           item.googleBooksId ||
-                          item.omdbId,
+                          item.imdbId,
                     item,
                 ])
             ).values()
@@ -502,7 +488,13 @@ const globalSearch = async (
         if (sortBy === "relevance" && uniqueResults.length) {
             uniqueResults.sort((a, b) => {
                 let aScore = fields.reduce((score, field) => {
-                    const value = a[field] || "";
+                    let value = a[field] || "";
+                    // Handle arrays (e.g., genres, keywords) by joining into a string
+                    if (Array.isArray(value)) {
+                        value = value.join(",");
+                    }
+                    // Convert to string if not already a string
+                    value = String(value);
                     return (
                         score +
                         (value
@@ -513,7 +505,13 @@ const globalSearch = async (
                     );
                 }, 0);
                 let bScore = fields.reduce((score, field) => {
-                    const value = b[field] || "";
+                    let value = b[field] || "";
+                    // Handle arrays (e.g., genres, keywords) by joining into a string
+                    if (Array.isArray(value)) {
+                        value = value.join(",");
+                    }
+                    // Convert to string if not already a string
+                    value = String(value);
                     return (
                         score +
                         (value
@@ -526,15 +524,16 @@ const globalSearch = async (
                 if (a.matchReason.includes("Person fields")) aScore += 2;
                 if (b.matchReason.includes("Person fields")) bScore += 2;
                 if (a.matchReason === "TMDB API") aScore -= 1;
-                if (a.matchReason === "OMDb API") aScore -= 2; // Lower priority for OMDb
+                if (a.matchReason === "OMDb API") aScore -= 2;
                 if (b.matchReason === "Spotify API") aScore -= 1;
                 if (b.matchReason === "Google Books API") aScore -= 1;
                 return bScore - aScore;
             });
         }
 
-        // Apply pagination
-        const paginatedResults = uniqueResults.slice(0, limit);
+        // Apply final pagination
+        const startIndex = (page - 1) * limit;
+        const paginatedResults = uniqueResults.slice(startIndex, startIndex + limit);
 
         return { name, results: paginatedResults, total };
     });
@@ -558,8 +557,8 @@ const globalSearch = async (
     );
     const totalPages = Math.ceil(totalResults / limit);
 
-    return {
-        results: formattedResults,
+    const result = {
+        data: { results: formattedResults },
         pagination: {
             page,
             limit,
@@ -567,10 +566,15 @@ const globalSearch = async (
             totalPages,
         },
     };
+
+    // Cache the result
+    searchCache.set(cacheKey, result);
+    setTimeout(() => searchCache.delete(cacheKey), CACHE_TTL);
+
+    return result;
 };
 
-const searchUser = async (searchTerm, page = 1, limit = 10) => {
-    console.log("user  searchTerm:", searchTerm);
+const searchPeople = async ({ searchTerm, page = 1, limit = 10 }) => {
     if (
         !searchTerm ||
         typeof searchTerm !== "string" ||
@@ -586,7 +590,14 @@ const searchUser = async (searchTerm, page = 1, limit = 10) => {
     const sanitizedTerm = searchTerm
         .trim()
         .replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    console.log("Sanitized term:", sanitizedTerm);
+
+    // Generate cache key
+    const cacheKey = `searchPeople:${searchTerm}:${page}:${limit}`;
+    const cachedResult = searchCache.get(cacheKey);
+    if (cachedResult) {
+        logger.logMessage("info", `Cache hit for search: ${cacheKey}`);
+        return cachedResult;
+    }
 
     // Build query conditions with $regex and $options
     const queryConditions = [
@@ -596,7 +607,6 @@ const searchUser = async (searchTerm, page = 1, limit = 10) => {
         { "fullName.lastName": { $regex: sanitizedTerm, $options: "i" } },
     ];
 
-    // Add a condition for fullNameString by combining firstName and lastName
     queryConditions.push({
         $expr: {
             $regexMatch: {
@@ -614,42 +624,41 @@ const searchUser = async (searchTerm, page = 1, limit = 10) => {
         deleted: false,
     };
 
-    console.log("Query:", JSON.stringify(query, null, 2));
-
-    const total = await models.User.countDocuments(query);
-    console.log("Total matching users:", total);
-
-    const users = await models.User.find(query)
-        .populate("profile")
-        .select("fullName userName email profile _id")
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean();
+    const result = await models.User.paginate(query, {
+        page,
+        limit,
+        populate: ["profile"],
+        select: "fullName userName email profile _id",
+    });
 
     // Add the virtual field `fullNameString` manually since virtuals are not included in `.lean()`
-    users.forEach((user) => {
+    result.results.forEach((user) => {
         if (user.fullName && typeof user.fullName === "object") {
             user.fullNameString =
                 `${user.fullName.firstName || ""} ${user.fullName.lastName || ""}`.trim();
         }
     });
 
-    console.log("Found users:", users);
-
-    return {
-        data: users,
+    const formattedResult = {
+        results: result.results,
         pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
+            page: result.page,
+            limit: result.limit,
+            total: result.totalResults,
+            totalPages: result.totalPages,
         },
     };
+
+    // Cache the result
+    searchCache.set(cacheKey, formattedResult);
+    setTimeout(() => searchCache.delete(cacheKey), CACHE_TTL);
+
+    return formattedResult;
 };
 
 const searchService = {
     globalSearch,
-    searchUser,
+    searchPeople,
 };
 
 export default searchService;

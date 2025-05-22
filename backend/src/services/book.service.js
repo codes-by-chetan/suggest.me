@@ -83,7 +83,7 @@ const findMissingFields = (record, modelType) => {
                 !record[f] ||
                 (Array.isArray(record[f]) && record[f].length === 0) ||
                 (f === "coverImage" &&
-                    record[f]?.url?.includes("via.placeholder.com")) ||
+                    record[f]?.url?.includes("placeholder")) ||
                 (f === "profileImage" && !record[f]?.url) ||
                 (f === "logo" && !record[f]?.url)
         );
@@ -186,7 +186,7 @@ const mergeRecords = (original, extracted) => {
                 !merged[key] ||
                 (Array.isArray(merged[key]) && merged[key].length === 0) ||
                 (key === "coverImage" &&
-                    merged[key]?.url?.includes("via.placeholder.com")) ||
+                    merged[key]?.url?.includes("placeholder")) ||
                 (key === "profileImage" && !merged[key]?.url) ||
                 (key === "logo" && !merged[key]?.url)
             ) {
@@ -687,7 +687,7 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
                       publicId: googleBooksId,
                   }
                 : {
-                      url: "https://via.placeholder.com/150",
+                      url: "https://bookstoreromanceday.org/wp-content/uploads/2020/08/book-cover-placeholder.png?w=144",
                       publicId: "placeholder",
                   });
         console.debug(`Cover image: ${coverImage?.url}`);

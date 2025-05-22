@@ -32,16 +32,6 @@ const getSuggestionDetails = async (suggestionId, userId) => {
         _id: suggestionId,
         $or: [{ sender: userId }, { recipients: userId }],
     });
-    await suggestion.populate("content");
-    await suggestion.populate("content.album content.artist content.publisher");
-    await suggestion.populate({
-        path: "sender recipients",
-        select: "_id fullName fullNameString profile",
-    });
-    await suggestion.populate({
-        path: "sender.profile recipients.profile",
-        select: "avatar isVerified displayName bio",
-    });
 
     if (!suggestion) {
         throw new ApiError(
@@ -49,6 +39,45 @@ const getSuggestionDetails = async (suggestionId, userId) => {
             "Abe, yeh suggestion nahi mili!"
         );
     }
+
+    const populateOptions = [
+        {
+            path: "content",
+            ...(suggestion.contentType === "Music"
+                ? {
+                      populate: [
+                          { path: "album" },
+                          { path: "artist" },
+                          { path: "featuredArtists" },
+                      ],
+                  }
+                : suggestion.contentType === "Book"
+                  ? {
+                        populate: [{ path: "author" }],
+                    }
+                  : suggestion.contentType === "Series"
+                    ? {
+                          populate: [
+                              { path: "production", populate: "companies" },
+                          ],
+                      }
+                    : suggestion.contentType === "Movie"
+                      ? {
+                            populate: [{ path: "director" }, { path: "writers" }],
+                        }
+                      : {}),
+        },
+        {
+            path: "sender recipients",
+            select: "_id fullName fullNameString profile",
+        },
+        {
+            path: "sender.profile recipients.profile",
+            select: "avatar isVerified displayName bio",
+        },
+    ];
+
+    await suggestion.populate(populateOptions);
 
     return suggestion;
 };
@@ -70,12 +99,12 @@ const createSuggestion = async (user, content, note, recipients) => {
 
     let contentDetails;
     try {
-        const movieId = content.id.toString();
+        const contentId = content.id.toString();
         console.log(
-            `Calling getMovieDetails with movieId: ${movieId}, userId: ${user._id}`
+            `Calling getContent with contentId: ${contentId}, userId: ${user._id}`
         );
         contentDetails = await getContent[content.type]({
-            id: movieId,
+            id: contentId,
             userId: user._id,
         });
         if (!contentDetails) {
@@ -94,6 +123,7 @@ const createSuggestion = async (user, content, note, recipients) => {
             `Content details fetch karne mein gadbad ho gayi: ${error.message}`
         );
     }
+
     const recipientsIds = recipients.map((r) => r._id);
     const validRecipients = recipients?.length
         ? await models.User.find({
@@ -107,6 +137,7 @@ const createSuggestion = async (user, content, note, recipients) => {
             "Kuch recipients galat hain!"
         );
     }
+
     const contentType =
         content.type === "movie"
             ? "Movie"
@@ -117,6 +148,7 @@ const createSuggestion = async (user, content, note, recipients) => {
                 : content.type === "music" || content.type === "songs"
                   ? "Music"
                   : "Video";
+
     const suggestion = await models.UserSuggestions.create({
         sender: user._id,
         contentType,
@@ -126,21 +158,76 @@ const createSuggestion = async (user, content, note, recipients) => {
         createdBy: user._id,
     });
 
-    await suggestion.populate("content");
-    await suggestion.populate({
-        path: "sender recipients",
-        select: "_id fullName fullNameString profile",
-    });
-    await suggestion.populate({
-        path: "sender.profile recipients.profile",
-        select: "avatar isVerified displayName bio",
-    });
+    const populateOptions = [
+        {
+            path: "content",
+            ...(suggestion.contentType === "Music"
+                ? {
+                      populate: [
+                          { path: "album" },
+                          { path: "artist" },
+                          { path: "featuredArtists" },
+                      ],
+                  }
+                : suggestion.contentType === "Book"
+                  ? {
+                        populate: [{ path: "author" }],
+                    }
+                  : suggestion.contentType === "Series"
+                    ? {
+                          populate: [
+                              { path: "production", populate: "companies" },
+                          ],
+                      }
+                    : suggestion.contentType === "Movie"
+                      ? {
+                            populate: [{ path: "director" }, { path: "writers" }],
+                        }
+                      : {}),
+        },
+        {
+            path: "sender recipients",
+            select: "_id fullName fullNameString profile",
+        },
+        {
+            path: "sender.profile recipients.profile",
+            select: "avatar isVerified displayName bio",
+        },
+    ];
+
+    await suggestion.populate(populateOptions);
+
     await notificationService.sendSuggestionNotification(suggestion);
     return suggestion;
 };
 
 const mapSuggestionToContentItem = async (suggestion) => {
-    await suggestion.populate("content.album content.artist content.publisher");
+    if (suggestion.contentType === "Music") {
+        await suggestion.populate({
+            path: "content",
+            populate: [
+                { path: "album" },
+                { path: "artist" },
+                { path: "featuredArtists" },
+            ],
+        });
+    } else if (suggestion.contentType === "Book") {
+        await suggestion.populate({
+            path: "content",
+            populate: [{ path: "author" }],
+        });
+    } else if (suggestion.contentType === "Series") {
+        await suggestion.populate({
+            path: "content",
+            populate: [{ path: "production", populate: "companies" }],
+        });
+    } else if (suggestion.contentType === "Movie") {
+        await suggestion.populate({
+            path: "content",
+            populate: [{ path: "director" }, { path: "writers" }],
+        });
+    }
+
     await suggestion.populate({
         path: "sender.profile recipients.profile",
         select: "avatar isVerified displayName bio",
@@ -152,9 +239,11 @@ const mapSuggestionToContentItem = async (suggestion) => {
         title: suggestion.content?.title || "Unknown Title",
         type: suggestion.contentType.toLowerCase(),
         imageUrl:
-            suggestion.content?.poster?.url ||
-            suggestion.content?.coverImage?.url ||
-            suggestion.content?.album?.coverImage?.url,
+            suggestion.contentType.toLowerCase() === "music"
+                ? suggestion.content?.album?.coverImage?.url
+                : suggestion.content?.poster?.url ||
+                  suggestion.content?.coverImage?.url ||
+                  suggestion.content?.album?.coverImage?.url,
         year:
             suggestion.content?.year?.toString() ||
             suggestion.content?.publishedYear?.toString() ||
@@ -163,10 +252,20 @@ const mapSuggestionToContentItem = async (suggestion) => {
             suggestion.content?.director?.map((d) => d.name).join(", ") ||
             suggestion.content?.creator?.map((c) => c.name).join(", ") ||
             suggestion.content?.author?.map((a) => a.name).join(", ") ||
-            suggestion.content?.artists?.map((a) => a.name).join(", ") ||
+            suggestion.content?.production?.companies?.map((a) => a.name).join(", ") ||
+            (suggestion.contentType.toLowerCase() === "music"
+                ? [
+                      suggestion.content?.artist?.name,
+                      ...(suggestion.content?.featuredArtists?.map((a) => a.name) || []),
+                  ]
+                      .filter(Boolean)
+                      .join(", ")
+                : "") ||
             "",
         description:
-            suggestion.content?.plot || suggestion.content?.description || suggestion.content?.overview,
+            suggestion.content?.plot ||
+            suggestion.content?.description ||
+            suggestion.content?.overview,
         suggestedTo: suggestion.recipients.map((recipient) => ({
             id: recipient._id.toString(),
             name: recipient.fullNameString || "Unknown",
@@ -174,11 +273,37 @@ const mapSuggestionToContentItem = async (suggestion) => {
         })),
         suggestedAt: suggestion.createdAt.toISOString(),
         status: null, // Status not implemented in schema, defaulting to null
+        suggestion: suggestion,
     };
 };
 
 const mapSuggestionForUserToContentItem = async (suggestion) => {
-    await suggestion.populate("content.album content.artist content.publisher");
+    if (suggestion.contentType === "Music") {
+        await suggestion.populate({
+            path: "content",
+            populate: [
+                { path: "album" },
+                { path: "artist" },
+                { path: "featuredArtists" },
+            ],
+        });
+    } else if (suggestion.contentType === "Book") {
+        await suggestion.populate({
+            path: "content",
+            populate: [{ path: "author" }],
+        });
+    } else if (suggestion.contentType === "Series") {
+        await suggestion.populate({
+            path: "content",
+            populate: [{ path: "production", populate: "companies" }],
+        });
+    } else if (suggestion.contentType === "Movie") {
+        await suggestion.populate({
+            path: "content",
+            populate: [{ path: "director" }, { path: "writers" }],
+        });
+    }
+
     await suggestion.populate({
         path: "sender.profile recipients.profile",
         select: "avatar isVerified displayName bio",
@@ -190,9 +315,11 @@ const mapSuggestionForUserToContentItem = async (suggestion) => {
         title: suggestion.content?.title || "Unknown Title",
         type: suggestion.contentType.toLowerCase(),
         imageUrl:
-            suggestion.content?.poster?.url ||
-            suggestion.content?.coverImage?.url ||
-            suggestion.content?.album?.coverImage?.url,
+            suggestion.contentType.toLowerCase() === "music"
+                ? suggestion.content?.album?.coverImage?.url
+                : suggestion.content?.poster?.url ||
+                  suggestion.content?.coverImage?.url ||
+                  suggestion.content?.album?.coverImage?.url,
         year:
             suggestion.content?.year?.toString() ||
             suggestion.content?.publishedYear?.toString() ||
@@ -201,10 +328,20 @@ const mapSuggestionForUserToContentItem = async (suggestion) => {
             suggestion.content?.director?.map((d) => d.name).join(", ") ||
             suggestion.content?.creator?.map((c) => c.name).join(", ") ||
             suggestion.content?.author?.map((a) => a.name).join(", ") ||
-            suggestion.content?.artists?.map((a) => a.name).join(", ") ||
+            suggestion.content?.production?.companies?.map((a) => a.name).join(", ") ||
+            (suggestion.contentType.toLowerCase() === "music"
+                ? [
+                      suggestion.content?.artist?.name,
+                      ...(suggestion.content?.featuredArtists?.map((a) => a.name) || []),
+                  ]
+                      .filter(Boolean)
+                      .join(", ")
+                : "") ||
             "",
         description:
-            suggestion.content?.plot || suggestion.content?.description || suggestion.content?.overview,
+            suggestion.content?.plot ||
+            suggestion.content?.description ||
+            suggestion.content?.overview,
         suggestedBy: {
             id: suggestion.sender._id.toString(),
             name: suggestion.sender.fullNameString || "Unknown",
@@ -212,16 +349,23 @@ const mapSuggestionForUserToContentItem = async (suggestion) => {
         },
         suggestedAt: suggestion.createdAt.toISOString(),
         status: null, // Status not implemented in schema, defaulting to null
+        suggestion: suggestion,
     };
 };
 
-const getSuggestionsByUser = async (userId, { page = 1, limit = 12, type } = {}) => {
+const getSuggestionsByUser = async (
+    userId,
+    { page = 1, limit = 12, type } = {}
+) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
     if (page < 1 || limit < 1) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, page ya limit galat hai!");
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, page ya limit galat hai!"
+        );
     }
 
     const typeMap = {
@@ -257,8 +401,13 @@ const getSuggestionsByUser = async (userId, { page = 1, limit = 12, type } = {})
         sortBy: "createdAt:desc",
     };
 
-    const { results, totalResults, totalPages, page: currentPage, limit: currentLimit } =
-        await models.UserSuggestions.paginate(filter, options);
+    const {
+        results,
+        totalResults,
+        totalPages,
+        page: currentPage,
+        limit: currentLimit,
+    } = await models.UserSuggestions.paginate(filter, options);
 
     const data = await Promise.all(results.map(mapSuggestionToContentItem));
 
@@ -271,13 +420,19 @@ const getSuggestionsByUser = async (userId, { page = 1, limit = 12, type } = {})
     };
 };
 
-const getSuggestionsForUser = async (userId, { page = 1, limit = 12, type } = {}) => {
+const getSuggestionsForUser = async (
+    userId,
+    { page = 1, limit = 12, type } = {}
+) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
         throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, user ID galat hai!");
     }
 
     if (page < 1 || limit < 1) {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Bhai, page ya limit galat hai!");
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Bhai, page ya limit galat hai!"
+        );
     }
 
     const typeMap = {
@@ -313,10 +468,17 @@ const getSuggestionsForUser = async (userId, { page = 1, limit = 12, type } = {}
         sortBy: "createdAt:desc",
     };
 
-    const { results, totalResults, totalPages, page: currentPage, limit: currentLimit } =
-        await models.UserSuggestions.paginate(filter, options);
+    const {
+        results,
+        totalResults,
+        totalPages,
+        page: currentPage,
+        limit: currentLimit,
+    } = await models.UserSuggestions.paginate(filter, options);
 
-    const data = await Promise.all(results.map(mapSuggestionForUserToContentItem));
+    const data = await Promise.all(
+        results.map(mapSuggestionForUserToContentItem)
+    );
 
     return {
         success: true,
