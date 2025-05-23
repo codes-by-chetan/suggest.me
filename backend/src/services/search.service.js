@@ -315,6 +315,41 @@ const getSearchableModels = () => {
     ];
 };
 
+// Relevance scoring function
+const calculateRelevanceScore = (item, searchTerm, fields) => {
+    let score = 0;
+    const searchLower = searchTerm.toLowerCase();
+
+    // Prioritize title matches
+    const title = String(item.title || "").toLowerCase();
+    if (title === searchLower) {
+        score += 100; // Exact match
+    } else if (title.startsWith(searchLower)) {
+        score += 50; // Starts with search term
+    } else if (title.includes(searchLower)) {
+        score += 25; // Contains search term
+    }
+
+    // Check other fields
+    fields.forEach((field) => {
+        let value = item[field] || "";
+        if (Array.isArray(value)) {
+            value = value.join(",");
+        }
+        value = String(value).toLowerCase();
+        if (value.includes(searchLower)) {
+            score += 5; // Lower score for matches in other fields
+        }
+    });
+
+    // Boost for person field matches
+    if (item.matchReason.includes("Person fields")) {
+        score += 10;
+    }
+
+    return score;
+};
+
 const globalSearch = async ({
     searchType,
     searchTerm,
@@ -349,6 +384,18 @@ const globalSearch = async ({
         return cachedResult;
     }
 
+    // Invalidate cache for broader search terms
+    if (searchTerm.length > 2) {
+        const broaderTerm = searchTerm.slice(0, 2); // e.g., "dashav" -> "da"
+        const broaderCacheKeyPrefix = `globalSearch:${searchType}:${broaderTerm}:`;
+        for (const key of searchCache.keys()) {
+            if (key.startsWith(broaderCacheKeyPrefix)) {
+                searchCache.delete(key);
+                logger.logMessage("info", `Invalidated cache for broader term: ${key}`);
+            }
+        }
+    }
+
     // Get searchable models
     const searchableModels = getSearchableModels();
 
@@ -361,11 +408,11 @@ const globalSearch = async ({
     }
 
     // Step 1: Find matching Person IDs for artist search
-    const matchingPersons = await models.Person.paginate(
-        { name: regex, isActive: true },
-        { page: 1, limit: 100, select: "_id" }
-    );
-    const personIds = matchingPersons.results.map((p) => p._id);
+    const matchingPersons = await models.Person.find({ name: regex, isActive: true })
+        .select("_id")
+        .limit(100)
+        .lean();
+    const personIds = matchingPersons.map((p) => p._id);
 
     // Prepare search queries
     const searchQueries = modelsToSearch.map(async (modelConfig) => {
@@ -381,19 +428,48 @@ const globalSearch = async ({
                     $or: fields.map((field) => ({ [field]: regex })),
                     isActive: true,
                 };
-                const textResults = await model.paginate(textQuery, {
-                    page,
-                    limit,
-                    select: `${select}`,
-                    populate: personFields.map((field) => field.split(".")[0]),
-                });
-                allResults.push(
-                    ...textResults.results.map((doc) => ({
-                        ...doc.toObject(),
-                        matchReason: "Text fields",
-                    }))
-                );
-                total += textResults.totalResults;
+                // Get total count
+                const textTotal = await model.countDocuments(textQuery);
+                // Fetch results for the current page
+                const textResults = await model.find(textQuery)
+                    .select(select)
+                    .populate(personFields.map((field) => field.split(".")[0]))
+                    .skip((page - 1) * limit)
+                    .limit(limit)
+                    .lean();
+                let transformedResults = textResults.map((doc) => ({
+                    ...doc,
+                    matchReason: "Text fields",
+                }));
+
+                // Transform music and songs results from DB
+                if (name === "music" || name === "songs") {
+                    transformedResults = await Promise.all(
+                        transformedResults.map(async (result) => {
+                            let album = null;
+                            if (result.album) {
+                                album = await models.MusicAlbum.findById(result.album).select("coverImage").lean();
+                            }
+                            const artistNames = result.artist?.name ? [result.artist.name] : [];
+                            const featuredArtistNames = Array.isArray(result.featuredArtists)
+                                ? result.featuredArtists.map((fa) => fa.name).filter(Boolean)
+                                : [];
+                            const artists = [...artistNames, ...featuredArtistNames].join(", ");
+                            const coverImage = album?.coverImage?.url || "";
+                            return {
+                                ...result,
+                                artists,
+                                coverImage,
+                                artist: undefined,
+                                featuredArtists: undefined,
+                                album: undefined,
+                            };
+                        })
+                    );
+                }
+
+                allResults.push(...transformedResults);
+                total += textTotal;
             }
 
             // Query 2: Search on person-related fields
@@ -406,19 +482,48 @@ const globalSearch = async ({
                     ),
                     isActive: true,
                 };
-                const personResults = await model.paginate(personQuery, {
-                    page,
-                    limit,
-                    select: `${select}`,
-                    populate: personFields.map((field) => field.split(".")[0]),
-                });
-                allResults.push(
-                    ...personResults.results.map((doc) => ({
-                        ...doc.toObject(),
-                        matchReason: `Person fields (${personFields.join(", ")})`,
-                    }))
-                );
-                total += personResults.totalResults;
+                // Get total count
+                const personTotal = await model.countDocuments(personQuery);
+                // Fetch results for the current page
+                const personResults = await model.find(personQuery)
+                    .select(select)
+                    .populate(personFields.map((field) => field.split(".")[0]))
+                    .skip((page - 1) * limit)
+                    .limit(limit)
+                    .lean();
+                let transformedPersonResults = personResults.map((doc) => ({
+                    ...doc,
+                    matchReason: `Person fields (${personFields.join(", ")})`,
+                }));
+
+                // Transform music and songs results from DB
+                if (name === "music" || name === "songs") {
+                    transformedPersonResults = await Promise.all(
+                        transformedPersonResults.map(async (result) => {
+                            let album = null;
+                            if (result.album) {
+                                album = await models.MusicAlbum.findById(result.album).select("coverImage").lean();
+                            }
+                            const artistNames = result.artist?.name ? [result.artist.name] : [];
+                            const featuredArtistNames = Array.isArray(result.featuredArtists)
+                                ? result.featuredArtists.map((fa) => fa.name).filter(Boolean)
+                                : [];
+                            const artists = [...artistNames, ...featuredArtistNames].join(", ");
+                            const coverImage = album?.coverImage?.url || "";
+                            return {
+                                ...result,
+                                artists,
+                                coverImage,
+                                artist: undefined,
+                                featuredArtists: undefined,
+                                album: undefined,
+                            };
+                        })
+                    );
+                }
+
+                allResults.push(...transformedPersonResults);
+                total += personTotal;
             }
         }
 
@@ -427,7 +532,7 @@ const globalSearch = async ({
         uniqueField.forEach((field) => {
             uniqueIds[field] = new Set(
                 allResults
-                    .filter((item) => item[field.split(".")[1]]) // e.g., references.tmdbId
+                    .filter((item) => item[field.split(".")[1]])
                     .map((item) => item[field.split(".")[0]][field.split(".")[1]])
             );
         });
@@ -467,7 +572,7 @@ const globalSearch = async ({
         });
 
         allResults.push(...filteredExternalResults);
-        total += filteredExternalResults.length;
+        total += externalTotal;
 
         // Deduplicate results by _id, tmdbId, spotifyId, or googleBooksId
         const uniqueResults = Array.from(
@@ -487,55 +592,25 @@ const globalSearch = async ({
         // Sort by relevance
         if (sortBy === "relevance" && uniqueResults.length) {
             uniqueResults.sort((a, b) => {
-                let aScore = fields.reduce((score, field) => {
-                    let value = a[field] || "";
-                    // Handle arrays (e.g., genres, keywords) by joining into a string
-                    if (Array.isArray(value)) {
-                        value = value.join(",");
-                    }
-                    // Convert to string if not already a string
-                    value = String(value);
-                    return (
-                        score +
-                        (value
-                            .toLowerCase()
-                            .includes(sanitizedTerm.toLowerCase())
-                            ? 1
-                            : 0)
-                    );
-                }, 0);
-                let bScore = fields.reduce((score, field) => {
-                    let value = b[field] || "";
-                    // Handle arrays (e.g., genres, keywords) by joining into a string
-                    if (Array.isArray(value)) {
-                        value = value.join(",");
-                    }
-                    // Convert to string if not already a string
-                    value = String(value);
-                    return (
-                        score +
-                        (value
-                            .toLowerCase()
-                            .includes(sanitizedTerm.toLowerCase())
-                            ? 1
-                            : 0)
-                    );
-                }, 0);
-                if (a.matchReason.includes("Person fields")) aScore += 2;
-                if (b.matchReason.includes("Person fields")) bScore += 2;
-                if (a.matchReason === "TMDB API") aScore -= 1;
-                if (a.matchReason === "OMDb API") aScore -= 2;
-                if (b.matchReason === "Spotify API") aScore -= 1;
-                if (b.matchReason === "Google Books API") aScore -= 1;
+                const aScore = calculateRelevanceScore(a, sanitizedTerm, fields);
+                const bScore = calculateRelevanceScore(b, sanitizedTerm, fields);
                 return bScore - aScore;
             });
         }
 
-        // Apply final pagination
-        const startIndex = (page - 1) * limit;
-        const paginatedResults = uniqueResults.slice(startIndex, startIndex + limit);
+        // Transform coverImage for album results
+        if (name === "album") {
+            return {
+                name,
+                results: uniqueResults.map((result) => ({
+                    ...result,
+                    coverImage: result.coverImage?.url || "",
+                })),
+                total,
+            };
+        }
 
-        return { name, results: paginatedResults, total };
+        return { name, results: uniqueResults, total };
     });
 
     // Execute all queries concurrently
@@ -599,6 +674,18 @@ const searchPeople = async ({ searchTerm, page = 1, limit = 10 }) => {
         return cachedResult;
     }
 
+    // Invalidate cache for broader search terms
+    if (searchTerm.length > 2) {
+        const broaderTerm = searchTerm.slice(0, 2);
+        const broaderCacheKeyPrefix = `searchPeople:${broaderTerm}:`;
+        for (const key of searchCache.keys()) {
+            if (key.startsWith(broaderCacheKeyPrefix)) {
+                searchCache.delete(key);
+                logger.logMessage("info", `Invalidated cache for broader term: ${key}`);
+            }
+        }
+    }
+
     // Build query conditions with $regex and $options
     const queryConditions = [
         { userName: { $regex: sanitizedTerm, $options: "i" } },
@@ -624,15 +711,16 @@ const searchPeople = async ({ searchTerm, page = 1, limit = 10 }) => {
         deleted: false,
     };
 
-    const result = await models.User.paginate(query, {
-        page,
-        limit,
-        populate: ["profile"],
-        select: "fullName userName email profile _id",
-    });
+    const total = await models.User.countDocuments(query);
+    const results = await models.User.find(query)
+        .populate("profile")
+        .select("fullName userName email profile _id")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
 
     // Add the virtual field `fullNameString` manually since virtuals are not included in `.lean()`
-    result.results.forEach((user) => {
+    results.forEach((user) => {
         if (user.fullName && typeof user.fullName === "object") {
             user.fullNameString =
                 `${user.fullName.firstName || ""} ${user.fullName.lastName || ""}`.trim();
@@ -640,12 +728,12 @@ const searchPeople = async ({ searchTerm, page = 1, limit = 10 }) => {
     });
 
     const formattedResult = {
-        results: result.results,
+        results,
         pagination: {
-            page: result.page,
-            limit: result.limit,
-            total: result.totalResults,
-            totalPages: result.totalPages,
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
         },
     };
 
