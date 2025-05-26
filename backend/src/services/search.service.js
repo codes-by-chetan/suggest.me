@@ -53,7 +53,10 @@ const fetchOMDbData = async (searchTerm, contentType, page, limit) => {
             total: parseInt(response.data.totalResults || 0),
         };
     } catch (error) {
-        logger.logMessage("error", `OMDb API error for ${contentType}: ${error.message}`);
+        logger.logMessage(
+            "error",
+            `OMDb API error for ${contentType}: ${error.message}`
+        );
         return { data: [], total: 0 };
     }
 };
@@ -73,7 +76,7 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                 Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
             },
         });
-
+        console.log(item);
         const data = response.data.results.map((item) => ({
             tmdbId: item.id,
             imdbId: item.imdb_id || item.external_ids?.imdb_id || "",
@@ -98,8 +101,14 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
             total: response.data.total_results || 0,
         };
     } catch (error) {
-        logger.logMessage("error", `TMDB API error for ${contentType}: ${error.message}`);
-        logger.logMessage("warn", `Falling back to OMDb API for ${contentType} search: ${searchTerm}`);
+        logger.logMessage(
+            "error",
+            `TMDB API error for ${contentType}: ${error.message}`
+        );
+        logger.logMessage(
+            "warn",
+            `Falling back to OMDb API for ${contentType} search: ${searchTerm}`
+        );
         return await fetchOMDbData(searchTerm, contentType, page, limit);
     }
 };
@@ -188,7 +197,10 @@ const fetchSpotifyData = async (searchTerm, page, limit) => {
         }));
 
         const data = [...tracks, ...albums, ...artists];
-        const total = response.data.tracks.total + response.data.albums.total + response.data.artists.total;
+        const total =
+            response.data.tracks.total +
+            response.data.albums.total +
+            response.data.artists.total;
 
         return { data, total };
     } catch (error) {
@@ -391,7 +403,10 @@ const globalSearch = async ({
         for (const key of searchCache.keys()) {
             if (key.startsWith(broaderCacheKeyPrefix)) {
                 searchCache.delete(key);
-                logger.logMessage("info", `Invalidated cache for broader term: ${key}`);
+                logger.logMessage(
+                    "info",
+                    `Invalidated cache for broader term: ${key}`
+                );
             }
         }
     }
@@ -408,7 +423,10 @@ const globalSearch = async ({
     }
 
     // Step 1: Find matching Person IDs for artist search
-    const matchingPersons = await models.Person.find({ name: regex, isActive: true })
+    const matchingPersons = await models.Person.find({
+        name: regex,
+        isActive: true,
+    })
         .select("_id")
         .limit(100)
         .lean();
@@ -416,7 +434,15 @@ const globalSearch = async ({
 
     // Prepare search queries
     const searchQueries = modelsToSearch.map(async (modelConfig) => {
-        const { model, name, fields, personFields, select, external, uniqueField } = modelConfig;
+        const {
+            model,
+            name,
+            fields,
+            personFields,
+            select,
+            external,
+            uniqueField,
+        } = modelConfig;
         let allResults = [];
         let total = 0;
 
@@ -431,7 +457,8 @@ const globalSearch = async ({
                 // Get total count
                 const textTotal = await model.countDocuments(textQuery);
                 // Fetch results for the current page
-                const textResults = await model.find(textQuery)
+                const textResults = await model
+                    .find(textQuery)
                     .select(select)
                     .populate(personFields.map((field) => field.split(".")[0]))
                     .skip((page - 1) * limit)
@@ -448,13 +475,26 @@ const globalSearch = async ({
                         transformedResults.map(async (result) => {
                             let album = null;
                             if (result.album) {
-                                album = await models.MusicAlbum.findById(result.album).select("coverImage").lean();
+                                album = await models.MusicAlbum.findById(
+                                    result.album
+                                )
+                                    .select("coverImage")
+                                    .lean();
                             }
-                            const artistNames = result.artist?.name ? [result.artist.name] : [];
-                            const featuredArtistNames = Array.isArray(result.featuredArtists)
-                                ? result.featuredArtists.map((fa) => fa.name).filter(Boolean)
+                            const artistNames = result.artist?.name
+                                ? [result.artist.name]
                                 : [];
-                            const artists = [...artistNames, ...featuredArtistNames].join(", ");
+                            const featuredArtistNames = Array.isArray(
+                                result.featuredArtists
+                            )
+                                ? result.featuredArtists
+                                      .map((fa) => fa.name)
+                                      .filter(Boolean)
+                                : [];
+                            const artists = [
+                                ...artistNames,
+                                ...featuredArtistNames,
+                            ].join(", ");
                             const coverImage = album?.coverImage?.url || "";
                             return {
                                 ...result,
@@ -485,7 +525,8 @@ const globalSearch = async ({
                 // Get total count
                 const personTotal = await model.countDocuments(personQuery);
                 // Fetch results for the current page
-                const personResults = await model.find(personQuery)
+                const personResults = await model
+                    .find(personQuery)
                     .select(select)
                     .populate(personFields.map((field) => field.split(".")[0]))
                     .skip((page - 1) * limit)
@@ -502,13 +543,26 @@ const globalSearch = async ({
                         transformedPersonResults.map(async (result) => {
                             let album = null;
                             if (result.album) {
-                                album = await models.MusicAlbum.findById(result.album).select("coverImage").lean();
+                                album = await models.MusicAlbum.findById(
+                                    result.album
+                                )
+                                    .select("coverImage")
+                                    .lean();
                             }
-                            const artistNames = result.artist?.name ? [result.artist.name] : [];
-                            const featuredArtistNames = Array.isArray(result.featuredArtists)
-                                ? result.featuredArtists.map((fa) => fa.name).filter(Boolean)
+                            const artistNames = result.artist?.name
+                                ? [result.artist.name]
                                 : [];
-                            const artists = [...artistNames, ...featuredArtistNames].join(", ");
+                            const featuredArtistNames = Array.isArray(
+                                result.featuredArtists
+                            )
+                                ? result.featuredArtists
+                                      .map((fa) => fa.name)
+                                      .filter(Boolean)
+                                : [];
+                            const artists = [
+                                ...artistNames,
+                                ...featuredArtistNames,
+                            ].join(", ");
                             const coverImage = album?.coverImage?.url || "";
                             return {
                                 ...result,
@@ -533,7 +587,9 @@ const globalSearch = async ({
             uniqueIds[field] = new Set(
                 allResults
                     .filter((item) => item[field.split(".")[1]])
-                    .map((item) => item[field.split(".")[0]][field.split(".")[1]])
+                    .map(
+                        (item) => item[field.split(".")[0]][field.split(".")[1]]
+                    )
             );
         });
 
@@ -545,7 +601,11 @@ const globalSearch = async ({
             externalResults = spotifyData.data;
             externalTotal = spotifyData.total;
         } else if (external === "googlebooks" && name === "book") {
-            const googleBooksData = await fetchGoogleBooksData(searchTerm, page, limit);
+            const googleBooksData = await fetchGoogleBooksData(
+                searchTerm,
+                page,
+                limit
+            );
             externalResults = googleBooksData.data;
             externalTotal = googleBooksData.total;
         } else if (name === "movie" || name === "series") {
@@ -592,8 +652,16 @@ const globalSearch = async ({
         // Sort by relevance
         if (sortBy === "relevance" && uniqueResults.length) {
             uniqueResults.sort((a, b) => {
-                const aScore = calculateRelevanceScore(a, sanitizedTerm, fields);
-                const bScore = calculateRelevanceScore(b, sanitizedTerm, fields);
+                const aScore = calculateRelevanceScore(
+                    a,
+                    sanitizedTerm,
+                    fields
+                );
+                const bScore = calculateRelevanceScore(
+                    b,
+                    sanitizedTerm,
+                    fields
+                );
                 return bScore - aScore;
             });
         }
@@ -681,7 +749,10 @@ const searchPeople = async ({ searchTerm, page = 1, limit = 10 }) => {
         for (const key of searchCache.keys()) {
             if (key.startsWith(broaderCacheKeyPrefix)) {
                 searchCache.delete(key);
-                logger.logMessage("info", `Invalidated cache for broader term: ${key}`);
+                logger.logMessage(
+                    "info",
+                    `Invalidated cache for broader term: ${key}`
+                );
             }
         }
     }
@@ -697,7 +768,9 @@ const searchPeople = async ({ searchTerm, page = 1, limit = 10 }) => {
     queryConditions.push({
         $expr: {
             $regexMatch: {
-                input: { $concat: ["$fullName.firstName", " ", "$fullName.lastName"] },
+                input: {
+                    $concat: ["$fullName.firstName", " ", "$fullName.lastName"],
+                },
                 regex: sanitizedTerm,
                 options: "i",
             },

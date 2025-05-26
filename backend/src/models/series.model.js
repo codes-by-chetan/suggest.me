@@ -158,6 +158,7 @@ const seriesSchema = new mongoose.Schema(
                 "Scripted",
                 "Miniseries", // Added for TMDB's type
                 "Other",
+                "Reality",
             ],
             default: "Other",
             required: false,
