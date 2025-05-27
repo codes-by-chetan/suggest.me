@@ -36,8 +36,8 @@ const mapContentItem = (userContent) => ({
         userContent.content?.creator?.map((c) => c.name).join(", ") ||
         userContent.content?.author?.map((a) => a.name).join(", ") ||
         userContent.content?.production?.companies
-                ?.map((a) => a.name)
-                .join(", ") ||
+            ?.map((a) => a.name)
+            .join(", ") ||
         (userContent.contentType.toLowerCase() === "music"
             ? [
                   userContent.content?.artist?.name,
@@ -292,6 +292,7 @@ const getUserContent = async (userId, { page = 1, limit = 12, type } = {}) => {
         series: "Series",
         book: "Book",
         music: "Music",
+        video: "Video",
     };
     const contentType = type ? typeMap[type.toLowerCase()] : undefined;
     if (type && !contentType) {

@@ -18,66 +18,23 @@ const OMDB_BASE_URL = "http://www.omdbapi.com/";
 const getOrCreatePerson = async (tmdbPerson, userId) => {
     if (!tmdbPerson || !tmdbPerson.id) return null;
 
-    // Check if person exists in database
     let person = await models.Person.findOne({
         tmdbId: tmdbPerson.id.toString(),
     });
 
-    // Fetch detailed person data from TMDB
     try {
-        let response;
-        try {
-            response = await axios.get(
-                `${TMDB_BASE_URL}/person/${tmdbPerson.id}`,
-                {
-                    params: { api_key: TMDB_API_KEY },
-                    headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
-                }
-            );
-        } catch (error) {
-            console.error(
-                `TMDB API error for person ${tmdbPerson.id}:`,
-                error.message
-            );
-            console.error(
-                `TMDB API error for person ${tmdbPerson.id}:`,
-                error
-            );
-            throw new Error(error.message);
-        }
+        const response = await axios.get(
+            `${TMDB_BASE_URL}/person/${tmdbPerson.id}`,
+            {
+                params: { api_key: TMDB_API_KEY },
+                headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
+            }
+        );
 
         const personData = response.data;
-        if (!person) {
-            person = await models.Person.create({
-                name: personData.name || tmdbPerson.name,
-                tmdbId: personData.id.toString(),
-                slug: (personData.name || tmdbPerson.name)
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, "-")
-                    .replace(/(^-|-$)/g, ""),
-                professions: [
-                    personData.known_for_department ||
-                        tmdbPerson.known_for_department ||
-                        "Actor",
-                ],
-                biography: personData.biography || "",
-                birthday: personData.birthday
-                    ? new Date(personData.birthday)
-                    : null,
-                profileImage: personData.profile_path
-                    ? {
-                          url: `https://image.tmdb.org/t/p/w500${personData.profile_path}`,
-                          publicId: personData.profile_path,
-                      }
-                    : null,
-                isActive: true,
-                createdBy: userId || null,
-                updatedBy: userId || null,
-            });
-            return person._id;
-        }
-        await person.updateOne({
+        const personDetails = {
             name: personData.name || tmdbPerson.name,
+            tmdbId: personData.id.toString(),
             slug: (personData.name || tmdbPerson.name)
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "-")
@@ -98,27 +55,31 @@ const getOrCreatePerson = async (tmdbPerson, userId) => {
                   }
                 : null,
             isActive: true,
-            updatedBy: userId || null,
-        });
-        return person._id;
-    } catch (error) {
-        console.error(
-            `TMDB API error for person ${tmdbPerson.id}:`,
-            error.message
-        );
-        console.error(`TMDB API error for person ${tmdbPerson.id}:`, error);
-        person = await models.Person.create({
-            name: tmdbPerson.name,
-            tmdbId: tmdbPerson.id.toString(),
-            slug: tmdbPerson.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/(^-|-$)/g, ""),
-            professions: [tmdbPerson.known_for_department || "Actor"],
-            isActive: true,
             createdBy: userId || null,
             updatedBy: userId || null,
-        });
+        };
+
+        if (!person) {
+            person = await models.Person.create(personDetails);
+        } else {
+            await person.updateOne(personDetails);
+        }
+        return person._id;
+    } catch (error) {
+        if (!person) {
+            person = await models.Person.create({
+                name: tmdbPerson.name,
+                tmdbId: tmdbPerson.id.toString(),
+                slug: tmdbPerson.name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/(^-|-$)/g, ""),
+                professions: [tmdbPerson.known_for_department || "Actor"],
+                isActive: true,
+                createdBy: userId || null,
+                updatedBy: userId || null,
+            });
+        }
         return person._id;
     }
 };
@@ -133,26 +94,13 @@ const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
     if (company) return company._id;
 
     try {
-        let response;
-        try {
-            response = await axios.get(
-                `${TMDB_BASE_URL}/company/${tmdbCompany.id}`,
-                {
-                    params: { api_key: TMDB_API_KEY },
-                    headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
-                }
-            );
-        } catch (error) {
-            console.error(
-                `TMDB API error for company ${tmdbCompany.id}:`,
-                error.message
-            );
-            console.error(
-                `TMDB API error for company ${tmdbCompany.id}:`,
-                error
-            );
-            throw new Error(error.message);
-        }
+        const response = await axios.get(
+            `${TMDB_BASE_URL}/company/${tmdbCompany.id}`,
+            {
+                params: { api_key: TMDB_API_KEY },
+                headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
+            }
+        );
 
         const companyData = response.data;
         company = await models.ProductionCompany.create({
@@ -176,11 +124,6 @@ const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
         });
         return company._id;
     } catch (error) {
-        console.error(
-            `TMDB API error for company ${tmdbCompany.id}:`,
-            error.message
-        );
-        console.error(`TMDB API error for company ${tmdbCompany.id}:`, error);
         company = await models.ProductionCompany.create({
             name: tmdbCompany.name,
             tmdbId: tmdbCompany.id.toString(),
@@ -199,55 +142,32 @@ const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
 // Helper function to fetch movie by IMDb ID from TMDB
 const fetchFromTmdbByImdb = async (imdbId) => {
     try {
-        let response;
-        try {
-            const findResponse = await axios.get(
-                `${TMDB_BASE_URL}/find/${imdbId}`,
-                {
-                    params: {
-                        api_key: TMDB_API_KEY,
-                        external_source: "imdb_id",
-                    },
-                    headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
-                }
-            );
-
-            const movieResult = findResponse.data.movie_results[0];
-            if (!movieResult || !movieResult.id) {
-                console.error(`No movie found for IMDb ID ${imdbId} in TMDB`);
-                return null;
+        const findResponse = await axios.get(
+            `${TMDB_BASE_URL}/find/${imdbId}`,
+            {
+                params: { api_key: TMDB_API_KEY, external_source: "imdb_id" },
+                headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
             }
+        );
 
-            response = await axios.get(
-                `${TMDB_BASE_URL}/movie/${movieResult.id}`,
-                {
-                    params: {
-                        api_key: TMDB_API_KEY,
-                        append_to_response:
-                            "credits,release_dates,images,keywords,external_ids",
-                    },
-                    headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
-                }
-            );
-        } catch (error) {
-            console.error(
-                `TMDB API error for IMDb ID ${imdbId}:`,
-                error.message
-            );
-            console.error(
-                `TMDB API error for IMDb ID ${imdbId}:`,
-                error
-            );
-            throw new Error(error.message);
-        }
+        const movieResult = findResponse.data.movie_results[0];
+        if (!movieResult || !movieResult.id) return null;
+
+        const response = await axios.get(
+            `${TMDB_BASE_URL}/movie/${movieResult.id}`,
+            {
+                params: {
+                    api_key: TMDB_API_KEY,
+                    append_to_response:
+                        "credits,release_dates,images,keywords,external_ids",
+                },
+                headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
+            }
+        );
 
         const movie = response.data;
-        if (!movie || !movie.title) {
-            console.error(`No valid movie data for TMDB ID ${movieResult.id}`);
-            return null;
-        }
+        if (!movie || !movie.title) return null;
 
-        // Map directors
         const directors =
             movie.credits?.crew
                 ?.filter((c) => c.job === "Director")
@@ -257,7 +177,6 @@ const fetchFromTmdbByImdb = async (imdbId) => {
         );
         const validDirectors = directorIds.filter((id) => id !== null);
 
-        // Map writers
         const writers =
             movie.credits?.crew
                 ?.filter((c) => c.job === "Writer" || c.job === "Screenplay")
@@ -267,7 +186,6 @@ const fetchFromTmdbByImdb = async (imdbId) => {
         );
         const validWriters = writerIds.filter((id) => id !== null);
 
-        // Map cast
         const cast = movie.credits?.cast
             ? await Promise.all(
                   movie.credits.cast.slice(0, 50).map(async (actor) => {
@@ -283,7 +201,6 @@ const fetchFromTmdbByImdb = async (imdbId) => {
             : [];
         const validCast = cast.filter((c) => c !== null);
 
-        // Map production companies
         const productionCompanies = movie.production_companies
             ? await Promise.all(
                   movie.production_companies.map((c) =>
@@ -293,11 +210,9 @@ const fetchFromTmdbByImdb = async (imdbId) => {
             : [];
         const validCompanies = productionCompanies.filter((c) => c !== null);
 
-        // Map studios and distributors (placeholder)
         const studios = validCompanies;
         const distributors = [];
 
-        // Map TMDB data to Movie schema
         const tmdbMovieDetails = {
             title: movie.title,
             tmdbId: movie.id.toString(),
@@ -373,13 +288,12 @@ const fetchFromTmdbByImdb = async (imdbId) => {
             createdBy: null,
             updatedBy: null,
         };
+
         if (typeof movie.runtime === "number") {
-            tmdbMovieDetails["runtime"] = movie.runtime;
+            tmdbMovieDetails.runtime = movie.runtime;
         }
         return tmdbMovieDetails;
     } catch (error) {
-        console.error(`TMDB API error for IMDb ID ${imdbId}:`, error.message);
-        console.error(`TMDB API error for IMDb ID ${imdbId}:`, error);
         return null;
     }
 };
@@ -388,26 +302,16 @@ const fetchFromTmdbByImdb = async (imdbId) => {
 const fetchFromOmdb = async (imdbId) => {
     try {
         const response = await axios.get(OMDB_BASE_URL, {
-            params: {
-                apikey: OMDB_API_KEY,
-                i: imdbId,
-                type: "movie",
-            },
+            params: { apikey: OMDB_API_KEY, i: imdbId, type: "movie" },
         });
 
-        if (response.data.Response === "False") {
-            console.error(
-                `OMDb API error for IMDb ID ${imdbId}: ${response.data.Error}`
-            );
-            return null;
-        }
+        if (response.data.Response === "False") return null;
 
         const movie = response.data;
 
-        // Map OMDb data to Movie schema
-        let omdbMovieDetails = {
+        const omdbMovieDetails = {
             title: movie.Title || "Untitled",
-            tmdbId: null, // OMDb doesn't provide TMDB ID
+            tmdbId: null,
             slug: movie.Title
                 ? movie.Title.toLowerCase()
                       .replace(/[^a-z0-9]+/g, "-")
@@ -519,10 +423,7 @@ const fetchFromOmdb = async (imdbId) => {
                 studios: [],
                 distributors: [],
             },
-            references: {
-                tmdbId: null,
-                imdbId: movie.imdbID || imdbId,
-            },
+            references: { tmdbId: null, imdbId: movie.imdbID || imdbId },
             keywords: movie.Plot ? movie.Plot.split(" ").slice(0, 20) : [],
             boxOffice: {
                 budget:
@@ -549,13 +450,12 @@ const fetchFromOmdb = async (imdbId) => {
             createdBy: null,
             updatedBy: null,
         };
+
         if (movie?.Runtime && movie?.Runtime !== "N/A") {
-            omdbMovieDetails["runtime"] = parseInt(movie.Runtime);
+            omdbMovieDetails.runtime = parseInt(movie.Runtime);
         }
         return omdbMovieDetails;
     } catch (error) {
-        console.error(`OMDb API error for IMDb ID ${imdbId}:`, error.message);
-        console.error(`OMDb API error for IMDb ID ${imdbId}:`, error);
         return null;
     }
 };
@@ -563,32 +463,18 @@ const fetchFromOmdb = async (imdbId) => {
 // Helper function to fetch movie details from TMDB
 const fetchFromTmdb = async (tmdbId) => {
     try {
-        let response;
-        try {
-            response = await axios.get(`${TMDB_BASE_URL}/movie/${tmdbId}`, {
-                params: {
-                    api_key: TMDB_API_KEY,
-                    append_to_response:
-                        "credits,release_dates,images,keywords,external_ids",
-                },
-                headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
-            });
-        } catch (error) {
-            console.error(`TMDB API error for movie ${tmdbId}:`, error.message);
-            console.error(
-                `TMDB API error for IMDb ID ${tmdbId}:`,
-                error
-            );
-            throw new Error(error.message);
-        }
+        const response = await axios.get(`${TMDB_BASE_URL}/movie/${tmdbId}`, {
+            params: {
+                api_key: TMDB_API_KEY,
+                append_to_response:
+                    "credits,release_dates,images,keywords,external_ids",
+            },
+            headers: { Authorization: `Bearer ${TMDB_AUTH_TOKEN}` },
+        });
 
         const movie = response.data;
-        if (!movie || !movie.title) {
-            console.error(`No valid movie data for TMDB ID ${tmdbId}`);
-            return null;
-        }
+        if (!movie || !movie.title) return null;
 
-        // Map directors
         const directors =
             movie.credits?.crew
                 ?.filter((c) => c.job === "Director")
@@ -598,7 +484,6 @@ const fetchFromTmdb = async (tmdbId) => {
         );
         const validDirectors = directorIds.filter((id) => id !== null);
 
-        // Map writers
         const writers =
             movie.credits?.crew
                 ?.filter((c) => c.job === "Writer" || c.job === "Screenplay")
@@ -608,7 +493,6 @@ const fetchFromTmdb = async (tmdbId) => {
         );
         const validWriters = writerIds.filter((id) => id !== null);
 
-        // Map cast
         const cast = movie.credits?.cast
             ? await Promise.all(
                   movie.credits.cast.slice(0, 50).map(async (actor) => {
@@ -624,7 +508,6 @@ const fetchFromTmdb = async (tmdbId) => {
             : [];
         const validCast = cast.filter((c) => c !== null);
 
-        // Map production companies
         const productionCompanies = movie.production_companies
             ? await Promise.all(
                   movie.production_companies.map((c) =>
@@ -634,12 +517,10 @@ const fetchFromTmdb = async (tmdbId) => {
             : [];
         const validCompanies = productionCompanies.filter((c) => c !== null);
 
-        // Map studios and distributors (placeholder)
         const studios = validCompanies;
         const distributors = [];
 
-        // Map TMDB data to Movie schema
-        let tmdbMovieDetails = {
+        const tmdbMovieDetails = {
             title: movie.title,
             tmdbId: movie.id.toString(),
             slug: movie.title
@@ -715,13 +596,12 @@ const fetchFromTmdb = async (tmdbId) => {
             createdBy: null,
             updatedBy: null,
         };
+
         if (typeof movie.runtime === "number") {
-            tmdbMovieDetails["runtime"] = movie.runtime;
+            tmdbMovieDetails.runtime = movie.runtime;
         }
         return tmdbMovieDetails;
     } catch (error) {
-        console.error(`TMDB API error for movie ${tmdbId}:`, error.message);
-        console.error(`TMDB API error for IMDb ID ${tmdbId}:`, error);
         return null;
     }
 };
@@ -731,49 +611,21 @@ const getMovieDetails = async ({ id, userId }) => {
     if (!id) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
-            "Bhai, movie ID ya TMDB ID toh daal!"
+            "Movie ID or TMDB ID is required"
         );
     }
 
-    // Ensure movieId is a string
-    // id = movieId.toString();
-    // Check if movieId is a valid MongoDB ObjectId
     const isValidObjectId = mongoose.isValidObjectId(id);
-    console.log("isValidObjectId :", isValidObjectId);
-    console.log(
-        `getMovieDetails: Querying with movieId: ${id}, isValidObjectId: ${mongoose.isValidObjectId(id)}`
-    );
-    // Query the database
-    let query = {};
-    if (isValidObjectId) {
-        try {
-            query = {
-                $or: [
-                    { _id: id },
-                    { "references.tmdbId": id },
-                    { "references.imdbId": id },
-                ],
-            };
-        } catch (error) {
-            console.log("query construction with objectId failed  :", error);
-            console.log("setting fallback query object  ");
-            query = {
-                $or: [
-                    { "references.tmdbId": id },
-                    { "references.imdbId": id },
-                ],
-            };
-        }
-    } else {
-        query = {
-            $or: [
-                { "references.tmdbId": id },
-                { "references.imdbId": id },
-            ],
-        };
-    }
+    let query = isValidObjectId
+        ? {
+              $or: [
+                  { _id: id },
+                  { "references.tmdbId": id },
+                  { "references.imdbId": id },
+              ],
+          }
+        : { $or: [{ "references.tmdbId": id }, { "references.imdbId": id }] };
 
-    console.log(`getMovieDetails: Executing query: ${JSON.stringify(query)}`);
     let movie = await models.Movie.findOne(query)
         .populate("director")
         .populate("writers")
@@ -785,23 +637,15 @@ const getMovieDetails = async ({ id, userId }) => {
         .populate("updatedBy")
         .lean();
 
-    if (movie) {
-        console.log(`getMovieDetails: Found movie in database: ${movie._id}`);
-        return movie;
-    }
+    if (movie) return movie;
 
-    // Fetch from TMDB by TMDB ID
-    console.log(`getMovieDetails: Fetching from TMDB with ID: ${id}`);
-    let tmdbMovieDetails = await fetchFromTmdb(id);
-    if (tmdbMovieDetails) {
-        tmdbMovieDetails.createdBy = userId || null;
-        tmdbMovieDetails.updatedBy = userId || null;
+    let movieDetails = await fetchFromTmdb(id);
+    if (movieDetails) {
+        movieDetails.createdBy = userId || null;
+        movieDetails.updatedBy = userId || null;
         try {
-            const newMovie = await models.Movie.create(tmdbMovieDetails);
-            console.log(
-                `getMovieDetails: Saved new movie to database: ${newMovie._id}`
-            );
-            const populatedMovie = await models.Movie.findById(newMovie._id)
+            const newMovie = await models.Movie.create(movieDetails);
+            return await models.Movie.findById(newMovie._id)
                 .populate("director")
                 .populate("writers")
                 .populate("cast.person")
@@ -811,28 +655,21 @@ const getMovieDetails = async ({ id, userId }) => {
                 .populate("createdBy")
                 .populate("updatedBy")
                 .lean();
-            return populatedMovie;
         } catch (error) {
-            console.error("Error saving movie to database:", error);
             throw new ApiError(
                 httpStatus.INTERNAL_SERVER_ERROR,
-                `Movie database mein save karne mein gadbad: ${error.message}`
+                "Failed to save movie to database"
             );
         }
     }
 
-    // Retry with IMDb ID using TMDB
-    console.log(`getMovieDetails: Fetching from TMDB by IMDb ID: ${id}`);
-    tmdbMovieDetails = await fetchFromTmdbByImdb(id);
-    if (tmdbMovieDetails) {
-        tmdbMovieDetails.createdBy = userId || null;
-        tmdbMovieDetails.updatedBy = userId || null;
+    movieDetails = await fetchFromTmdbByImdb(id);
+    if (movieDetails) {
+        movieDetails.createdBy = userId || null;
+        movieDetails.updatedBy = userId || null;
         try {
-            const newMovie = await models.Movie.create(tmdbMovieDetails);
-            console.log(
-                `getMovieDetails: Saved new movie to database: ${newMovie._id}`
-            );
-            const populatedMovie = await models.Movie.findById(newMovie._id)
+            const newMovie = await models.Movie.create(movieDetails);
+            return await models.Movie.findById(newMovie._id)
                 .populate("director")
                 .populate("writers")
                 .populate("cast.person")
@@ -842,28 +679,21 @@ const getMovieDetails = async ({ id, userId }) => {
                 .populate("createdBy")
                 .populate("updatedBy")
                 .lean();
-            return populatedMovie;
         } catch (error) {
-            console.error("Error saving movie to database:", error);
             throw new ApiError(
                 httpStatus.INTERNAL_SERVER_ERROR,
-                `Movie database mein save karne mein gadbad: ${error.message}`
+                "Failed to save movie to database"
             );
         }
     }
 
-    // Fallback to OMDb by IMDb ID
-    console.log(`getMovieDetails: Fetching from OMDb with ID: ${id}`);
-    const omdbMovieDetails = await fetchFromOmdb(id);
-    if (omdbMovieDetails) {
-        omdbMovieDetails.createdBy = userId || null;
-        omdbMovieDetails.updatedBy = userId || null;
+    movieDetails = await fetchFromOmdb(id);
+    if (movieDetails) {
+        movieDetails.createdBy = userId || null;
+        movieDetails.updatedBy = userId || null;
         try {
-            const newMovie = await models.Movie.create(omdbMovieDetails);
-            console.log(
-                `getMovieDetails: Saved new movie to database: ${newMovie._id}`
-            );
-            const populatedMovie = await models.Movie.findById(newMovie._id)
+            const newMovie = await models.Movie.create(movieDetails);
+            return await models.Movie.findById(newMovie._id)
                 .populate("director")
                 .populate("writers")
                 .populate("cast.person")
@@ -873,18 +703,15 @@ const getMovieDetails = async ({ id, userId }) => {
                 .populate("createdBy")
                 .populate("updatedBy")
                 .lean();
-            return populatedMovie;
         } catch (error) {
-            console.error("Error saving movie to database:", error);
             throw new ApiError(
                 httpStatus.INTERNAL_SERVER_ERROR,
-                `Movie database mein save karne mein gadbad: ${error.message}`
+                "Failed to save movie to database"
             );
         }
     }
 
-    console.log(`getMovieDetails: Movie not found for ID: ${id}`);
-    throw new ApiError(httpStatus.NOT_FOUND, "Abe, yeh movie nahi mili!");
+    throw new ApiError(httpStatus.NOT_FOUND, "Movie not found");
 };
 
 const movieService = {
@@ -892,3 +719,4 @@ const movieService = {
 };
 
 export default movieService;
+            

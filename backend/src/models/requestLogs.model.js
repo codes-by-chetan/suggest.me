@@ -21,7 +21,7 @@ const requestLogSchema = new Schema(
     }
 );
 
-requestLogSchema.pre("save", dbLogger("RequestLog"));
+// requestLogSchema.pre("save", dbLogger("RequestLog"));
 
 const RequestLog = mongoose.model("RequestLog", requestLogSchema);
 export default RequestLog;

@@ -7,6 +7,7 @@ import config from "../config/env.config.js";
 import { slugify as translitSlug } from "transliteration";
 import OpenAI from "openai";
 import { load } from "cheerio";
+import { io } from "../index.js"; // Import io instance
 
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: config.openAi.apiKey });
@@ -750,13 +751,24 @@ const fetchFromGoogleBooks = async (googleBooksId) => {
 };
 
 // Enrich book data
-const enrichBookData = async (book) => {
+const enrichBookData = async (book, userId = null) => {
     try {
         console.debug(`Enriching book: ${book._id || book.googleBooksId}`);
         const authors =
             (book.author || []).map((a) => a.name || "").join(" ") ||
             "unknown author";
-        return await enrichData(book, "Book", `${book.title} ${authors}`);
+        const enrichedBook = await enrichData(book, "Book", `${book.title} ${authors}`);
+        // Emit Socket.IO event globally
+        if (io) {
+            io.emit("bookEnriched", {
+                _id: enrichedBook._id,
+                googleBooksId: enrichedBook.googleBooksId,
+                openLibraryId: enrichedBook.openLibraryId || null, // Include if available in your schema
+                ...enrichedBook
+            });
+            console.debug(`Emitted global bookEnriched event for book ${enrichedBook._id}`);
+        }
+        return enrichedBook;
     } catch (error) {
         console.error(
             `Error in enrichBookData for book ${book._id || book.googleBooksId}:`,
@@ -765,7 +777,6 @@ const enrichBookData = async (book) => {
         return book;
     }
 };
-
 // Create book with enrichment
 const createBook = async (bookData, userId) => {
     try {
@@ -778,8 +789,12 @@ const createBook = async (bookData, userId) => {
         console.debug(`Book created: ${book._id}`);
         let populated = await models.Book.findById(book._id).lean();
         console.debug(`Populating book: ${book._id}`);
-        populated = await enrichBookData(populated);
-        console.debug(`Book enriched: ${book._id}`);
+        // Trigger enrichment in the background
+        setImmediate(() => {
+            enrichBookData(populated, userId).catch((err) => {
+                console.error(`Background enrichment failed for book ${book._id}:`, err.message);
+            });
+        });
         return populated;
     } catch (error) {
         console.error(
@@ -955,7 +970,7 @@ const enrichAllBooks = async () => {
         const cursor = models.Book.find({}).lean().cursor();
         for await (const b of cursor) {
             try {
-                await enrichBookData(b);
+                await enrichBookData(b, null);
             } catch (error) {
                 console.warn(`Failed to enrich book ${b._id}:`, error.message);
             }
@@ -1054,14 +1069,19 @@ const getBookDetails = async ({ id, userId }) => {
 
         if (book) {
             console.debug(`Book found in DB: ${book._id}`);
-            return await enrichBookData(book);
+            // Trigger enrichment in the background
+            setImmediate(() => {
+                enrichBookData(book, userId).catch((err) => {
+                    console.error(`Background enrichment failed for book ${book._id}:`, err.message);
+                });
+            });
+            return book;
         }
 
         console.debug(
             `Book not found in DB, fetching from Google Books: ${id}`
         );
         const fromGB = await fetchFromGoogleBooks(id);
-        console.debug("hello");
         if (!fromGB) {
             console.warn(`Book not found for ${id}`);
             throw new ApiError(httpStatus.NOT_FOUND, "Book not found");
