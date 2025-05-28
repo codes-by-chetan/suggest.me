@@ -158,7 +158,7 @@ const getNotificationsByRecipient = async (recipientId) => {
             select: "_id fullName fullNameString profile",
             populate: {
                 path: "profile",
-                select: "avatar",
+                select: "avatar isVerified",
             },
         })
         .sort({ createdAt: -1 }); // Sort by most recent first
