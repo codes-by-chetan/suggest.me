@@ -195,10 +195,6 @@ const seriesSchema = new mongoose.Schema(
         episodes: {
             type: Number,
             min: [1, "Episodes must be at least 1."],
-            validate: {
-                validator: Number.isInteger,
-                message: "Episodes must be an integer.",
-            },
         },
         seasonsDetails: {
             type: [seasonDetailsSchema],

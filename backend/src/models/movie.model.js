@@ -65,7 +65,7 @@ const movieSchema = new mongoose.Schema(
         },
         runtime: {
             type: Number,
-            min: [1, "Runtime must be at least 1 minute."],
+            min: [0, "Runtime must be at least 0 minute."],
             max: [600, "Runtime cannot exceed 600 minutes (10 hours)."],
             validate: {
                 validator: Number.isInteger,

@@ -656,6 +656,7 @@ const getMovieDetails = async ({ id, userId }) => {
                 .populate("updatedBy")
                 .lean();
         } catch (error) {
+            console.log(error)
             throw new ApiError(
                 httpStatus.INTERNAL_SERVER_ERROR,
                 "Failed to save movie to database"

@@ -261,7 +261,7 @@ const getSearchableModels = () => {
             name: "movie",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["director", "writers", "cast.person"],
-            select: "title slug poster director writers cast references.tmdbId references.imdbId year",
+            select: "title slug poster director plot writers cast references.tmdbId references.imdbId year",
             uniqueField: ["references.tmdbId", "references.imdbId"],
         },
         {
@@ -269,7 +269,7 @@ const getSearchableModels = () => {
             name: "series",
             fields: ["title", "genres", "plot", "keywords"],
             personFields: ["creators", "cast.person"],
-            select: "title slug poster creators cast references.tmdbId references.imdbId year",
+            select: "title plot slug poster creators cast references.tmdbId references.imdbId year",
             uniqueField: ["references.tmdbId", "references.imdbId"],
         },
         {
@@ -566,6 +566,7 @@ const globalSearch = async ({
                             return {
                                 ...result,
                                 artists,
+                                plot: artists + "-" + album?.name,
                                 coverImage,
                                 artist: undefined,
                                 featuredArtists: undefined,

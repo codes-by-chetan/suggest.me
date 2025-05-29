@@ -724,7 +724,7 @@ const fetchFromTmdb = async (tmdbId) => {
 
 // Service to get series details by seriesId or tmdbId
 const getSeriesDetails = async ({ id, userId }) => {
-    if (!id) {
+    if (!id || id==="undefined") {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
             "Bhai, series ID ya TMDB ID toh daal!"
