@@ -150,7 +150,7 @@ userSchema.plugin(plugins.paginate);
 userSchema.plugin(plugins.privatePlugin);
 
 // Indexes for performance
-userSchema.index({ "sessions.tokenId": 1 }, { unique: true, sparse: true });
+// userSchema.index({ "sessions.tokenId": 1 }, { unique: true, sparse: true });
 
 // Check if email is taken
 userSchema.statics.isEmailTaken = async function (email, excludeUserId) {

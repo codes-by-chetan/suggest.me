@@ -139,7 +139,7 @@ const logMessage = (type, message, from = "SERVER") => {
     console.log(`${chalk.gray(timestamp)} ${logType} ${formattedMessage}`);
 
     // Log to HTML file with styled classes
-    const htmlLog = `<span class="timestamp">${timestamp}</span> <span class="${type}">[${from?.toUpperCase()}] [${type?.toUpperCase()}]</span> ${formattedMessage}\n`;
+    const htmlLog = `<span class="timestamp">${timestamp}</span> <span class="${type}">[${from.toString()?.toUpperCase()}] [${type?.toUpperCase()}]</span> ${formattedMessage}\n`;
     logStream.write(htmlLog);
 };
 
