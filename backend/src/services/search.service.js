@@ -76,7 +76,6 @@ const fetchTMDBData = async (searchTerm, contentType, page, limit) => {
                 Authorization: `Bearer ${TMDB_AUTH_TOKEN}`,
             },
         });
-        console.log(item);
         const data = response.data.results.map((item) => ({
             tmdbId: item.id,
             imdbId: item.imdb_id || item.external_ids?.imdb_id || "",
