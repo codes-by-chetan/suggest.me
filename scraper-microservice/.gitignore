@@ -1,0 +1,30 @@
+# Python ka typical stuff
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.env
+
+# IDE ya editor ka bakwas
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Dependencies wala folder jo kabhi git pe nahi jata
+dist/
+build/
+*.egg-info/
+
+# Logs aur temporary files
+*.log
+*.tmp
+*.cache
+
+# Mac ka useless file
+.DS_Store
+
+# Agar koi aur specific cheez hai jo ignore karni hai
+# Add kar do yahan
