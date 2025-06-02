@@ -5,6 +5,7 @@ import httpStatus from "http-status";
 import axios from "axios";
 import config from "../config/env.config.js";
 import { io } from "../index.js";
+import pLimit from "p-limit";
 
 const TMDB_API_KEY = config.tmdb.apiKey;
 const TMDB_AUTH_TOKEN = config.tmdb.accessToken;
@@ -13,7 +14,43 @@ const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const OMDB_API_KEY = config.omdb.apiKey;
 const OMDB_BASE_URL = "http://www.omdbapi.com/";
 
-const STREAMING_SERVICE_URL = process.env.STREAMING_SERVICE_URL || "http://localhost:8001";
+const STREAMING_SERVICE_URL = process.env.STREAMING_SERVICE_URL || "http://localhost:3000";
+
+// Limit to 2 concurrent requests to the streaming service
+const limit = pLimit(2);
+
+const fetchStreamingPlatforms = async (movieTitle, year, retries = 2, timeout = 30000) => {
+    return limit(async () => {
+        for (let attempt = 1; attempt <= retries + 1; attempt++) {
+            try {
+                console.log(`Fetching streaming platforms for ${movieTitle} (${year}), attempt ${attempt}`);
+                const response = await axios.post(
+                    `${STREAMING_SERVICE_URL}/api/movies/scrape`,
+                    { title: movieTitle, year: year },
+                    { timeout }
+                );
+
+                const { platforms } = response.data;
+                if (!platforms || !Array.isArray(platforms)) {
+                    console.error(`No platforms returned for ${movieTitle} (${year})`);
+                    return [];
+                }
+
+                console.log(`Successfully fetched platforms for ${movieTitle} (${year}): ${JSON.stringify(platforms)}`);
+                // Platforms are already in the correct format: [{"platform": "...", "link": "..."}]
+                return platforms;
+            } catch (error) {
+                console.error(`Failed to fetch streaming platforms for ${movieTitle} (${year}), attempt ${attempt}: ${error.message}`);
+                if (attempt === retries + 1) {
+                    console.error(`All attempts failed for ${movieTitle} (${year})`);
+                    return [];
+                }
+                await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+            }
+        }
+        return [];
+    });
+};
 
 const getOrCreatePerson = async (tmdbPerson, userId) => {
     if (!tmdbPerson || !tmdbPerson.id) return null;
@@ -119,30 +156,6 @@ const getOrCreateProductionCompany = async (tmdbCompany, userId) => {
             updatedBy: userId || null,
         });
         return company._id;
-    }
-};
-
-const fetchStreamingPlatforms = async (movieTitle, year) => {
-    try {
-        const response = await axios.post(
-            `${STREAMING_SERVICE_URL}/streaming-platforms`,
-            { title: movieTitle, year: year },
-            { timeout: 10000 }
-        );
-
-        const { platforms } = response.data;
-        if (!platforms || !Array.isArray(platforms)) {
-            console.error(`No platforms returned for ${movieTitle} (${year})`);
-            return [];
-        }
-
-        return platforms.map(platform => ({
-            platform,
-            link: `https://www.justwatch.com/us/search?q=${encodeURIComponent(movieTitle)}+${year}`,
-        }));
-    } catch (error) {
-        console.error(`Failed to fetch streaming platforms for ${movieTitle} (${year}): ${error.message}`);
-        return [];
     }
 };
 
