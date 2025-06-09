@@ -10,9 +10,15 @@ import {
   contentItemArray,
 } from '@/components/layout/data/contentItem'
 import { Suggestor, suggestorsArray } from '@/components/layout/data/suggestors'
+import { Header } from '@/components/layout/header'
+import { TopNav } from '@/components/layout/top-nav'
+import { ProfileDropdown } from '@/components/profile-dropdown'
+import { Search } from '@/components/search'
 import SuggestionButton from '@/components/suggestions/SuggestionButton'
 import SuggestionFlow from '@/components/suggestions/SuggestionFlow'
 import SuggestorsList from '@/components/suggestors/SuggestorsList'
+import { ThemeSwitch } from '@/components/theme-switch'
+
 interface ContentDetails {
   id: string
   title: string
@@ -88,6 +94,14 @@ const Home = () => {
 
   return (
     <>
+      <Header>
+        {/* <TopNav links={topNav} /> */}
+        <div className='ml-auto flex items-center space-x-4'>
+          <Search />
+          <ThemeSwitch />
+          {/* <ProfileDropdown /> */}
+        </div>
+      </Header>
       <div className='py-6'>
         <h1 className='text-foreground mb-0 flex gap-2 text-3xl font-bold'>
           Welcome to
@@ -128,7 +142,7 @@ const Home = () => {
                       className='bg-muted h-40 w-full'
                       onClick={() =>
                         navigate({
-                          to: "/content/$id",
+                          to: '/content/$id',
                           params: { id: item.id },
                         })
                       }
@@ -284,3 +298,30 @@ const Home = () => {
 }
 
 export default Home
+
+const topNav = [
+  {
+    title: 'Overview',
+    href: 'dashboard/overview',
+    isActive: true,
+    disabled: false,
+  },
+  {
+    title: 'Customers',
+    href: 'dashboard/customers',
+    isActive: false,
+    disabled: true,
+  },
+  {
+    title: 'Products',
+    href: 'dashboard/products',
+    isActive: false,
+    disabled: true,
+  },
+  {
+    title: 'Settings',
+    href: 'dashboard/settings',
+    isActive: false,
+    disabled: true,
+  },
+]

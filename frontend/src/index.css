@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@tailwind utilities;
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -186,4 +187,109 @@
     font-size: large;
   }
   
+}
+
+
+
+@layer base {
+  :root {
+    /* Light theme - social media inspired */
+    --background: 210 40% 98%;
+    --foreground: 222.2 47.4% 11.2%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 47.4% 11.2%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 47.4% 11.2%;
+
+    /* Primary: Blue (Facebook/Twitter inspired) */
+    --primary: 214 89% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Light gray */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 214 89% 95%;
+    --accent-foreground: 214 89% 52%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 214 89% 52%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark theme - social media inspired */
+    --background: 222.2 45.4% 9.2%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 60.4% 13.5%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 47.4% 13.5%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary: Blue (Facebook/Twitter inspired) */
+    --primary: 214 89% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 214 89% 20%;
+    --accent-foreground: 214 89% 70%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 214 89% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .toast-success {
+    @apply border-green-500 bg-green-50 dark:bg-green-900/20;
+  }
+
+  .toast-error {
+    @apply border-red-500 bg-red-50 dark:bg-red-900/20;
+  }
+
+  .toast-info {
+    @apply border-blue-500 bg-blue-50 dark:bg-blue-900/20;
+  }
+
+  .toast-warning {
+    @apply border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20;
+  }
+}
+body::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
+}
+
+.hide-scroll::-webkit-scrollbar {
+  display: none !important; /* Safari and Chrome */
 }
