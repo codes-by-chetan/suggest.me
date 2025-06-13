@@ -13,7 +13,7 @@ export interface SignUpApiResponse {
   data: Data
   message: string
   success: boolean
-  redirect: null
+  redirect: string|boolean|null
 }
 
 interface Data {

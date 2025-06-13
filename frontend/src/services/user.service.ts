@@ -1,6 +1,16 @@
-import api from "./api.service";
-import { friendsResponse, UserProfileResponse } from "../interfaces/user.interface";
-import { response } from "@/interfaces/auth.interfaces";
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import config from '@/config/env.config'
+import ApiErrorResponse from '@/interfaces/api/error-response.interface'
+import { Credentials } from '@/interfaces/api/login-response.interface.ts'
+import { registrationDetails, SignUpApiResponse } from '@/interfaces/api/signup-response.interface.ts'
+import { verifyOtpData } from '@/interfaces/api/verify-otp.interface.ts'
+import createApiClient from '@/utils/axios-client.ts'
+
+const userApi = createApiClient(config.API_URL)
+
+
+
 export default class UserService {
   getAccessToken() {
     const token: string | null = localStorage.getItem("token");
