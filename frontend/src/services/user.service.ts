@@ -10,6 +10,37 @@ import createApiClient from '@/utils/axios-client.ts'
 const userApi = createApiClient(config.API_URL)
 
 
+export const UserService = {
+  getUserProfile: async ():Promise<UserProfileResponse|ApiErrorResponse> =>
+    userApi.get('/user/profile').then(),
+  login: async (data: Credentials) => userApi.post('/auth/login', data),
+  verifyUser: async () => userApi.get('/auth/verify-user'),
+  isAdmin: async () => userApi.get('/auth/verify-admin'),
+  refreshUserDetails: async () => userApi.get('/auth/refresh-user'),
+  changePassword: async () => userApi.post('/auth/change-password'),
+  verifyOtp: async (data: verifyOtpData) =>
+    userApi.post('/auth/verify-otp', data),
+  forgotPassword: async (data: { email: string }) =>
+    userApi.post('/auth/forgot-password', data),
+  resetPassword: async (data: { password: string }, token: string) =>
+    userApi.post(`/auth/reset-password?token=${token}`, data),
+  activateAccount: async (token: string) =>
+    userApi.post(`/auth/activate?token=${token}`),
+  resendAccountActivation: async (data: { email: string }) =>
+    userApi.post(`/auth/resend-account-activation`, data),
+  logout: async () =>
+    userApi.post(
+      `/auth/logout`,
+      {},
+      {
+        withCredentials: true, // Ensure cookies are sent
+      }
+    ),
+  switchOrganization: async (data: { orgId: string }) =>
+    userApi.post('/auth/switch-organizations', data),
+}
+
+
 
 export default class UserService {
   getAccessToken() {
