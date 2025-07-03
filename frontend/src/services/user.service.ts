@@ -1,221 +1,134 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import config from '@/config/env.config'
-import ApiErrorResponse from '@/interfaces/api/error-response.interface'
-import { Credentials } from '@/interfaces/api/login-response.interface.ts'
-import { registrationDetails, SignUpApiResponse } from '@/interfaces/api/signup-response.interface.ts'
-import { verifyOtpData } from '@/interfaces/api/verify-otp.interface.ts'
-import createApiClient from '@/utils/axios-client.ts'
+import config from '@/config/env.config';
+import { ApiResponse } from '@/interfaces/api/api-response.interface';
+import ApiErrorResponse from '@/interfaces/api/error-response.interface';
+import {
+  friendsResponse,
+  UserProfileResponse,
+} from '@/interfaces/api/user.interface';
+import createApiClient from '@/utils/axios-client.ts';
 
-const userApi = createApiClient(config.API_URL)
-
+const userApi = createApiClient(config.API_URL);
 
 export const UserService = {
-  getUserProfile: async ():Promise<UserProfileResponse|ApiErrorResponse> =>
-    userApi.get('/user/profile').then(),
-  login: async (data: Credentials) => userApi.post('/auth/login', data),
-  verifyUser: async () => userApi.get('/auth/verify-user'),
-  isAdmin: async () => userApi.get('/auth/verify-admin'),
-  refreshUserDetails: async () => userApi.get('/auth/refresh-user'),
-  changePassword: async () => userApi.post('/auth/change-password'),
-  verifyOtp: async (data: verifyOtpData) =>
-    userApi.post('/auth/verify-otp', data),
-  forgotPassword: async (data: { email: string }) =>
-    userApi.post('/auth/forgot-password', data),
-  resetPassword: async (data: { password: string }, token: string) =>
-    userApi.post(`/auth/reset-password?token=${token}`, data),
-  activateAccount: async (token: string) =>
-    userApi.post(`/auth/activate?token=${token}`),
-  resendAccountActivation: async (data: { email: string }) =>
-    userApi.post(`/auth/resend-account-activation`, data),
-  logout: async () =>
-    userApi.post(
-      `/auth/logout`,
-      {},
-      {
-        withCredentials: true, // Ensure cookies are sent
-      }
-    ),
-  switchOrganization: async (data: { orgId: string }) =>
-    userApi.post('/auth/switch-organizations', data),
-}
+  getUserProfile: async (): Promise<UserProfileResponse | ApiErrorResponse> =>
+    userApi
+      .get('/user/profile')
+      .then((response: any) => {
+        return response.data;
+      })
+      .catch((err) => {
+        console.log(err);
+        return err.response.data;
+      }),
+
+  getUserProfileById: async (
+    userId: string
+  ): Promise<UserProfileResponse | ApiErrorResponse> =>
+    userApi
+      .get(`profiles/${userId}`)
+      .then((response: any) => {
+        return response.data;
+      })
+      .catch((err) => {
+        console.log(err);
+        return err.response.data;
+      }),
 
 
+  followUser: async (userId: string): Promise<ApiResponse | ApiErrorResponse> =>
+    userApi
+      .get(`relations/follow/${userId}`)
+      .then((response: any) => {
+        return response.data;
+      })
+      .catch((err) => {
+        console.log(err);
+        return err.response.data;
+      }),
 
-export default class UserService {
-  getAccessToken() {
-    const token: string | null = localStorage.getItem("token");
-    return token;
-  }
 
-  async getUserProfile(): Promise<UserProfileResponse> {
-    return api
-      .get("user/profile", {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
+  unFollowUser: async (
+    userId: string
+  ): Promise<ApiResponse | ApiErrorResponse> =>
+    userApi
+      .get(`relations/unfollow/${userId}`)
       .then((response: any) => {
         return response.data;
       })
       .catch((err) => {
         console.log(err);
         return err.response.data;
-      });
-  }
-  async getUserProfileById(userId: string): Promise<UserProfileResponse> {
-    return api
-      .get(`profiles/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
-      .then((response: any) => {
-        return response.data;
-      })
-      .catch((err) => {
-        console.log(err);
-        return err.response.data;
-      });
-  }
-  async followUser(userId: string): Promise<response> {
-    return api
-      .get(`relations/follow/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
-      .then((response: any) => {
-        return response.data;
-      })
-      .catch((err) => {
-        console.log(err);
-        return err.response.data;
-      });
-  }
-  async unFollowUser(userId: string): Promise<response> {
-    return api
-      .get(`relations/unfollow/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
-      .then((response: any) => {
-        return response.data;
-      })
-      .catch((err) => {
-        console.log(err);
-        return err.response.data;
-      });
-  }
+      }),
 
-  async acceptFollowRequest(requestId: string): Promise<UserProfileResponse> {
-    return api
-      .get(`relations/accept/follow/${requestId}`, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
-      .then((response: any) => {
-        return response.data;
-      })
-      .catch((err) => {
-        console.log(err);
-        return err.response.data;
-      });
-  }
 
-  async getRelation(userId: string): Promise<UserProfileResponse> {
-    return api
-      .get(`relations/relation/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
+  acceptFollowRequest: async (
+    requestId: string
+  ): Promise<UserProfileResponse | ApiErrorResponse> =>
+    userApi
+      .get(`relations/accept/follow/${requestId}`)
       .then((response: any) => {
         return response.data;
       })
       .catch((err) => {
         console.log(err);
         return err.response.data;
-      });
-  }
-  async getFollowsYou(userId: string): Promise<UserProfileResponse> {
-    return api
-      .get(`relations/follows/you/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
-      .then((response: any) => {
-        return response.data;
-      })
-      .catch((err) => {
-        console.log(err);
-        return err.response.data;
-      });
-  }
+      }),
 
-  async getUserWholeProfile(): Promise<response> {
-    return api
-      .get("user/profile-whole", {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
+      
+  getRelation: async (
+    userId: string
+  ): Promise<UserProfileResponse | ApiErrorResponse> =>
+    userApi
+      .get(`relations/relation/${userId}`)
       .then((response: any) => {
         return response.data;
       })
       .catch((err) => {
         console.log(err);
         return err.response.data;
-      });
-  }
-
-  async getUserFriends(): Promise<friendsResponse> {
-    return api
-      .get("relations/friends", {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
+      }),
+  getFollowsYou: async (userId: string): Promise<UserProfileResponse> =>
+    userApi
+      .get(`relations/follows/you/${userId}`)
       .then((response: any) => {
         return response.data;
       })
       .catch((err) => {
         console.log(err);
         return err.response.data;
-      });
-  }
-  async updateUserProfilePicture(data: any): Promise<response> {
-    return api
-      .post("user/avatar", data, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
+      }),
+  getUserWholeProfile: async (): Promise<ApiResponse | ApiErrorResponse> =>
+    userApi
+      .get('user/profile-whole')
       .then((response: any) => {
         return response.data;
       })
       .catch((err) => {
         console.log(err);
         return err.response.data;
-      });
-  }
-
-  async updateUserProfile(data: any): Promise<response> {
-    return api
-      .post("user/update/profile", data, {
-        headers: {
-          Authorization: `Bearer ${this.getAccessToken()}`,
-        },
-      })
+      }),
+  getUserFriends: async (): Promise<friendsResponse | ApiErrorResponse> =>
+    userApi
+      .get('relations/friends')
       .then((response: any) => {
         return response.data;
       })
       .catch((err) => {
         console.log(err);
         return err.response.data;
-      });
-  }
-}
+      }),
+  updateUserProfilePicture: async (
+    data: any
+  ): Promise<ApiResponse | ApiErrorResponse> =>
+    userApi
+      .post('user/avatar', data)
+      .then((response: any) => {
+        return response.data;
+      })
+      .catch((err) => {
+        console.log(err);
+        return err.response.data;
+      }),
+};

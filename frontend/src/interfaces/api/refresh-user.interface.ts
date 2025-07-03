@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-interface RefreshUserDetailsApiResponse {
+export interface RefreshUserDetailsApiResponse {
   statusCode: number;
   data: Data;
   message: string;
