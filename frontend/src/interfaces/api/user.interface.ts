@@ -14,9 +14,9 @@ export interface UserProfileData {
   fullName: FullName;
   email: string;
   contactNumber: ContactNumber;
-  fullNameString: string;
-  profile: Profile;
-  relations: Relations;
+  fullNameString?: string;
+  profile?: Profile;
+  relations?: Relations;
   createdAt: string;
   [key: string]: any;
 }

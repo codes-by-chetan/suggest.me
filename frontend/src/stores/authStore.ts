@@ -1,9 +1,39 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import AuthService from '@/services/auth.service'
-import UserService from '@/services/user.service'
-import { AuthUser } from '@/interfaces/auth.interfaces'
+import {UserService} from '@/services/user.service'
+import { AuthService } from '@/services/auth.service'
+
+interface AuthUser {
+  _id: string;
+  fullName: FullName;
+  email: string;
+  contactNumber: ContactNumber;
+  role: string;
+  fullNameString: string;
+  avatar: Avatar;
+}
+
+interface Avatar {
+  publicId: string;
+  url: string;
+  _id: string;
+  id: string;
+}
+
+interface ContactNumber {
+  countryCode: string;
+  number: string;
+  _id: string;
+  id: string;
+}
+
+interface FullName {
+  firstName: string;
+  lastName: string;
+  _id: string;
+}
 
 interface AuthState {
   auth: {
@@ -19,12 +49,9 @@ interface AuthState {
   }
 }
 
-const authService = new AuthService()
-const userService = new UserService()
-
 export const useAuthStore = create<AuthState>()((
   persist(
-    (set, get) => ({
+    (set, _get) => ({
       auth: {
         user: null,
         isAuthenticated: false,
@@ -50,7 +77,7 @@ export const useAuthStore = create<AuthState>()((
           }))
           
           try {
-            const response = await authService.login({ email, password })
+            const response = await AuthService.login({ email, password })
             
             if (response.success && response.data) {
               const { user } = response.data
@@ -71,7 +98,7 @@ export const useAuthStore = create<AuthState>()((
               }))
               return { success: false, message: response.message || 'Login failed' }
             }
-          } catch (error) {
+          } catch (_error) {
             set((state) => ({ 
               ...state, 
               auth: { ...state.auth, isLoading: false } 
@@ -81,7 +108,7 @@ export const useAuthStore = create<AuthState>()((
         },
         logout: async () => {
           try {
-            await authService.logout()
+            await AuthService.logout()
           } catch (error) {
             console.error('Logout error:', error)
           } finally {
@@ -97,30 +124,16 @@ export const useAuthStore = create<AuthState>()((
           }
         },
         checkAuth: async () => {
-          const token = authService.getToken()
-          if (!token) {
-            set((state) => ({ 
-              ...state, 
-              auth: { 
-                ...state.auth, 
-                user: null, 
-                isAuthenticated: false,
-                isLoading: false 
-              } 
-            }))
-            return
-          }
-
           set((state) => ({ 
             ...state, 
             auth: { ...state.auth, isLoading: true } 
           }))
 
           try {
-            const verifyResponse = await authService.verifyToken()
+            const verifyResponse = await AuthService.verifyUser()
             if (verifyResponse.success) {
               // Get user profile
-              const profileResponse = await userService.getUserProfile()
+              const profileResponse = await UserService.getUserProfile()
               if (profileResponse.success && profileResponse.data) {
                 const user = profileResponse.data.user as AuthUser
                 set((state) => ({ 
