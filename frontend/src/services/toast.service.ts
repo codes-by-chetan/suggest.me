@@ -1,81 +1,81 @@
-"use client";
+import { toast as shadcnToast } from 'sonner';
 
-import { toast as shadcnToast } from "@/components/ui/use-toast";
-import { Navigate, useNavigate } from "react-router";
-
-type ToastType = "success" | "error" | "info" | "warning" | "notification";
+// type ToastType = 'success' | 'error' | 'info' | 'warning' | 'notification';
 
 interface ToastOptions {
   title?: string;
   description?: string;
   duration?: number;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface NotificationToastOptions extends ToastOptions {
   onClick?: () => void;
 }
 
-export const useToast = () => {
-  const toast = {
-    success: (message: string, options?: ToastOptions) => {
-      return shadcnToast({
-        title: options?.title || "✅ Success",
-        description: message,
-        duration: options?.duration || 3000,
-        className: "toast-success",
-      });
-    },
+export const toast = {
+  success: (message: string, options?: ToastOptions) => {
+    return shadcnToast.success(message, {
+      description: options?.description,
+      duration: options?.duration || 3000,
+      action: options?.action,
+      className: 'toast-success bg-green-100 text-green-800 border-green-300',
+      style: { borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif' },
+    });
+  },
 
-    error: (message: string, options?: ToastOptions) => {
-      return shadcnToast({
-        title: options?.title || "❌ Error",
-        description: message,
-        duration: options?.duration || 5000,
-        className: "toast-error",
-      });
-    },
+  error: (message: string, options?: ToastOptions) => {
+    return shadcnToast.error(message, {
+      description: options?.description,
+      duration: options?.duration || 5000,
+      action: options?.action,
+      className: 'toast-error bg-red-100 text-red-800 border-red-300',
+      style: { borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif' },
+    });
+  },
 
-    info: (message: string, options?: ToastOptions) => {
-      return shadcnToast({
-        title: options?.title || "ℹ️ Information",
-        description: message,
-        duration: options?.duration || 4000,
-        className: "toast-info",
-      });
-    },
+  info: (message: string, options?: ToastOptions) => {
+    return shadcnToast.info(message, {
+      description: options?.description,
+      duration: options?.duration || 4000,
+      action: options?.action,
+      className: 'toast-info bg-blue-100 text-blue-800 border-blue-300',
+      style: { borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif' },
+    });
+  },
 
-    warning: (message: string, options?: ToastOptions) => {
-      return shadcnToast({
-        title: options?.title || "⚠️ Warning",
-        description: message,
-        duration: options?.duration || 4000,
-        className: "toast-warning",
-      });
-    },
+  warning: (message: string, options?: ToastOptions) => {
+    return shadcnToast.warning(message, {
+      description: options?.description,
+      duration: options?.duration || 4000,
+      action: options?.action,
+      className: 'toast-warning bg-yellow-100 text-yellow-800 border-yellow-300',
+      style: { borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif' },
+    });
+  },
 
-    notification: (message: string, options?: NotificationToastOptions) => {
-      const handleClick = () => {
-        if (options?.onClick) {
-          options.onClick();
-        } else {
-          Navigate({
-            to: "/notifications",
-          });
-        }
-      };
+  notification: (message: string, options?: NotificationToastOptions) => {
+    const handleClick = () => {
+      if (options?.onClick) {
+        options.onClick();
+      } else {
+        // Assuming Navigate is from a router like react-router-dom
+        window.location.href = '/notifications';
+      }
+    };
 
-      return shadcnToast({
-        title: options?.title || "🔔 New Notification",
-        description: message,
-        duration: options?.duration || 6000,
-        className: "toast-notification cursor-pointer",
-
+    return shadcnToast(message, {
+      description: options?.description,
+      duration: options?.duration || 6000,
+      action: options?.action || {
+        label: 'View',
         onClick: handleClick,
-      });
-    },
-  };
-
-  return { toast };
+      },
+      className: 'toast-notification bg-purple-100 text-purple-800 border-purple-300 cursor-pointer',
+      style: { borderRadius: '8px', padding: '12px', fontFamily: 'Inter, sans-serif' },
+    });
+  },
 };
-
-export const {toast} = useToast();

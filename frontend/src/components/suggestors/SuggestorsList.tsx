@@ -1,27 +1,27 @@
-import { useNavigate } from '@tanstack/react-router'
-import { motion } from 'framer-motion'
-import { Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useNavigate } from '@tanstack/react-router';
+import { Suggestor, suggestorsArray } from '@/data/suggestors';
+import { motion } from 'framer-motion';
+import { Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Suggestor, suggestorsArray } from '../layout/data/suggestors'
+} from '@/components/ui/card';
 
 interface SuggestorsListProps {
-  suggestors?: Suggestor[]
-  onSuggestorClick?: (suggestor: Suggestor) => void
-  className?: string
+  suggestors?: Suggestor[];
+  onSuggestorClick?: (suggestor: Suggestor) => void;
+  className?: string;
 }
 
 interface SuggestorCardProps {
-  suggestor: Suggestor
-  onSuggestorClick: (suggestor: Suggestor) => void
-  navigate: ReturnType<typeof useNavigate>
+  suggestor: Suggestor;
+  onSuggestorClick: (suggestor: Suggestor) => void;
+  navigate: ReturnType<typeof useNavigate>;
 }
 
 const SuggestorCard = ({
@@ -42,7 +42,7 @@ const SuggestorCard = ({
           </AvatarFallback>
         </Avatar>
         <CardTitle
-          className='text-lg text-yellow-200'
+          className='text-foreground text-lg '
           onClick={() => navigate({ to: `/profile/${suggestor.id}` })}
         >
           {suggestor.name}
@@ -59,23 +59,22 @@ const SuggestorCard = ({
       <button
         className='text-primary hover:text-primary/80 text-sm font-medium'
         onClick={(e) => {
-          e.stopPropagation()
-          onSuggestorClick(suggestor)
+          e.stopPropagation();
+          onSuggestorClick(suggestor);
         }}
       >
         View suggestions
       </button>
     </CardFooter>
   </Card>
-)
+);
 
 const SuggestorsList = ({
   suggestors = suggestorsArray,
   onSuggestorClick = () => {},
   className = '',
 }: SuggestorsListProps) => {
-  const navigate = useNavigate()
-
+  const navigate = useNavigate();
   if (suggestors.length === 0) {
     return (
       <div className='bg-card flex flex-col items-center justify-center rounded-lg p-8 shadow-sm'>
@@ -87,7 +86,7 @@ const SuggestorsList = ({
           When people suggest content to you, they'll appear here.
         </p>
       </div>
-    )
+    );
   }
 
   
@@ -113,7 +112,7 @@ const SuggestorsList = ({
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default SuggestorsList
+export default SuggestorsList;

@@ -43,7 +43,7 @@ interface CheckContentParams {
   suggestionId?: string;
 }
 
-export const AuthService = {
+const ContentListService = {
   addContent: async (data: AddContentParams): Promise<ApiResponse<any>> =>
     apiService.post('user/content', data),
   updateContentStatus: async (
@@ -68,3 +68,5 @@ export const AuthService = {
   checkContent: async (params: CheckContentParams): Promise<ApiResponse<any>> =>
     apiService.post(`user/content/check`, { params }),
 };
+
+export default ContentListService;

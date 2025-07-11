@@ -1,4 +1,7 @@
-import { GlobalSearchResponse, PeopleSearchResponse } from '@/interfaces/api/search.interface';
+import {
+  GlobalSearchResponse,
+  PeopleSearchResponse,
+} from '@/interfaces/api/search.interface';
 import api from './api.service';
 
 interface SearchParams {
@@ -24,25 +27,23 @@ export const globalSearch = async ({
   limit = 10,
   sortBy = 'relevance',
   contentTypes = [],
-}: SearchParams): Promise<GlobalSearchResponse> => {
-  return api.get<GlobalSearchResponse>(`/search/global/${searchType}`, {
+}: SearchParams) =>
+  api.get<GlobalSearchResponse['data']>(`/search/global/${searchType}`, {
     search: searchTerm,
     page,
     limit,
     sortBy,
     contentTypes: contentTypes.length ? contentTypes.join(',') : undefined,
   });
-};
 
 // Searches for people (users or Person model entities)
 export const searchPeople = async ({
   searchTerm,
   page = 1,
   limit = 10,
-}: PeopleSearchParams): Promise<PeopleSearchResponse> => {
-  return api.get<PeopleSearchResponse>('/search/users', {
+}: PeopleSearchParams) =>
+  api.get<PeopleSearchResponse['data']>('/search/users', {
     search: searchTerm,
     page,
     limit,
   });
-};

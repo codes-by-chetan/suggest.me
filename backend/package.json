@@ -19,7 +19,7 @@
     "cloudinary": "^2.5.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^17.1.0",
     "express": "^5.1.0",
     "google-search-results-nodejs": "^2.1.0",
     "http-status": "^2.1.0",

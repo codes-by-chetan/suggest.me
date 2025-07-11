@@ -1,153 +1,105 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react'
-import { CheckCircle, Clock, Bookmark, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { CustomTabsList } from '@/components/layout/CustomTabsList'
-import MyWatchListCard from '@/components/layout/MyWatchListCard'
-import { myWatchListItems } from '@/components/layout/data/myWatchListItems'
+import { useState, useEffect } from "react";
+import { CustomTabsList } from "@/components/layout/CustomTabsList";
+import MyWatchListCard from "@/components/layout/MyWatchListCard";
+import AuthenticationFallback from "@/components/layout/AuthenticationFallback";
+import { getUserContent } from "@/services/contentList.service";
+import { toast } from "@/services/toast.service";
+import { BookmarkCheck } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+
+interface ContentItem {
+  id: string;
+  userContentId: string;
+  contentId: string;
+  title: string;
+  type: string;
+  imageUrl?: string;
+  year?: string;
+  creator?: string;
+  description?: string;
+  suggestedBy: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  addedAt: string;
+  status: "WantToConsume" | "Consuming" | "Consumed" | "NotInterested" | null;
+  whereToWatch?: string[];
+  whereToRead?: string[];
+  whereToListen?: string[];
+}
 
 const MyWatchlist = () => {
-  const [activeTab, setActiveTab] = useState('all')
-  const [statusFilter, setStatusFilter] = useState<string | null>(null)
-  const [watchListItems, setWatchlistItems] = useState(myWatchListItems)
+  const { isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState("all");
+  const [watchListItems, setWatchlistItems] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 12;
 
-  // Filter by content type and status
-  const filteredItems = watchListItems
-    .filter((item) => activeTab === 'all' || item.type === activeTab)
-    .filter((item) => statusFilter === null || item.status === statusFilter)
-
-  const getStatusText = (status: string | null, type: string = '') => {
-    if (!status) return ''
-
-    // For filter dropdown where we don't have the type
-    if (!type) {
-      switch (status) {
-        case 'watched':
-        case 'finished':
-        case 'listened':
-          return 'Completed'
-        case 'watching':
-        case 'reading':
-        case 'listening':
-          return 'In Progress'
-        case 'watchlist':
-        case 'readlist':
-        case 'listenlist':
-          return 'In List'
-        default:
-          return ''
-      }
-    }
-
-    // When we have the content type
-    switch (type) {
-      case 'book':
-        return status === 'finished'
-          ? 'Finished'
-          : status === 'reading'
-            ? 'Currently Reading'
-            : status === 'readlist'
-              ? 'In Reading List'
-              : ''
-      case 'song':
-        return status === 'listened'
-          ? 'Listened'
-          : status === 'listening'
-            ? 'Currently Listening'
-            : status === 'listenlist'
-              ? 'In Listening List'
-              : ''
-      default:
-        return status === 'watched'
-          ? 'Watched'
-          : status === 'watching'
-            ? 'Currently Watching'
-            : status === 'watchlist'
-              ? 'In Watchlist'
-              : ''
-    }
-  }
-
-  // Update status handler
-  const handleUpdateStatus = (id: string, newStatus: string | null) => {
-    setWatchlistItems((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          return { ...item, status: newStatus as any }
+  // Fetch watchlist items
+  useEffect(() => {
+    const fetchWatchlist = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getUserContent({
+          page,
+          limit,
+          type: activeTab === "all" ? undefined : activeTab,
+        });
+        if (response.success) {
+          console.log("Watchlist items: ", response.data);
+          setWatchlistItems(response.data?.data || []);
+          setTotalPages(Math.ceil(response?.data?.total / limit));
+        } else {
+          toast.error("Failed to fetch your collections!");
+          setWatchlistItems([]);
         }
-        return item
-      })
-    )
+      } catch (error) {
+        console.error("Error fetching watchlist:", error);
+        toast.error("Something went wrong while fetching your collections!");
+        setWatchlistItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (isAuthenticated) fetchWatchlist();
+  }, [activeTab, page, isAuthenticated]);
+
+  // Show fallback if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <AuthenticationFallback
+        title="Please Sign In"
+        description="Sign in or create an account to manage your personal collections and track your favorite content across movies, books, music, and more."
+        icon={<BookmarkCheck className="h-10 w-10 text-primary" />}
+      />
+    );
   }
 
   return (
-    <div className='bg-background min-h-screen'>
-      <main className='mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8'>
-        <div className='pb-6'>
-          <div className='mb-8 flex items-center justify-between'>
-            <h1 className='text-foreground text-3xl font-bold'>
-              My <span className='text-primary'>Collections</span>
-            </h1>
-            <div className='flex gap-2'>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant='outline' className='gap-2 rounded-full'>
-                    <Filter className='h-4 w-4' />
-                    {statusFilter
-                      ? getStatusText(statusFilter)
-                      : 'All Statuses'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align='end'>
-                  <DropdownMenuItem onClick={() => setStatusFilter(null)}>
-                    All Statuses
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatusFilter('watched')}>
-                    <CheckCircle className='mr-2 h-4 w-4 text-green-500' />
-                    Completed
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStatusFilter('watching')}>
-                    <Clock className='mr-2 h-4 w-4 text-amber-500' />
-                    In Progress
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setStatusFilter('watchlist')}
-                  >
-                    <Bookmark className='mr-2 h-4 w-4 text-blue-500' />
-                    In List
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+    <main className="w-full mx-auto pb-[10vh] pt-0 px-4 sm:px-6 lg:px-8">
+      <div className="py-6">
+        <h1 className="text-3xl font-bold text-foreground mb-8">
+          My <span className="text-primary">Collections</span>
+        </h1>
+        <CustomTabsList
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          filteredSuggestions={watchListItems}
+          CustomCard={MyWatchListCard}
+          isLoading={isLoading}
+          onToggleEmojiPicker={() => {}}
+          onToggleCommentBox={() => {}}
+          cardReactions={{}}
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+        />
+      </div>
+    </main>
+  );
+};
 
-          <CustomTabsList
-            activeTab={activeTab}
-            CustomCard={MyWatchListCard}
-            setActiveTab={setActiveTab}
-            filteredSuggestions={filteredItems}
-            handleMarkAsWatched={(id: string) =>
-              handleUpdateStatus(id, 'watched')
-            }
-            handleMarkAsWatching={(id: string) =>
-              handleUpdateStatus(id, 'watching')
-            }
-            handleAddToWatchlist={() => {}}
-            handleRemoveFromMyWatchList={(id: string) =>
-              handleUpdateStatus(id, 'remove')
-            }
-            myWatchList={true}
-          />
-        </div>
-      </main>
-    </div>
-  )
-}
-
-export default MyWatchlist
+export default MyWatchlist;

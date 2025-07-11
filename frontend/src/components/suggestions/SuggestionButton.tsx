@@ -22,14 +22,14 @@ const SuggestionButton = ({
 }: SuggestionButtonProps) => {
   // Position styles based on the position prop
   const positionStyles = {
-    "bottom-right": "bottom-4 right-4",
+    "bottom-right": "md:bottom-4 bottom-20 right-4",
     "bottom-left": "bottom-4 left-4",
     "top-right": "top-4 right-4",
     "top-left": "top-4 left-4",
   }[position];
 
   return (
-    <div className={`fixed ${positionStyles} z-50 bg-background`}>
+    <div className={`fixed ${positionStyles} z-50`}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

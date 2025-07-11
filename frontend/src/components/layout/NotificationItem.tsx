@@ -1,98 +1,155 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { Film, BookOpen, Tv, Music, Youtube, Instagram } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { formatDistanceToNow } from 'date-fns';
+import { useNavigate } from '@tanstack/react-router';
+import {
+  Film,
+  BookOpen,
+  Tv,
+  Youtube,
+  Users,
+  Bell,
+  MessageSquare,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import VerifiedBadgeIcon from '../profile/VerifiedBadgeIcon';
 
-export interface Notification {
+interface Notification {
   id: string;
-  type: "suggestion" | "friend_request" | "like" | "comment" | "system";
+  type: string;
   title: string;
   message: string;
   timestamp: string;
   read: boolean;
-  contentType?: "movie" | "book" | "anime" | "song" | "youtube" | "reels";
+  contentType?: string;
   user?: {
     id: string;
-    name: string;
-    avatar?: string;
+    fullName: {
+      firstName: string;
+      lastName: string;
+      _id: string;
+      [key: string]: any;
+    };
+    avatar: string;
+    fullNameString: string;
+    profile: any;
   };
 }
-
 interface NotificationItemProps {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
+  closePopup?: () => void;
 }
 
 const NotificationItem = ({
   notification,
   onMarkAsRead,
+  closePopup = () => {},
 }: NotificationItemProps) => {
-  const getIconForContentType = (type?: string) => {
-    if (!type) return null;
+  const navigate = useNavigate();
+  const getIconForContentType = (type?: string, notificationType?: string) => {
+    if (!type && !notificationType) return <Bell className='h-4 w-4' />;
 
+    // Handle notification types without contentType (e.g., FollowRequest)
+    if (!type) {
+      switch (notificationType) {
+        case 'FollowRequest':
+        case 'FollowAccepted':
+          return <Users className='h-4 w-4' />;
+        case 'System':
+        case 'Mention':
+        case 'Other':
+          return <Bell className='h-4 w-4' />;
+        default:
+          return null;
+      }
+    }
+
+    // Handle contentType-based icons
     switch (type) {
-      case "movie":
-        return <Film className="h-4 w-4" />;
-      case "book":
-        return <BookOpen className="h-4 w-4" />;
-      case "anime":
-        return <Tv className="h-4 w-4" />;
-      case "song":
-        return <Music className="h-4 w-4" />;
-      case "youtube":
-        return <Youtube className="h-4 w-4" />;
-      case "reels":
-        return <Instagram className="h-4 w-4" />;
+      case 'movie':
+        return <Film className='h-4 w-4' />;
+      case 'book':
+        return <BookOpen className='h-4 w-4' />;
+      case 'series':
+        return <Tv className='h-4 w-4' />;
+      case 'video':
+        return <Youtube className='h-4 w-4' />;
+      case 'comment':
+        return <MessageSquare className='h-4 w-4' />;
+      case 'other':
+        return <Bell className='h-4 w-4' />;
       default:
         return null;
     }
   };
-
+  const handleUserClick = () => {
+    closePopup();
+    if (notification.user?.id) {
+      navigate({ to: `/profile/${notification.user.id}` });
+    }
+    if (!notification.read) {
+      onMarkAsRead(notification.id);
+    }
+  };
   const handleClick = () => {
-    onMarkAsRead(notification.id);
+    if (!notification.read) {
+      onMarkAsRead(notification.id);
+    }
   };
 
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 hover:bg-accent/50 transition-colors cursor-pointer",
-        !notification.read && "bg-primary/5 dark:bg-primary/10",
+        'hover:bg-accent/50 flex cursor-pointer items-start gap-3 p-3 transition-colors',
+        !notification.read && 'bg-primary/5 dark:bg-primary/10'
       )}
       onClick={handleClick}
     >
       {notification.user ? (
-        <Avatar className="h-8 w-8 ring-1 ring-primary/20">
+        <Avatar
+          className='ring-primary/20 h-8 w-8 ring-1'
+          onClick={handleUserClick}
+        >
           <AvatarImage
             src={notification.user.avatar}
-            alt={notification.user.name}
+            alt={notification.user.fullNameString}
           />
-          <AvatarFallback className="bg-primary-100 text-primary-800">
-            {notification.user.name.charAt(0)}
+          <AvatarFallback className='bg-primary-100 text-primary-800 font-bold'>
+            {notification.user.fullName.firstName.charAt(0)}
+            {notification.user.fullName.lastName.charAt(0)}
           </AvatarFallback>
         </Avatar>
       ) : (
-        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-          {notification.contentType ? (
-            getIconForContentType(notification.contentType)
-          ) : (
-            <span className="text-xs font-bold text-primary">!</span>
-          )}
+        <div className='bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full'>
+          {getIconForContentType(notification.contentType, notification.type)}
         </div>
       )}
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-start gap-2">
-          <p className="font-medium text-sm line-clamp-1">
-            {notification.title}
-          </p>
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {new Date(notification.timestamp).toLocaleDateString()}
+      <div className='min-w-0 flex-1'>
+        <div className='flex items-start justify-between gap-2'>
+          <div className='flex items-center justify-center gap-1'>
+            <p
+              className='line-clamp-1 text-sm font-medium'
+              onClick={handleUserClick}
+            >
+              {notification.user ? notification.user.fullNameString : ' '}
+            </p>
+            {notification.user?.profile.isVerified && (
+              <VerifiedBadgeIcon className='h-4 w-4 sm:h-5 sm:w-5' />
+            )}
+          </div>
+          <span className='text-muted-foreground text-xs whitespace-nowrap'>
+            {formatDistanceToNow(new Date(notification.timestamp), {
+              addSuffix: true,
+            })}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">
+        <p className='text-muted-foreground line-clamp-2 text-xs'>
           {notification.message}
         </p>
       </div>
       {!notification.read && (
-        <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1"></div>
+        <div className='bg-primary mt-1 h-2 w-2 flex-shrink-0 rounded-full'></div>
       )}
     </div>
   );

@@ -1,3 +1,5 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -5,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useRouter } from "@tanstack/react-router";
 
 interface ContentItem {
   id: string;
@@ -21,7 +22,7 @@ interface ContentItem {
 }
 
 const FriendActivity = () => {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const friendActivityContent: ContentItem[] = [
     {
@@ -60,7 +61,7 @@ const FriendActivity = () => {
   ];
 
   const handleCardClick = (id: string) => {
-    router.navigate({to: `/content/${id}`});
+    navigate(`/content/${id}`);
   };
 
   return (

@@ -1,286 +1,380 @@
-import { useNavigate } from '@tanstack/react-router'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
-  Bookmark,
   BookOpen,
-  CheckCircle,
-  Clock,
+  Clapperboard,
   Film,
   Heart,
-  Instagram,
   MessageCircle,
   Music,
   Share2,
+  SmilePlus,
   Tv,
   Youtube,
-} from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { Button } from '../ui/button'
-import { Card, CardContent } from '../ui/card'
-import { SuggestedToMeItem } from './data/suggestedToMe'
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { toast } from "@/services/toast.service";
+import { useNavigate } from "@tanstack/react-router";
+import ContentListService from "@/services/contentList.service";
+import { StatusDropdown } from "../reusables/status-dropdown";
+interface Position {
+  top: number;
+  left: number;
+}
+
+interface SuggestionItem {
+  id: string;
+  contentId?: string;
+  title: string;
+  type: string;
+  imageUrl?: string;
+  year?: string;
+  creator?: string;
+  description?: string;
+  suggestedBy: {
+    id: string;
+    name: string;
+    avatar?: string;
+  };
+  suggestedAt: string;
+  [key: string]: any;
+}
 
 interface SuggestedToMeCardProps {
-  item: SuggestedToMeItem
-  handleMarkAsWatched: (id: number | string) => void
-  handleMarkAsWatching: (id: number | string) => void
-  handleAddToWatchlist: (id: number | string) => void
+  item: SuggestionItem;
+  onToggleEmojiPicker: (id: string, position: Position) => void;
+  onToggleCommentBox: (id: string, position: Position) => void;
+  cardReactions?: Record<string, string[]>;
 }
 
 function SuggestedToMeCard({
   item,
-  handleMarkAsWatched,
-  handleMarkAsWatching,
-  handleAddToWatchlist,
+  onToggleEmojiPicker,
+  onToggleCommentBox,
+  cardReactions = {},
 }: SuggestedToMeCardProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [userContentId, setUserContentId] = useState<string | null>(null);
+  const [loading, setLoading] = useState({
+    consumed: false,
+    consuming: false,
+    wantToConsume: false,
+    notInterested: false,
+  });
+  const reactionBtnRef = useRef<HTMLButtonElement>(null);
+  const commentBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const fetchContentStatus = async () => {
+      try {
+        const response = await ContentListService.checkContent({
+          contentId: item.contentId,
+          suggestionId: item.id,
+        });
+        if (response.success && response.data) {
+          setStatus(response.data.status);
+          setUserContentId(response.data.id);
+        }
+      } catch (error) {
+        console.error("Error checking content:", error);
+      }
+    };
+    if (item.contentId) {
+      fetchContentStatus();
+    }
+  }, [item.contentId, item.id]);
+
   const getIconForType = (type: string) => {
     switch (type) {
-      case 'movie':
-        return <Film className='h-5 w-5' />
-      case 'book':
-        return <BookOpen className='h-5 w-5' />
-      case 'anime':
-        return <Tv className='h-5 w-5' />
-      case 'song':
-        return <Music className='h-5 w-5' />
-      case 'youtube':
-        return <Youtube className='h-5 w-5' />
-      case 'reels':
-        return <Instagram className='h-5 w-5' />
+      case "movie":
+        return <Film className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />;
+      case "series":
+        return (
+          <Clapperboard className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />
+        );
+      case "book":
+        return <BookOpen className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />;
+      case "anime":
+        return <Tv className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />;
+      case "music":
+      case "song":
+        return <Music className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />;
+      case "youtube":
+        return <Youtube className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />;
       default:
-        return <Film className='h-5 w-5' />
+        return <Film className="h-3 w-3 min-[470px]:h-4 min-[470px]:w-4" />;
     }
-  }
+  };
 
-  const getContentSpecificStatusLabel = (
-    status: string,
-    type: string
-  ): string => {
-    if (status === 'watchlist') return 'In Watchlist'
-    if (status === 'readlist') return 'In Reading List'
-    if (status === 'listenlist') return 'In Listening List'
-
+  const getRouteForType = (type: string, id: string) => {
     switch (type) {
-      case 'book':
-        return status === 'finished' ? 'Finished' : 'Reading'
-      case 'song':
-        return status === 'listened' ? 'Listened' : 'Listening'
+      case "movie":
+        return `/movies/${id}`;
+      case "series":
+        return `/series/${id}`;
+      case "book":
+        return `/books/${id}`;
+      case "music":
+      case "song":
+        return `/music/${id}`;
+      case "video":
+        return `/videos/${id}`;
+      case "people":
+        return `/people/${id}`;
+      case "users":
+        return `/profile/${id}`;
       default:
-        return status === 'watched' ? 'Watched' : 'Watching'
+        return "#";
     }
-  }
+  };
+
+  const handleReactionClick = () => {
+    if (reactionBtnRef.current) {
+      const rect = reactionBtnRef.current.getBoundingClientRect();
+      const position: Position = {
+        top: rect.bottom + window.scrollY,
+        left: Math.max(rect.left + window.scrollX - 150, 10),
+      };
+      onToggleEmojiPicker(item.id, position);
+    }
+  };
+
+  const handleCommentClick = () => {
+    if (commentBtnRef.current) {
+      const rect = commentBtnRef.current.getBoundingClientRect();
+      const position: Position = {
+        top: rect.bottom + window.scrollY,
+        left: Math.max(rect.left + window.scrollX - 150, 10),
+      };
+      onToggleCommentBox(item.id, position);
+    }
+  };
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    if (!item.contentId) {
+      toast.error("Content ID is missing.");
+      return;
+    }
+
+    setLoading((prev) => ({ ...prev, [newStatus.toLowerCase()]: true }));
+    try {
+      if (userContentId) {
+        const response = await ContentListService.updateContentStatus(userContentId, {
+          status: newStatus,
+        });
+        if (response.success) {
+          setStatus(newStatus);
+          toast.success("Content status updated successfully.");
+        } else {
+          toast.error("Failed to update content status.");
+        }
+      } else {
+        const response = await ContentListService.addContent({
+          content: {
+            id: item.contentId,
+            type: item.type?.charAt(0).toUpperCase() + item.type?.slice(1),
+          },
+          status: newStatus,
+          suggestionId: item.id,
+        });
+        if (response.success) {
+          setStatus(newStatus);
+          setUserContentId(response.data.id);
+          toast.success("Content added to your list.");
+        } else {
+          toast.error("Failed to add content to your list.");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, [newStatus.toLowerCase()]: false }));
+    }
+  };
+
+  const reactions = cardReactions[item.id] || [];
 
   return (
-    <Card
-      key={item.id}
-      className='bg-background dark:bg-muted dark:shadow-social-dark cursor-pointer overflow-hidden border-1 p-0 shadow-[1px_0px_5px_0_rgb(100,116,139)] transition-all hover:shadow-[5px_4px_8px_0_rgb(100,116,139)] dark:hover:shadow-[10px_8px_20px_0_rgb(100,116,139)]'
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -2 }}
+      className="h-full w-full"
     >
-      <div className='relative flex h-full flex-col'>
-        {item.imageUrl && (
-          <div
-            className='bg-muted h-40 w-full'
-            onClick={() => navigate({ to: `/content/${item.id}` })}
-          >
-            <img
-              src={item.imageUrl}
-              alt={item.title}
-              className='h-full w-full object-cover'
+      <Card className="overflow-hidden max-w-[calc(100vw-35px)] shadow-sm hover:shadow-md transition-all duration-200 border border-border/50 bg-card h-full flex flex-col relative">
+        <CardContent className="p-1.5 min-[470px]:p-3 sm:p-4 flex flex-col h-full">
+          {/* Status dropdown - positioned to avoid overlap */}
+          <div className="absolute top-1 right-1 min-[470px]:top-2 min-[470px]:right-2 z-10">
+            <StatusDropdown
+              currentStatus={status}
+              contentType={item.type}
+              onStatusChange={handleStatusUpdate}
+              loading={loading}
+              size="sm"
             />
           </div>
-        )}
-        <CardContent className='flex-1 p-5'>
-          <div className='mb-3 flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
-              <div className='bg-primary/10 dark:bg-primary/20 rounded-full p-1.5'>
-                {getIconForType(item.type)}
+
+          {/* Ultra-compact layout for < 470px, horizontal layout for >= 470px */}
+          <div className="flex gap-2 min-[470px]:gap-3 mb-1 min-[470px]:mb-2">
+            {/* Image */}
+            <div
+              className={cn(
+                "relative overflow-hidden rounded-lg cursor-pointer flex-shrink-0 bg-muted",
+                item.type === "music" || item.type === "song"
+                  ? "w-10 h-10 min-[470px]:w-16 min-[470px]:h-16 sm:w-20 sm:h-20"
+                  : "w-10 h-12 min-[470px]:w-16 min-[470px]:h-24 sm:w-20 sm:h-30"
+              )}
+              onClick={() =>
+                navigate({to: getRouteForType(item.type, item.contentId || item.id)})
+              }
+            >
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl || "/placeholder.svg"}
+                  alt={item.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                  {getIconForType(item.type)}
+                </div>
+              )}
+            </div>
+
+            {/* Content metadata */}
+            <div className="flex-1 min-w-0 pr-4 min-[470px]:pr-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-1 min-[470px]:gap-2 mb-0.5 min-[470px]:mb-1 flex-wrap">
+                  <div className="bg-primary/10 dark:bg-primary/20 p-0.5 min-[470px]:p-1 rounded-full">
+                    {getIconForType(item.type)}
+                  </div>
+                  <span className="text-xs font-medium text-primary capitalize">
+                    {item.type}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.year || "N/A"}
+                  </span>
+                </div>
               </div>
-              <span className='text-primary text-xs font-medium capitalize'>
-                {item.type}
-              </span>
             </div>
-            <span className='text-muted-foreground text-xs'>
-              {new Date(item.suggestedAt).toLocaleDateString()}
-            </span>
           </div>
-          <h3
-            className='text-foreground mb-1 line-clamp-1 text-lg font-semibold'
-            onClick={() => navigate({ to: `/content/${item.id}` })}
-          >
-            {item.title}
-          </h3>
-          <p className='text-muted-foreground mb-2 text-sm'>
-            {item.creator} • {item.year}
-          </p>
-          <p className='text-foreground mb-4 line-clamp-1 text-sm'>
-            {item.description}
-          </p>
 
-          {/* Status indicator */}
-          {item.status && (
-            <div className='absolute top-2 right-2 z-10'>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  item.status === 'watched' ||
-                  item.status === 'finished' ||
-                  item.status === 'listened'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                    : item.status === 'watching' ||
-                        item.status === 'reading' ||
-                        item.status === 'listening'
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                }`}
-              >
-                {item.status === 'watched' ||
-                item.status === 'finished' ||
-                item.status === 'listened' ? (
-                  <>
-                    <CheckCircle className='mr-1 h-3 w-3' />
-                    {getContentSpecificStatusLabel(item.status, item.type)}
-                  </>
-                ) : item.status === 'watching' ||
-                  item.status === 'reading' ||
-                  item.status === 'listening' ? (
-                  <>
-                    <Clock className='mr-1 h-3 w-3' />
-                    {getContentSpecificStatusLabel(item.status, item.type)}
-                  </>
-                ) : item.status === 'watchlist' ? (
-                  <>
-                    <Bookmark className='mr-1 h-3 w-3' />
-                    In Watchlist
-                  </>
-                ) : item.status === 'readlist' ? (
-                  <>
-                    <Bookmark className='mr-1 h-3 w-3' />
-                    In Reading List
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className='mr-1 h-3 w-3' />
-                    In Listening List
-                  </>
+          {/* Title and creator */}
+          <div className="mb-1 min-[470px]:mb-2">
+            <h3
+              className="font-semibold text-xs min-[470px]:text-sm sm:text-base line-clamp-1 text-foreground cursor-pointer break-words mb-0.5 min-[470px]:mb-1"
+              onClick={() =>
+                navigate({to: getRouteForType(item.type, item.contentId || item.id)})
+              }
+            >
+              {item.title}
+            </h3>
+            <p className="text-xs text-muted-foreground line-clamp-1 break-words">
+              {item.creator || "Unknown"}
+            </p>
+          </div>
+
+          {/* Description - Fixed height container
+          <div className="mb-1 min-[470px]:mb-3 h-[35px] min-[470px]:h-[48px] overflow-hidden">
+            <p
+              className="text-xs line-clamp-2 min-[470px]:line-clamp-3 text-foreground break-words text-wrap"
+              dangerouslySetInnerHTML={{
+                __html: item.description || "No description available.",
+              }}
+            />
+          </div> */}
+
+          {/* Social actions - ultra compact */}
+          <div className="flex items-center justify-center mb-1 min-[470px]:mb-3 gap-0.5 min-[470px]:gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full p-0.5 min-[470px]:p-1.5 h-auto min-w-[20px] min-[470px]:min-w-[28px]"
+              onClick={() => setIsFavorite(!isFavorite)}
+            >
+              <Heart
+                className={cn(
+                  "h-2.5 w-2.5 min-[470px]:h-3.5 min-[470px]:w-3.5",
+                  isFavorite
+                    ? "text-red-500 fill-red-500"
+                    : "text-muted-foreground"
                 )}
-              </span>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className='mb-4 flex items-center justify-between gap-2'>
-            <Button
-              variant={
-                item.status === 'finished' ||
-                item.status === 'listened' ||
-                item.status === 'watched'
-                  ? 'default'
-                  : 'outline'
-              }
-              size='sm'
-              className={`flex-1 rounded-full text-xs ${
-                item.status === 'finished' ||
-                item.status === 'listened' ||
-                item.status === 'watched'
-                  ? 'bg-primary text-white'
-                  : ''
-              }`}
-              onClick={() => handleMarkAsWatched(item.id)}
-            >
-              <CheckCircle className='mr-1 h-3 w-3' />
-              {item.type === 'book'
-                ? 'Finished'
-                : item.type === 'song'
-                  ? 'Listened'
-                  : 'Watched'}
+              />
             </Button>
-
             <Button
-              variant={
-                item.status === 'reading' ||
-                item.status === 'listening' ||
-                item.status === 'watching'
-                  ? 'default'
-                  : 'outline'
-              }
-              size='sm'
-              className={`flex-1 rounded-full text-xs ${
-                item.status === 'reading' ||
-                item.status === 'listening' ||
-                item.status === 'watching'
-                  ? 'bg-primary text-white'
-                  : ''
-              }`}
-              onClick={() => handleMarkAsWatching(item.id)}
+              ref={reactionBtnRef}
+              variant="ghost"
+              size="sm"
+              className="rounded-full p-0.5 min-[470px]:p-1.5 h-auto min-w-[20px] min-[470px]:min-w-[28px]"
+              onClick={handleReactionClick}
             >
-              <Clock className='mr-1 h-3 w-3' />
-              {item.type === 'book'
-                ? 'Reading'
-                : item.type === 'song'
-                  ? 'Listening'
-                  : 'Watching'}
+              {reactions.length > 0 ? (
+                <div className="flex gap-0.5 items-center">
+                  <div className="flex">
+                    {reactions.slice(0, 1).map((emoji, index) => (
+                      <span key={index} className="text-xs">
+                        {emoji}
+                      </span>
+                    ))}
+                  </div>
+                  <SmilePlus className="h-2 w-2 min-[470px]:h-3 min-[470px]:w-3" />
+                </div>
+              ) : (
+                <SmilePlus className="h-2.5 w-2.5 min-[470px]:h-3.5 min-[470px]:w-3.5 text-muted-foreground" />
+              )}
             </Button>
-
             <Button
-              variant={
-                item.status === 'readlist' ||
-                item.status === 'listenlist' ||
-                item.status === 'watchlist'
-                  ? 'default'
-                  : 'outline'
-              }
-              size='sm'
-              className={`flex-1 rounded-full text-xs ${
-                item.status === 'readlist' ||
-                item.status === 'listenlist' ||
-                item.status === 'watchlist'
-                  ? 'bg-primary text-white'
-                  : ''
-              }`}
-              onClick={() => handleAddToWatchlist(item.id)}
+              ref={commentBtnRef}
+              variant="ghost"
+              size="sm"
+              className="rounded-full p-0.5 min-[470px]:p-1.5 h-auto min-w-[20px] min-[470px]:min-w-[28px]"
+              onClick={handleCommentClick}
             >
-              <Bookmark className='mr-1 h-3 w-3' />
-              {item.type === 'book'
-                ? 'Reading List'
-                : item.type === 'song'
-                  ? 'Listening List'
-                  : 'Watchlist'}
+              <MessageCircle className="h-2.5 w-2.5 min-[470px]:h-3.5 min-[470px]:w-3.5 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-full p-0.5 min-[470px]:p-1.5 h-auto min-w-[20px] min-[470px]:min-w-[28px]"
+            >
+              <Share2 className="h-2.5 w-2.5 min-[470px]:h-3.5 min-[470px]:w-3.5 text-muted-foreground" />
             </Button>
           </div>
 
-          {/* Social media style interaction buttons */}
-          <div className='mb-4 flex items-center justify-between'>
-            <Button variant='ghost' size='sm' className='h-auto rounded-full'>
-              <Heart className='text-muted-foreground h-4 w-4' />
-            </Button>
-            <Button variant='ghost' size='sm' className='h-auto rounded-full'>
-              <MessageCircle className='text-muted-foreground h-4 w-4' />
-            </Button>
-            <Button variant='ghost' size='sm' className='h-auto rounded-full'>
-              <Share2 className='text-muted-foreground h-4 w-4' />
-            </Button>
-          </div>
+          {/* Spacer to push footer to bottom */}
+          <div className="flex-grow"></div>
 
-          <div className='border-border flex items-center border-t pt-3'>
-            <span className='text-foreground mr-2 text-xs font-medium'>
-              Suggested by:
-            </span>
-            <div className='flex items-center'>
-              <Avatar className='ring-primary/20 mr-1 h-5 w-5 ring-1'>
+          {/* Suggested by - ultra compact */}
+          <div className="flex items-center pt-1 min-[470px]:pt-2 border-t border-border">
+            <div className="flex items-center min-w-0 w-full">
+              <Avatar className="h-2.5 w-2.5 min-[470px]:h-4 min-[470px]:w-4 mr-1 min-[470px]:mr-1.5 ring-1 ring-primary/20 flex-shrink-0">
                 <AvatarImage
-                  src={item?.suggestedBy?.avatar}
+                  src={item?.suggestedBy?.avatar || "/placeholder.svg"}
                   alt={item?.suggestedBy?.name}
                 />
-                <AvatarFallback className='bg-primary-100 text-primary-800'>
-                  {item?.suggestedBy?.name.charAt(0)}
+                <AvatarFallback className="bg-primary-100 text-primary-800 text-xs">
+                  {item?.suggestedBy?.name.charAt(0)}{" "}
+                  
                 </AvatarFallback>
               </Avatar>
-              <span className='text-foreground text-xs font-medium'>
-                {item?.suggestedBy?.name}
+              <span className="text-xs font-medium text-foreground truncate">
+                {item?.suggestedBy?.name} <span className=" text-xs font-light text-muted-foreground italic">{`(${new Date(item.suggestedAt).toLocaleDateString()})`}</span>
               </span>
             </div>
           </div>
         </CardContent>
-      </div>
-    </Card>
-  )
+      </Card>
+    </motion.div>
+  );
 }
 
-export default SuggestedToMeCard
+export default SuggestedToMeCard;

@@ -1,5 +1,6 @@
-import api from "./api.service";
-import { getAccessToken } from "./notification.service";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ApiResponse } from '@/interfaces/api/api-response.interface';
+import api from './api.service';
 
 interface SuggestContentParams {
   content: { [key: string]: any };
@@ -14,85 +15,30 @@ interface PaginationParams {
   type?: string;
 }
 
-export const suggestContent = async (data: SuggestContentParams) => {
-  try {
-    const response = await api.post("suggestions/suggest", data, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-    });
-    return response.data; // Extract the data field from ApiResponse
-  } catch (err: any) {
-    console.error("Error suggesting content:", err);
-    throw new Error(
-      err.response?.data?.message || "Abe, suggestion add nahi hua!"
-    );
-  }
+// Submits a content suggestion
+export const suggestContent = async (data: SuggestContentParams, params: any = {}): Promise<ApiResponse<any>> => {
+  return api.post<ApiResponse<any>>('suggestions/suggest', data, params);
 };
 
-export const getSuggestionDetails = async (id: string) => {
-  return api
-    .get(`suggestions/suggestion/details/${id}`, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-    })
-    .then((response: any) => {
-      return response.data;
-    })
-    .catch((err) => {
-      console.log(err);
-      return err.response.data;
-    });
+// Retrieves details for a specific suggestion
+export const getSuggestionDetails = async (id: string, params: any = {}): Promise<ApiResponse<any>> => {
+  return api.get<ApiResponse<any>>(`suggestions/suggestion/details/${id}`, params);
 };
 
+// Fetches suggestions made by the user
 export const getSuggestedByYou = async ({
   page = 1,
   limit = 12,
   type,
-}: PaginationParams = {}) => {
-  try {
-    const response = await api.get(`suggestions/suggested/by/you`, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-      params: { page, limit, type },
-    });
-    return response.data.data; // Extract the data field from ApiResponse
-  } catch (err: any) {
-    console.error("Error fetching suggestions sent by you:", err);
-    throw new Error(
-      err.response?.data?.message || "Abe, suggestions fetch nahi hui!"
-    );
-  }
+}: PaginationParams = {}): Promise<ApiResponse<any>> => {
+  return api.get<ApiResponse<any>>('suggestions/suggested/by/you', { page, limit, type });
 };
 
+// Fetches suggestions made for the user
 export const getSuggestedToYou = async ({
   page = 1,
   limit = 12,
   type,
-}: PaginationParams = {}) => {
-  try {
-    const response = await api.get(`suggestions/suggested/to/you`, {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-      params: { page, limit, type },
-    });
-    return response.data.data; // Extract the data field from ApiResponse
-  } catch (err: any) {
-    console.error("Error fetching suggestions for you:", err);
-    throw new Error(
-      err.response?.data?.message || "Abe, suggestions fetch nahi hui!"
-    );
-  }
+}: PaginationParams = {}): Promise<ApiResponse<any>> => {
+  return api.get<ApiResponse<any>>('suggestions/suggested/to/you', { page, limit, type });
 };
-
-const suggestionService = {
-  suggestContent,
-  getSuggestionDetails,
-  getSuggestedByYou,
-  getSuggestedToYou,
-};
-
-export default suggestionService;

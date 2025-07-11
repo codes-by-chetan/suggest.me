@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -39,9 +40,9 @@ export function CommandMenu() {
       <CommandList>
         <ScrollArea type='hover' className='h-72 pr-1'>
           <CommandEmpty>No results found.</CommandEmpty>
-          {sidebarData.navGroups.map((group) => (
+          {sidebarData.navGroups.map((group:any) => (
             <CommandGroup key={group.title} heading={group.title}>
-              {group.items.map((navItem, i) => {
+              {group.items.map((navItem:any, i:number) => {
                 if (navItem.url)
                   return (
                     <CommandItem
@@ -58,7 +59,7 @@ export function CommandMenu() {
                     </CommandItem>
                   )
 
-                return navItem.items?.map((subItem, i) => (
+                return navItem.items?.map((subItem:any, i:number) => (
                   <CommandItem
                     key={`${subItem.url}-${i}`}
                     value={subItem.title}

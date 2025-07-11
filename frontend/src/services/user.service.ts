@@ -7,7 +7,7 @@ import {
 } from '@/interfaces/api/user.interface';
 import apiService from './api.service';
 
-export const UserService = {
+const UserService = {
   getUserProfile: async (): Promise<ApiResponse<UserProfileData>> =>
     apiService.get('/user/profile'),
   getUserProfileById: async (
@@ -35,3 +35,5 @@ export const UserService = {
   updateUserProfilePicture: async (data: any): Promise<ApiResponse<any>> =>
     apiService.post('user/avatar', data),
 };
+
+export default UserService;

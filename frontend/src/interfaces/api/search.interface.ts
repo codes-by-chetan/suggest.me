@@ -7,7 +7,7 @@ export interface GlobalSearchResponse {
   redirect: null;
 }
 
-interface GSearchResults {
+export interface GSearchResults {
   results: GlobalSearchResults;
   pagination: Pagination;
 }
@@ -19,7 +19,7 @@ interface Pagination {
   totalPages: number;
 }
 
-interface GlobalSearchResults {
+export interface GlobalSearchResults {
   movie: {
     data: MovieItem[];
     total: number;
@@ -298,7 +298,7 @@ export interface PeopleSearchResponse {
   [key: string]: any; // Allow additional properties
 }
 
-interface PeopleSearchResult {
+export interface PeopleSearchResult {
   data: UserItem[];
   pagination: Pagination;
   [key: string]: any; // Allow additional properties

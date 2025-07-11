@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PostCardProps {
-  id: string;
+  _id: string;
   imageUrl: string;
   likes: number;
   comments: number;
@@ -14,7 +13,7 @@ interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({
-  id = "1",
+  _id = "1",
   imageUrl = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=400&q=80",
   likes = 0,
   comments = 0,

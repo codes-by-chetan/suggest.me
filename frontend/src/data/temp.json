@@ -1,0 +1,36 @@
+{
+  "user":{
+  "fullName": {
+      "firstName": "Chetan",
+      "lastName": "Mohite",
+      "_id": "680776f62684135589b34e84"
+  },
+  "email": "chetan@ngm.in",
+  "contactNumber": {
+      "countryCode": "+91",
+      "number": "9764560354",
+      "_id": "680776f62684135589b34e85",
+      "id": "680776f62684135589b34e85"
+  },
+  "role": "user",
+  "status": "ACTIVE",
+  "_id": "680776f62684135589b34e83",
+  "deleted": false,
+  "sessions": [
+      {
+          "tokenId": "c188ae51-9bd4-443a-89d7-6839aebe9a9d",
+          "deviceInfo": {
+              "device": "desktop"
+          },
+          "ipAddress": "::1",
+          "loginAt": "2025-04-22T11:01:10.468Z",
+          "expiresAt": "2025-04-22T11:01:10.451Z",
+          "isActive": true
+      }
+  ],
+  "createdAt": "2025-04-22T11:01:10.312Z",
+  "updatedAt": "2025-04-22T11:01:10.473Z",
+  "fullNameString": "Chetan Mohite",
+  "id": "680776f62684135589b34e83"
+}
+}
