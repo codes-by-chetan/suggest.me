@@ -350,7 +350,7 @@ interface ProfileImage {
 
 
 
-export const AuthService = {
+export const ContentService = {
   getMovieDetails: async (
     movieId: string
   ): Promise<ApiResponse<MovieDetails>> =>

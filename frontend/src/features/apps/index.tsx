@@ -1,36 +1,36 @@
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   IconAdjustmentsHorizontal,
   IconSortAscendingLetters,
   IconSortDescendingLetters,
-} from '@tabler/icons-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+} from '@tabler/icons-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
-import { apps } from './data/apps'
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Header } from '@/components/layout/header';
+import { Main } from '@/components/layout/main';
+import { ProfileDropdown } from '@/components/profile-dropdown';
+import { Search } from '@/components/search';
+import { ThemeSwitch } from '@/components/theme-switch';
+import { apps } from './data/apps';
 
 const appText = new Map<string, string>([
   ['all', 'All Apps'],
   ['connected', 'Connected'],
   ['notConnected', 'Not Connected'],
-])
+]);
 
 export default function Apps() {
-  const [sort, setSort] = useState('ascending')
-  const [appType, setAppType] = useState('all')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [sort, setSort] = useState('ascending');
+  const [appType, setAppType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const filteredApps = apps
     .sort((a, b) =>
@@ -45,7 +45,7 @@ export default function Apps() {
           ? !app.connected
           : true
     )
-    .filter((app) => app.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((app) => app.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <>
@@ -140,5 +140,5 @@ export default function Apps() {
         </ul>
       </Main>
     </>
-  )
+  );
 }

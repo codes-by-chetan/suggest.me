@@ -19,7 +19,8 @@ import models from "../models/index.js";
  */
 const loginWithEmailAndPassword = async (req) => {
     const credentials = req.body;
-    console.log(credentials)
+    console.log(credentials);
+
     if (!credentials.userName && !credentials.email) {
         throw new ApiError(
             httpStatus.BAD_REQUEST,
@@ -31,7 +32,8 @@ const loginWithEmailAndPassword = async (req) => {
         credentials.email,
         credentials.userName
     );
-
+    console.log(user);
+    
     if (!user) {
         throw new ApiError(httpStatus.NOT_FOUND, "User not found!!!");
     }
@@ -40,11 +42,12 @@ const loginWithEmailAndPassword = async (req) => {
         throw new ApiError(httpStatus.UNAUTHORIZED, "User is inactive!!!");
     }
 
-    if (!user.isPasswordCorrect(credentials.password)) {
+    const isPasswordValid = await user.isPasswordCorrect(credentials.password);
+    if (!isPasswordValid) {
         throw new ApiError(httpStatus.UNAUTHORIZED, "Password is incorrect!!!");
     }
 
-    const token = user.generateAccessToken(req);
+    const token = await user.generateAccessToken(req);
 
     return token;
 };
@@ -57,7 +60,7 @@ const loginWithEmailAndPassword = async (req) => {
  */
 const registerUser = async (userDetails) => {
     const user = await services.userService.createUser(userDetails);
-    
+
     return user.populate("profile");
 };
 
@@ -117,11 +120,14 @@ const logout = async (userId, token) => {
         const decoded = jwt.verify(token, config.jwt.secret);
         const tokenId = decoded.jti;
         const sessions = await models.User.getActiveSessions(userId);
-        console.log("sessions===>",sessions);
-        
+        console.log("sessions===>", sessions);
+
         const result = await models.User.revokeSession(userId, tokenId);
         if (result.modifiedCount === 0) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Session not found or already revoked");
+            throw new ApiError(
+                httpStatus.BAD_REQUEST,
+                "Session not found or already revoked"
+            );
         }
     } catch (error) {
         if (error instanceof jwt.JsonWebTokenError) {

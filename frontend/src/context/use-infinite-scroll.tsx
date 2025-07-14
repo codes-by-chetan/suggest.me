@@ -1,5 +1,3 @@
-"use client"
-
 import { useRef, useEffect, useCallback } from "react"
 
 export function useInfiniteScroll(callback: () => void, options = {}) {

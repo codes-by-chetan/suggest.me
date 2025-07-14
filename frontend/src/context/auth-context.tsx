@@ -1,4 +1,6 @@
-import AuthService from "@/services/auth.service";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {AuthService} from "@/services/auth.service";
+import { toast } from "@/services/toast.service";
 import React, {
   createContext,
   useContext,
@@ -23,18 +25,18 @@ interface User {
 interface ContactNumber {
   countryCode: string;
   number: string;
-  _id: string;
-  id: string;
+  _id?: string;
+  id?: string;
 }
 
 interface FullName {
   firstName: string;
   lastName: string;
-  _id: string;
+  _id?: string;
 }
 
 type AuthContextType = {
-  user: User;
+  user: User|null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (data: any) => Promise<boolean>;
@@ -46,8 +48,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const authService = new AuthService();
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<User|null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Function to refresh auth state from localStorage
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Stored auth token:", storedAuth);
 
     if (storedAuth) {
-      await authService.refreshUserDetails().then((res) => {
+      await AuthService.refreshUserDetails().then((res) => {
         if (res.success) {
           setUser(res.data.user);
           setIsAuthenticated(true);
@@ -94,28 +95,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     console.log("Login attempt with:", { email, password });
 
-    const success = await authService.login({ email, password }).then((res) => {
-      if (res.success) {
-        localStorage.setItem("token", res.data.token);
-        localStorage.setItem("tokenExpiry", res.data.expiryTime);
-        setUser(res.data.user);
-        setIsAuthenticated(true);
-        refreshAuthState();
-        return true;
-      } else {
+    const success = await AuthService
+      .login({ email, password })
+      .then((res) => {
+        if (res.success && res.data) {
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("tokenExpiry", res.data.expiryTime);
+          setUser(res.data.user);
+          setIsAuthenticated(true);
+          refreshAuthState();
+          return true;
+        } else {
+          toast.error(res.message || "Login Failed");
+          return false;
+        }
+      })
+      .catch((err) => {
+        toast.error(err.response.data.message || "Login Failed");
         return false;
-      }
-    });
+      });
     return success;
   };
-
   const signup = async (data: any) => {
     // In a real app, this would be an API call to register the user
     console.log("Signup attempt with:", data);
 
     // Simulate API call
-    const success = await authService.register(data).then((res) => {
-      if (res.success) {
+    const success = await AuthService.register(data).then((res) => {
+      if (res.success && res.data) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("tokenExpiry", res.data.expiryTime);
         setUser(res.data.user);
@@ -131,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     // Update state first to ensure immediate UI update
 
-    await authService.logout().then((res) => {
+    await AuthService.logout().then((res) => {
       if (res) {
         setUser(null);
         setIsAuthenticated(false);

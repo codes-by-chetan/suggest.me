@@ -72,6 +72,17 @@ const getAllNotifications = asyncHandler(async (req, res) => {
     return res.status(httpStatus.OK).json(response);
 });
 
+const getSuggestedUsers = asyncHandler(async (req, res) => {
+    const suggestedUsers = await services.userService.getSuggestedUsers(
+        req.user._id
+    );
+    const response = new ApiResponse(
+        httpStatus.OK,
+        suggestedUsers,
+        "Suggested users fetched successfully"
+    );
+    return res.status(httpStatus.OK).json(response);
+});
 
 const userController = {
     getUserProfile,
@@ -80,5 +91,6 @@ const userController = {
     updateUserProfile,
     getUserFullProfileById,
     getAllNotifications,
+    getSuggestedUsers,
 };
 export default userController;

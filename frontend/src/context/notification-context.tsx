@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
 import {
   fetchNotifications,
   markNotificationAsRead,
@@ -11,6 +10,7 @@ import {
 } from "@/services/notification.service";
 import { useSocket } from "./socket-context";
 import { toast } from "@/services/toast.service";
+import { useAuth } from "./auth-context";
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -152,7 +152,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const markAllAsRead = async () => {
     try {
-      await markAllNotificationsAsRead(user._id).then((response) => {
+      await markAllNotificationsAsRead(user?._id).then((response) => {
         if (response.success) {
           setNotifications((prev) =>
             prev.map((n) => ({ ...n, status: "Read" }))

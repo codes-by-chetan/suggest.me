@@ -1,11 +1,12 @@
-import { HTMLAttributes, useState } from 'react'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@tanstack/react-router'
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { HTMLAttributes, useState } from 'react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Link, Navigate } from '@tanstack/react-router';
+import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/auth-context';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -13,11 +14,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { PasswordInput } from '@/components/password-input'
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/password-input';
 
-type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
+type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
 const formSchema = z.object({
   email: z
@@ -32,28 +33,32 @@ const formSchema = z.object({
     .min(7, {
       message: 'Password must be at least 7 characters long',
     }),
-})
+});
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
-
+  const [isLoading, setIsLoading] = useState(false);
+  const auth = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: '',
       password: '',
     },
-  })
+  });
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    setIsLoading(true);
     // eslint-disable-next-line no-console
-    console.log(data)
+    console.log(data);
 
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 3000)
-  }
+    const res = await auth.login(data.email, data.password);
+    if (res) {
+      // Redirect to home page
+      Navigate({ to: '/' });
+    }
+
+    setIsLoading(false);
+  };
 
   return (
     <Form {...form}>
@@ -119,5 +124,5 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         </div>
       </form>
     </Form>
-  )
+  );
 }

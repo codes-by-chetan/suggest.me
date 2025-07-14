@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { useSocket } from "@/lib/socket-context";
 import api from "@/services/api.service";
 import { toast } from "@/services/toast.service";
 import { Chat, Message } from "@/interfaces/chat.interfaces";
+import { useSocket } from "./socket-context";
+import { useAuth } from "./auth-context";
 
 interface ChatContextType {
   chats: Chat[];

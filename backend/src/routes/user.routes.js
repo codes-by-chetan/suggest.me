@@ -13,6 +13,7 @@ router.use(middleware.authMiddleware);
 router.get("/profile", controllers.userController.getUserProfile);
 router.get("/notifications", controllers.userController.getAllNotifications);
 router.get("/profile-whole", controllers.userController.getUserFullProfile);
+router.get("/suggested-users", controllers.userController.getSuggestedUsers);
 router.post("/update/profile", controllers.userController.updateUserProfile);
 router.post(
     "/avatar",

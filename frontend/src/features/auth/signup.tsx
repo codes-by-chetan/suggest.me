@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,7 +27,8 @@ import AppName from "@/components/tags/AppName";
 import "react-intl-tel-input/dist/main.css";
 import IntlTelInput from "react-intl-tel-input";
 import "./signup.css";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/context/auth-context";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 const formSchema = z
   .object({
@@ -89,13 +89,10 @@ const Signup = () => {
       
       const success = await auth.signup(userData);
       if(success){
-        navigate("/profile"); 
+        navigate({to: "/profile"}); 
       }
     } catch (error) {
       console.error("Signup error:", error);
-      setError(
-        error.response?.data?.message || "An error occurred during signup"
-      );
     } finally {
       setIsLoading(false);
     }
@@ -208,7 +205,7 @@ const Signup = () => {
                             value={field.value.number}
                             placeholder="Phone number"
                             onPhoneNumberChange={(
-                              isValid,
+                              _isValid,
                               value,
                               countryData
                             ) =>
@@ -332,14 +329,14 @@ const Signup = () => {
                       <FormLabel>
                         I agree to the{" "}
                         <Link
-                          to="/terms"
+                          to="/sign-up"
                           className="text-primary hover:text-primary/90"
                         >
                           Terms of Service
                         </Link>{" "}
                         and{" "}
                         <Link
-                          to="/privacy"
+                          to="/sign-up"
                           className="text-primary hover:text-primary/90"
                         >
                           Privacy Policy
@@ -428,7 +425,7 @@ const Signup = () => {
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to="/sign-in-2"
               className="text-primary hover:text-primary/90 font-medium"
             >
               Sign in

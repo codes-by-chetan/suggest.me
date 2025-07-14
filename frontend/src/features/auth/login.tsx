@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import  { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -24,8 +23,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/lib/auth-context";
 import AppName from "@/components/tags/AppName";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/context/auth-context";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -58,7 +58,7 @@ const Login = () => {
       const res = await auth.login(values.email, values.password);
       if (res) {
         // Redirect to home page
-        navigate("/");
+        navigate({to: "/"});
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -207,7 +207,7 @@ const Login = () => {
           <p className="text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
-              to="/signup"
+              to="/sign-up"
               className="text-primary hover:text-primary/90 font-medium"
             >
               Sign up

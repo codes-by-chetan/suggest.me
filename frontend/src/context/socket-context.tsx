@@ -3,12 +3,11 @@ import React, {
   useContext,
   useEffect,
   useState,
-  useRef,
   useCallback,
-} from "react";
-import { io, Socket } from "socket.io-client";
-import { useAuth } from "@/lib/auth-context";
-import config from "@/config/env.config";
+} from 'react';
+import config from '@/config/env.config';
+import { io, Socket } from 'socket.io-client';
+import { useAuth } from './auth-context';
 
 const API_BASE_URL = config.SOCKET_URL;
 
@@ -30,18 +29,18 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!socket) {
       setSocket(
         io(API_BASE_URL, {
-          transports: ["websocket"],
+          transports: ['websocket'],
           reconnection: true,
           reconnectionAttempts: 5,
         })
       );
     }
     if (socket) {
-      socket.on("connect", () => {
-        console.log("Socket connected globally:", socket.id);
+      socket.on('connect', () => {
+        console.log('Socket connected globally:', socket.id);
       });
-      socket.on("disconnect", () => {
-        console.log("Socket disconnected globally");
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected globally');
       });
     }
     return socket;
@@ -49,28 +48,33 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const connectSocket = useCallback(() => {
     if (!isAuthenticated || !user) return;
-    socket.emit("join", user._id);
+    if (!socket) {
+      initializeSocket();
+    }
+    if (socket) {
+      socket.emit('join', user._id);
 
-    socket.on("connect", () => {
-      console.log("Socket connected, joining room:", user._id);
-      socket.emit("join", user._id);
-    });
+      socket.on('connect', () => {
+        console.log('Socket connected, joining room:', user._id);
+        socket.emit('join', user._id);
+      });
 
-    socket.on("reconnect", () => {
-      console.log("Socket reconnected, rejoining room:", user._id);
-      socket.emit("join", user._id);
-    });
+      socket.on('reconnect', () => {
+        console.log('Socket reconnected, rejoining room:', user._id);
+        socket.emit('join', user._id);
+      });
 
-    socket.on("disconnect", () => {
-      console.log("Socket disconnected");
-    });
-  }, [isAuthenticated, user?._id]);
+      socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+      });
+    }
+  }, [isAuthenticated, user, socket]);
 
   const disconnectSocket = () => {
     if (socket) {
       socket.disconnect();
       setSocket(null);
-      console.log("Socket disconnected manually");
+      console.log('Socket disconnected manually');
     }
   };
 
@@ -97,7 +101,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useSocket = (): SocketContextType => {
   const context = useContext(SocketContext);
   if (!context) {
-    throw new Error("useSocket must be used within a SocketProvider");
+    throw new Error('useSocket must be used within a SocketProvider');
   }
   return context;
 };

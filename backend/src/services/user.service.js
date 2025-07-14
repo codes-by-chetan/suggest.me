@@ -1,7 +1,7 @@
 import models from "../models/index.js";
 import ApiError from "../utils/ApiError.js";
 import httpStatus from "http-status";
-
+import mongoose from "mongoose";
 /**
  * Create a new user.
  * @param {Object} userBody - The user data.
@@ -59,11 +59,19 @@ const createUser = async (userBody) => {
  * @throws {Error} If there's an error during the database operation
  */
 const findOneUser = async (email, userName) => {
-    return await models.User.findOne({
-        $or: [{ email }, { userName }],
-        deleted: { $ne: true },
-    });
+    const query = { deleted: { $ne: true } };
+
+    if (email) {
+        query.email = email.toLowerCase().trim();
+    } else if (userName) {
+        query.userName = userName.toLowerCase().trim();
+    } else {
+        return null; // neither email nor userName is provided
+    }
+
+    return await models.User.findOne(query);
 };
+
 
 /**
  * Finds a single user by id
@@ -233,6 +241,129 @@ const getOtherUserProfileDetails = async (id) => {
     return profileData;
 };
 
+/**
+ * Get suggested users to follow
+ * @param {string} userId - The id of the current user
+ * @param {number} [limit=5] - Number of users to return
+ * @returns {Promise<Array>} List of suggested users
+ */
+const getSuggestedUsers = async (userId, limit = 5) => {
+    const currentUser = await models.User.findById(userId).populate("profile");
+    if (!currentUser) {
+        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
+    }
+
+    // Get current user's followings to exclude them
+    const followings = await models.UserRelationship.getFollowing(userId);
+    const followingIds = followings.map((f) => f.following._id.toString());
+
+    // Get current user's preferences
+    const userPreferences =
+        currentUser.profile?.preferences?.preferredContentTypes || [];
+
+    // Find users with similar preferences or mutual connections
+    const suggestedUsers = await models.UserProfile.aggregate([
+        // Match public or verified profiles, exclude current user and followed users
+        {
+            $match: {
+                user: {
+                    $ne: new mongoose.Types.ObjectId(userId),
+                    $nin: followingIds.map(
+                        (id) => new mongoose.Types.ObjectId(id)
+                    ),
+                },
+                $or: [{ isPublic: true }, { isVerified: true }],
+                isActive: true,
+            },
+        },
+        // Lookup user details
+        {
+            $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "userDetails",
+            },
+        },
+        { $unwind: "$userDetails" },
+        // Lookup followers for mutual connections
+        {
+            $lookup: {
+                from: "userrelationships",
+                let: { userId: "$user" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$following", "$$userId"] } } },
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "follower",
+                            foreignField: "_id",
+                            as: "followerDetails",
+                        },
+                    },
+                    { $unwind: "$followerDetails" },
+                ],
+                as: "followers",
+            },
+        },
+        // Calculate match score based on preferences and mutual followers
+        {
+            $addFields: {
+                commonPreferences: {
+                    $size: {
+                        $setIntersection: [
+                            "$preferences.preferredContentTypes",
+                            userPreferences,
+                        ],
+                    },
+                },
+                mutualFollowers: {
+                    $size: {
+                        $filter: {
+                            input: "$followers",
+                            as: "follower",
+                            cond: {
+                                $in: [
+                                    "$$follower.follower",
+                                    followingIds.map(
+                                        (id) => new mongoose.Types.ObjectId(id)
+                                    ),
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        // Sort by match score (common preferences + mutual followers)
+        {
+            $sort: {
+                commonPreferences: -1,
+                mutualFollowers: -1,
+                "userDetails.createdAt": -1,
+            },
+        },
+        // Limit results
+        { $limit: limit },
+        // Project relevant fields
+        {
+            $project: {
+                id: "$userDetails._id",
+                fullName: "$userDetails.fullName",
+                userName: "$userDetails.userName",
+                fullNameString: "$userDetails.fullNameString",
+                avatar: "$avatar",
+                bio: "$bio",
+                isVerified: "$isVerified",
+                commonPreferences: 1,
+                mutualFollowers: 1,
+            },
+        },
+    ]);
+
+    return suggestedUsers;
+};
+
 const userService = {
     createUser,
     findOneUser,
@@ -245,5 +376,6 @@ const userService = {
     getUserRelations,
     getUserProfileDetails,
     getOtherUserProfileDetails,
+    getSuggestedUsers,
 };
 export default userService;
