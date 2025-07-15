@@ -11,8 +11,8 @@ import { fileURLToPath } from "url";
 
 const app = express();
 const corsConfig = cors({
-    origin: "*",
-    credentials: true,
+  origin: ["http://localhost:5173", "http://192.168.0.39:5173", "http://localhost:5174","https://suggest-me-prototype.netlify.app/"], // allow both localhost and LAN access
+  credentials: true,
 });
 
 const __filename = fileURLToPath(import.meta.url);
@@ -54,7 +54,7 @@ app.get("/", (req, res) => {
     const response = new ApiResponse(
         200,
         null,
-        "this is the home route of org-management"
+        "this is the home route of suggest.me"
     );
     res.status(200).send(response);
 });
