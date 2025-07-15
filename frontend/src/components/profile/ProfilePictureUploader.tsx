@@ -212,7 +212,7 @@ const ProfilePictureUploader: React.FC<ProfilePictureUploaderProps> = ({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 shadow-md hover:bg-primary/90"
+        className="absolute bottom-0 right-0 bg-blue-900 text-white rounded-full p-2 shadow-md hover:bg-blue-950"
         onClick={handleOpenDialog}
       >
         <Camera className="h-5 w-5" />

@@ -1,26 +1,22 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearch } from '@tanstack/react-router';
+import { ApiResponse } from '@/interfaces/api/api-response.interface';
+import {
+  GSearchResults,
+  PeopleSearchResult,
+} from '@/interfaces/api/search.interface';
+import type { SearchResultItem } from '@/interfaces/search.interface';
+import { globalSearch, searchPeople } from '@/services/search.service';
+import { useInfiniteScroll } from '@/context/use-infinite-scroll';
+import { useMobile } from '@/context/use-mobile';
+import { SearchInput } from './components/search-input';
+import { SearchResults } from './components/search-results';
+import { SearchTabs } from './components/search-tabs';
 
-import type React from "react";
-
-import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
-import { SearchInput } from "./search-input";
-import { SearchTabs } from "./search-tabs";
-import { SearchResults } from "./search-results";
-import { globalSearch, searchPeople } from "@/services/search.service";
-import type {
-  GlobalSearchResponse,
-  PeopleSearchResponse,
-  SearchResultItem,
-} from "@/interfaces/search.interface";
-import { useMobile } from "@/lib/use-mobile";
-import { useInfiniteScroll } from "@/lib/use-infinite-scroll";
-
-// Define limit as a constant
 const LIMIT = 10;
-// SessionStorage key prefix and expiration time (1 hour in milliseconds)
-const STORAGE_PREFIX = "search_tab_";
-const EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour
+const STORAGE_PREFIX = 'search_tab_';
+const EXPIRATION_TIME = 60 * 60 * 1000;
 
 export type TabType = {
   label: string;
@@ -48,34 +44,34 @@ export type TabDataWithSearchState = {
 
 export default function SearchPage() {
   const tabs: TabType[] = [
-    { label: "All", value: "all" },
-    { label: "Users", value: "users" },
-    { label: "Movies", value: "movie" },
-    { label: "Series", value: "series" },
-    { label: "Music", value: "music" },
-    { label: "Books", value: "book" },
+    { label: 'All', value: 'all' },
+    { label: 'Users', value: 'users' },
+    { label: 'Movies', value: 'movie' },
+    { label: 'Series', value: 'series' },
+    { label: 'Music', value: 'music' },
+    { label: 'Books', value: 'book' },
   ];
-  const [searchParams, setSearchParams] = useSearchParams();
+
+  const { q } = useSearch({ from: '/_authenticated/search/' });
+  const navigate = useNavigate();
   const isMobile = useMobile();
 
-  const [searchTerm, setSearchTerm] = useState<string>(
-    searchParams.get("q") || ""
-  );
+  const [searchTerm, setSearchTerm] = useState<string>(q || '');
+
   const getInitialTab = () => {
-    const searchTerm = searchParams.get("q") || "";
-    if (searchTerm) {
-      const stored = sessionStorage.getItem(`${STORAGE_PREFIX}${searchTerm}`);
+    if (q) {
+      const stored = sessionStorage.getItem(`${STORAGE_PREFIX}${q}`);
       if (stored) {
         const { tab, timestamp } = JSON.parse(stored);
-        // Check if entry is not expired
         if (Date.now() - timestamp < EXPIRATION_TIME) {
           const validTab = tabs.find((t) => t.value === tab);
-          return validTab ? tab : "all";
+          return validTab ? tab : 'all';
         }
       }
     }
-    return "all";
+    return 'all';
   };
+
   const [debouncedSearchTerm, setDebouncedSearchTerm] =
     useState<string>(searchTerm);
   const [activeTab, setActiveTab] = useState<string>(getInitialTab());
@@ -86,58 +82,23 @@ export default function SearchPage() {
 
   const [tabData, setTabData] = useState<{
     [key: string]: TabDataType;
-  }>({
-    all: {
-      results: [],
-      totalResults: 0,
-      totalPages: 0,
-      hasMore: true,
-      page: 1,
-      imageFailed: [],
-    },
-    users: {
-      results: [],
-      totalResults: 0,
-      totalPages: 0,
-      hasMore: true,
-      page: 1,
-      imageFailed: [],
-    },
-    movie: {
-      results: [],
-      totalResults: 0,
-      totalPages: 0,
-      hasMore: true,
-      page: 1,
-      imageFailed: [],
-    },
-    series: {
-      results: [],
-      totalResults: 0,
-      totalPages: 0,
-      hasMore: true,
-      page: 1,
-      imageFailed: [],
-    },
-    music: {
-      results: [],
-      totalResults: 0,
-      totalPages: 0,
-      hasMore: true,
-      page: 1,
-      imageFailed: [],
-    },
-    book: {
-      results: [],
-      totalResults: 0,
-      totalPages: 0,
-      hasMore: true,
-      page: 1,
-      imageFailed: [],
-    },
-  });
-  
-  // Update SessionStorage when activeTab changes
+  }>(
+    tabs.reduce(
+      (acc, tab) => {
+        acc[tab.value] = {
+          results: [],
+          totalResults: 0,
+          totalPages: 0,
+          hasMore: true,
+          page: 1,
+          imageFailed: [],
+        };
+        return acc;
+      },
+      {} as Record<string, TabDataType>
+    )
+  );
+
   useEffect(() => {
     if (debouncedSearchTerm && activeTab) {
       sessionStorage.setItem(
@@ -146,7 +107,7 @@ export default function SearchPage() {
       );
     }
   }, [activeTab, debouncedSearchTerm]);
-  // Debounce search term update
+
   const updateDebouncedSearch = useCallback(
     debounce((value: string) => {
       if (value === debouncedSearchTerm) return;
@@ -167,14 +128,15 @@ export default function SearchPage() {
         });
         return newData;
       });
-      // Update URL query parameter
-      if (value.trim()) {
-        setSearchParams({ q: value });
-      } else {
-        setSearchParams({});
-      }
+
+      navigate({
+        to: "/search",
+        search: (prev) =>
+          value.trim() ? { ...prev, q: value } : { ...prev, q: undefined },
+        replace: true,
+      });
     }, 800),
-    [setSearchParams]
+    [navigate, debouncedSearchTerm]
   );
 
   useEffect(() => {
@@ -184,6 +146,12 @@ export default function SearchPage() {
   useEffect(() => {
     fetchResults(activeTab, 1, false);
   }, []);
+
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      fetchResults(activeTab, 1, false);
+    }
+  }, [debouncedSearchTerm, activeTab, hasSearched]);
 
   const fetchResults = async (
     tab: string,
@@ -208,16 +176,15 @@ export default function SearchPage() {
     setLoading(true);
 
     try {
-      setError(null); // Reset error state before fetching
-      if (tab === "users") {
-        // Fetch user search results
-        const response: PeopleSearchResponse = await searchPeople({
+      setError(null);
+      if (tab === 'users') {
+        const response: ApiResponse<PeopleSearchResult> = await searchPeople({
           searchTerm: debouncedSearchTerm,
           page: currentPage,
           limit: LIMIT,
         });
 
-        const newResults = response.data.results || [];
+        const newResults = response.data?.results || [];
 
         setTabData((prev) => ({
           ...prev,
@@ -225,14 +192,16 @@ export default function SearchPage() {
             results: append
               ? [...prev[tab].results, ...newResults]
               : newResults,
-            totalResults: response.data.pagination.totalResults || 0,
+            totalResults: response.data?.pagination.totalResults || 0,
             totalPages: Math.ceil(
-              (response.data.pagination.totalResults || 0) / LIMIT
+              (response.data?.pagination.totalResults || 0) / LIMIT
             ),
             hasMore:
               newResults.length > 0 &&
               currentPage <
-                Math.ceil((response.data.pagination.totalResults || 0) / LIMIT),
+                Math.ceil(
+                  (response.data?.pagination.totalResults || 0) / LIMIT
+                ),
             page: currentPage,
             imageFailed: append
               ? [
@@ -243,22 +212,25 @@ export default function SearchPage() {
           },
         }));
       } else {
-        // Fetch global search results
-        const contentTypes = tab === "all" ? [] : [tab];
-
-        const response: GlobalSearchResponse = await globalSearch({
-          searchType: "all",
+        const contentTypes = tab === 'all' ? [] : [tab];
+        const response: ApiResponse<GSearchResults> = await globalSearch({
+          searchType: 'all',
           searchTerm: debouncedSearchTerm,
           page: currentPage,
           limit: LIMIT,
           contentTypes,
         });
 
-        const searchResults = response.data?.results || {};
+        if (!response.success || !response.data)
+          throw new Error('Invalid API Response');
+
+        const searchResults = response.data.results;
         let combinedResults: SearchResultItem[] = [];
 
-        if (tab === "all") {
-          Object.keys(searchResults).forEach((category) => {
+        if (tab === 'all') {
+          (
+            Object.keys(searchResults) as Array<keyof typeof searchResults>
+          ).forEach((category) => {
             if (searchResults[category]?.data?.length) {
               combinedResults = [
                 ...combinedResults,
@@ -270,7 +242,8 @@ export default function SearchPage() {
             }
           });
         } else {
-          combinedResults = searchResults[tab]?.data || [];
+          combinedResults =
+            searchResults[tab as keyof typeof searchResults]?.data || [];
         }
 
         setTabData((prev) => ({
@@ -296,7 +269,7 @@ export default function SearchPage() {
       }
     } catch (err) {
       console.error(err);
-      setError("An error occurred while fetching results. Please try again.");
+      setError('An error occurred while fetching results. Please try again.');
       setTabData((prev) => ({
         ...prev,
         [tab]: {
@@ -313,14 +286,6 @@ export default function SearchPage() {
     }
   };
 
-  // Fetch results on tab switch or search term change
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      fetchResults(activeTab, 1, false);
-    }
-  }, [debouncedSearchTerm, activeTab, hasSearched]);
-
-  // Setup infinite scroll
   const loadMore = useCallback(() => {
     if (!loading && tabData[activeTab].hasMore) {
       const nextPage = tabData[activeTab].page + 1;
@@ -329,8 +294,8 @@ export default function SearchPage() {
   }, [loading, activeTab, tabData]);
 
   const { observerRef } = useInfiniteScroll(loadMore, {
-    rootMargin: isMobile ? "300px" : "100px", // Larger margin for mobile
-    threshold: isMobile ? 0.01 : 0.1, // Lower threshold for mobile
+    rootMargin: isMobile ? '300px' : '100px',
+    threshold: isMobile ? 0.01 : 0.1,
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -338,22 +303,18 @@ export default function SearchPage() {
     updateDebouncedSearch(searchTerm);
   };
 
-  // Create tabData with hasSearched for mobile view
-  const tabDataWithSearchState: TabDataWithSearchState = {
+  const tabDataWithSearchState: any = {
     ...tabData,
     hasSearched,
   };
 
   return (
-    <div className="relative pb-10 sm:pb-0 px-2 py-0 sm:p-2 md:p-3 lg:p-4 w-full max-w-[100%] sm:max-w-xl md:max-w-2xl lg:max-w-7xl mx-auto overflow-x-hidden">
-      {/* Search Input */}
+    <div className='relative mx-auto w-full max-w-[100%] overflow-x-hidden px-2 py-0 pb-10 sm:max-w-xl sm:p-2 sm:pb-0 md:max-w-2xl md:p-3 lg:max-w-7xl lg:p-4'>
       <SearchInput
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         handleSearch={handleSearch}
       />
-
-      {/* Conditional Rendering Based on Screen Size */}
       {isMobile ? (
         <SearchTabs
           tabs={tabs}
@@ -392,7 +353,6 @@ export default function SearchPage() {
   );
 }
 
-// Debounce function
 function debounce(func: (...args: any[]) => void, delay: number) {
   let timeoutId: NodeJS.Timeout;
   return (...args: any[]) => {

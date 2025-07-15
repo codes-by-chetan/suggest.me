@@ -1,15 +1,15 @@
 import { ParsedLocation, redirect } from '@tanstack/react-router'
 
 export const getAccessToken = () => {
-  return localStorage.getItem('accessToken')
+  return localStorage.getItem('token')
 }
 
 export const setAccessToken = (token: string) => {
-  localStorage.setItem('accessToken', token)
+  localStorage.setItem('token', token)
 }
 
 export const removeAccessToken = () => {
-  localStorage.removeItem('accessToken')
+  localStorage.removeItem('token')
 }
 
 export const isAuthenticated = () => {

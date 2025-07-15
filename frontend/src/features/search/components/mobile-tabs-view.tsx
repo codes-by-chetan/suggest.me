@@ -1,11 +1,8 @@
-"use client"
-
 import type React from "react"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
-import type { TabType } from "./search-page"
 import { cn } from "@/lib/utils"
+import { TabType } from ".."
 
 interface MobileTabsViewProps {
   tabs: TabType[]
@@ -17,17 +14,17 @@ export function MobileTabsView({ tabs, activeTab, setActiveTab }: MobileTabsView
   const [startX, setStartX] = useState<number | null>(null)
   const [currentX, setCurrentX] = useState<number | null>(null)
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const _handleTouchStart = (e: React.TouchEvent) => {
     setStartX(e.touches[0].clientX)
   }
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const _handleTouchMove = (e: React.TouchEvent) => {
     if (startX !== null) {
       setCurrentX(e.touches[0].clientX)
     }
   }
 
-  const handleTouchEnd = () => {
+  const _handleTouchEnd = () => {
     if (startX !== null && currentX !== null) {
       const diff = startX - currentX
       const threshold = 50 // Minimum swipe distance
@@ -73,7 +70,7 @@ export function MobileTabsView({ tabs, activeTab, setActiveTab }: MobileTabsView
         dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
-        onDragEnd={(e, { offset }) => handleSwipe(offset.x)}
+        onDragEnd={(_e, { offset }) => handleSwipe(offset.x)}
       />
 
       {/* Tab Indicators */}

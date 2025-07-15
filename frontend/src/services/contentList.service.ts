@@ -66,7 +66,7 @@ const ContentListService = {
   deleteContent: async (contentId: string): Promise<ApiResponse<any>> =>
     apiService.delete(`user/content/${contentId}`),
   checkContent: async (params: CheckContentParams): Promise<ApiResponse<any>> =>
-    apiService.post(`user/content/check`, { params }),
+    apiService.get('user/content/check', params),
 };
 
 export default ContentListService;

@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import {UserService} from '@/services/user.service'
+import UserService from '@/services/user.service'
 import { AuthService } from '@/services/auth.service'
 
 interface AuthUser {

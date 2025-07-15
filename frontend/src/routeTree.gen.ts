@@ -29,6 +29,8 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedUsersIndexImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedSearchIndexImport } from './routes/_authenticated/search/index'
+import { Route as AuthenticatedNotificationsIndexImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedHelpCenterIndexImport } from './routes/_authenticated/help-center/index'
 import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexImport } from './routes/_authenticated/apps/index'
@@ -36,6 +38,7 @@ import { Route as AuthenticatedSettingsNotificationsImport } from './routes/_aut
 import { Route as AuthenticatedSettingsDisplayImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedMusicIdIndexImport } from './routes/_authenticated/music/$id/index'
 
 // Create Virtual Routes
 
@@ -217,6 +220,19 @@ const AuthenticatedSettingsIndexRoute = AuthenticatedSettingsIndexImport.update(
   } as any,
 )
 
+const AuthenticatedSearchIndexRoute = AuthenticatedSearchIndexImport.update({
+  id: '/search/',
+  path: '/search/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+
+const AuthenticatedNotificationsIndexRoute =
+  AuthenticatedNotificationsIndexImport.update({
+    id: '/notifications/',
+    path: '/notifications/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+
 const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexImport.update({
     id: '/help-center/',
@@ -296,6 +312,12 @@ const AuthenticatedContentIdIndexLazyRoute =
       (d) => d.Route,
     ),
   )
+
+const AuthenticatedMusicIdIndexRoute = AuthenticatedMusicIdIndexImport.update({
+  id: '/music/$id/',
+  path: '/music/$id/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -441,6 +463,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/notifications/': {
+      id: '/_authenticated/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsIndexImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/search/': {
+      id: '/_authenticated/search/'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AuthenticatedSearchIndexImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/'
@@ -495,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/suggested-to-me'
       fullPath: '/suggested-to-me'
       preLoaderRoute: typeof AuthenticatedSuggestedToMeIndexLazyImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
+    '/_authenticated/music/$id/': {
+      id: '/_authenticated/music/$id/'
+      path: '/music/$id'
+      fullPath: '/music/$id'
+      preLoaderRoute: typeof AuthenticatedMusicIdIndexImport
       parentRoute: typeof AuthenticatedRouteImport
     }
     '/_authenticated/content/$id/': {
@@ -552,6 +595,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
+  AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
+  AuthenticatedSearchIndexRoute: typeof AuthenticatedSearchIndexRoute
   AuthenticatedTasksIndexRoute: typeof AuthenticatedTasksIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedHomeIndexLazyRoute: typeof AuthenticatedHomeIndexLazyRoute
@@ -559,6 +604,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMyWatchlistIndexLazyRoute: typeof AuthenticatedMyWatchlistIndexLazyRoute
   AuthenticatedProfileIndexLazyRoute: typeof AuthenticatedProfileIndexLazyRoute
   AuthenticatedSuggestedToMeIndexLazyRoute: typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  AuthenticatedMusicIdIndexRoute: typeof AuthenticatedMusicIdIndexRoute
   AuthenticatedContentIdIndexLazyRoute: typeof AuthenticatedContentIdIndexLazyRoute
   AuthenticatedProfileIdIndexLazyRoute: typeof AuthenticatedProfileIdIndexLazyRoute
   AuthenticatedProfileUpdateProfileIndexLazyRoute: typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
@@ -570,6 +616,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
+  AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
+  AuthenticatedSearchIndexRoute: AuthenticatedSearchIndexRoute,
   AuthenticatedTasksIndexRoute: AuthenticatedTasksIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedHomeIndexLazyRoute: AuthenticatedHomeIndexLazyRoute,
@@ -580,6 +628,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileIndexLazyRoute: AuthenticatedProfileIndexLazyRoute,
   AuthenticatedSuggestedToMeIndexLazyRoute:
     AuthenticatedSuggestedToMeIndexLazyRoute,
+  AuthenticatedMusicIdIndexRoute: AuthenticatedMusicIdIndexRoute,
   AuthenticatedContentIdIndexLazyRoute: AuthenticatedContentIdIndexLazyRoute,
   AuthenticatedProfileIdIndexLazyRoute: AuthenticatedProfileIdIndexLazyRoute,
   AuthenticatedProfileUpdateProfileIndexLazyRoute:
@@ -610,6 +659,8 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/notifications': typeof AuthenticatedNotificationsIndexRoute
+  '/search': typeof AuthenticatedSearchIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -618,6 +669,7 @@ export interface FileRoutesByFullPath {
   '/my-watchlist': typeof AuthenticatedMyWatchlistIndexLazyRoute
   '/profile': typeof AuthenticatedProfileIndexLazyRoute
   '/suggested-to-me': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/music/$id': typeof AuthenticatedMusicIdIndexRoute
   '/content/$id': typeof AuthenticatedContentIdIndexLazyRoute
   '/profile/$id': typeof AuthenticatedProfileIdIndexLazyRoute
   '/profile/update-profile': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
@@ -642,6 +694,8 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/notifications': typeof AuthenticatedNotificationsIndexRoute
+  '/search': typeof AuthenticatedSearchIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -650,6 +704,7 @@ export interface FileRoutesByTo {
   '/my-watchlist': typeof AuthenticatedMyWatchlistIndexLazyRoute
   '/profile': typeof AuthenticatedProfileIndexLazyRoute
   '/suggested-to-me': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/music/$id': typeof AuthenticatedMusicIdIndexRoute
   '/content/$id': typeof AuthenticatedContentIdIndexLazyRoute
   '/profile/$id': typeof AuthenticatedProfileIdIndexLazyRoute
   '/profile/update-profile': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
@@ -677,6 +732,8 @@ export interface FileRoutesById {
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
+  '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
+  '/_authenticated/search/': typeof AuthenticatedSearchIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
@@ -685,6 +742,7 @@ export interface FileRoutesById {
   '/_authenticated/my-watchlist/': typeof AuthenticatedMyWatchlistIndexLazyRoute
   '/_authenticated/profile/': typeof AuthenticatedProfileIndexLazyRoute
   '/_authenticated/suggested-to-me/': typeof AuthenticatedSuggestedToMeIndexLazyRoute
+  '/_authenticated/music/$id/': typeof AuthenticatedMusicIdIndexRoute
   '/_authenticated/content/$id/': typeof AuthenticatedContentIdIndexLazyRoute
   '/_authenticated/profile/$id/': typeof AuthenticatedProfileIdIndexLazyRoute
   '/_authenticated/profile/update-profile/': typeof AuthenticatedProfileUpdateProfileIndexLazyRoute
@@ -713,6 +771,8 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/help-center'
+    | '/notifications'
+    | '/search'
     | '/settings/'
     | '/tasks'
     | '/users'
@@ -721,6 +781,7 @@ export interface FileRouteTypes {
     | '/my-watchlist'
     | '/profile'
     | '/suggested-to-me'
+    | '/music/$id'
     | '/content/$id'
     | '/profile/$id'
     | '/profile/update-profile'
@@ -744,6 +805,8 @@ export interface FileRouteTypes {
     | '/apps'
     | '/chats'
     | '/help-center'
+    | '/notifications'
+    | '/search'
     | '/settings'
     | '/tasks'
     | '/users'
@@ -752,6 +815,7 @@ export interface FileRouteTypes {
     | '/my-watchlist'
     | '/profile'
     | '/suggested-to-me'
+    | '/music/$id'
     | '/content/$id'
     | '/profile/$id'
     | '/profile/update-profile'
@@ -777,6 +841,8 @@ export interface FileRouteTypes {
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
     | '/_authenticated/help-center/'
+    | '/_authenticated/notifications/'
+    | '/_authenticated/search/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
@@ -785,6 +851,7 @@ export interface FileRouteTypes {
     | '/_authenticated/my-watchlist/'
     | '/_authenticated/profile/'
     | '/_authenticated/suggested-to-me/'
+    | '/_authenticated/music/$id/'
     | '/_authenticated/content/$id/'
     | '/_authenticated/profile/$id/'
     | '/_authenticated/profile/update-profile/'
@@ -850,6 +917,8 @@ export const routeTree = rootRoute
         "/_authenticated/apps/",
         "/_authenticated/chats/",
         "/_authenticated/help-center/",
+        "/_authenticated/notifications/",
+        "/_authenticated/search/",
         "/_authenticated/tasks/",
         "/_authenticated/users/",
         "/_authenticated/home/",
@@ -857,6 +926,7 @@ export const routeTree = rootRoute
         "/_authenticated/my-watchlist/",
         "/_authenticated/profile/",
         "/_authenticated/suggested-to-me/",
+        "/_authenticated/music/$id/",
         "/_authenticated/content/$id/",
         "/_authenticated/profile/$id/",
         "/_authenticated/profile/update-profile/"
@@ -935,6 +1005,14 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/help-center/index.tsx",
       "parent": "/_authenticated"
     },
+    "/_authenticated/notifications/": {
+      "filePath": "_authenticated/notifications/index.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/search/": {
+      "filePath": "_authenticated/search/index.tsx",
+      "parent": "/_authenticated"
+    },
     "/_authenticated/settings/": {
       "filePath": "_authenticated/settings/index.tsx",
       "parent": "/_authenticated/settings"
@@ -965,6 +1043,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/suggested-to-me/": {
       "filePath": "_authenticated/suggested-to-me/index.lazy.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/music/$id/": {
+      "filePath": "_authenticated/music/$id/index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/content/$id/": {

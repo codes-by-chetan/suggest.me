@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useRef } from "react"
-import { useNotifications } from "@/lib/notification-context"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
@@ -9,35 +9,36 @@ import { motion, AnimatePresence, type PanInfo } from "framer-motion"
 import { subDays, isAfter } from "date-fns"
 import NotificationItem2 from "@/components/layout/NotificationItem-2"
 import AuthenticationFallback from "@/components/layout/AuthenticationFallback"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/context/auth-context"
+import { useNotifications } from "@/context/notification-context"
 
-interface Notification {
-  id: string
-  type: string
-  title: string
-  message: string
-  timestamp: string
-  read: boolean
-  contentType?: string
-  user?: {
-    id: string
-    fullName: {
-      firstName: string
-      lastName: string
-      _id: string
-      [key: string]: any
-    }
-    avatar: string
-    fullNameString: string
-  }
-  metadata: {
-    followRequestStatus: string
-    followRequestId: string
-    _id: string
-    id: string
-    [key: string]: any
-  }
-}
+// interface Notification {
+//   id: string
+//   type: string
+//   title: string
+//   message: string
+//   timestamp: string
+//   read: boolean
+//   contentType?: string
+//   user?: {
+//     id: string
+//     fullName: {
+//       firstName: string
+//       lastName: string
+//       _id: string
+//       [key: string]: any
+//     }
+//     avatar: string
+//     fullNameString: string
+//   }
+//   metadata: {
+//     followRequestStatus: string
+//     followRequestId: string
+//     _id: string
+//     id: string
+//     [key: string]: any
+//   }
+// }
 
 const NotificationsPage = () => {
   const { isAuthenticated } = useAuth()
@@ -102,7 +103,7 @@ const NotificationsPage = () => {
   }
 
   // Handle swipe gestures
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  const handleDragEnd = (_event: any, info: PanInfo) => {
     const threshold = 50
     const velocity = info.velocity.x
 

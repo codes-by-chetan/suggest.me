@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react"
 import { Plus, Lightbulb } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ import { getSuggestedByYou, suggestContent } from "@/services/suggestion.service
 import { toast } from "@/services/toast.service"
 import type { ContentItem } from "@/interfaces/content.interfaces"
 import MySuggestionCard from "@/components/layout/MySuggestion"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/context/auth-context"
 
 const MySuggestions = () => {
   const { isAuthenticated } = useAuth()
@@ -29,9 +30,11 @@ const MySuggestions = () => {
         limit,
         type: type === "all" ? undefined : type,
       })
+      console.log("Fetched suggestions:", res);
+      
       if (res.success) {
-        setSuggestions(res.data)
-        setTotalPages(Math.ceil(res.total / res.limit))
+        setSuggestions(res.data.data)
+        setTotalPages(Math.ceil(res.data.total / res.data.limit))
       } else {
         toast.error("Failed to fetch suggestions!")
         setSuggestions([])
@@ -57,7 +60,7 @@ const MySuggestions = () => {
       } else {
         toast.error("Failed to add suggestion!")
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Something went wrong while adding suggestion!")
     }
     await fetchSuggestions(1, activeTab)

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -16,7 +16,6 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Star,
   Award,
   Tag,
   XCircle,
@@ -24,15 +23,12 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { getMusicDetails, MusicDetails } from "@/services/content.service";
-import {
-  checkContent,
-  addContent,
-  updateContentStatus,
-} from "@/services/contentList.service";
+import { ContentService, MusicDetails } from "@/services/content.service";
 import { toast } from "@/services/toast.service";
-import { useAuth } from "@/lib/auth-context";
 import AuthDialog from "@/components/layout/AuthDialog";
+import { useNavigate, useParams } from "@tanstack/react-router";
+import { useAuth } from "@/context/auth-context";
+import ContentListService from "@/services/contentList.service";
 
 const formatPlays = (plays: string): string => {
   const num = parseInt(plays.replace(/,/g, ""));
@@ -48,7 +44,7 @@ const formatPlays = (plays: string): string => {
 };
 
 const MusicDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams({from: "/_authenticated/music/$id/"});
   const navigate = useNavigate();
   const [content, setContent] = useState<MusicDetails | null>(null);
   const [contentStatus, setContentStatus] = useState<string | null>(null);
@@ -65,13 +61,13 @@ const MusicDetailsPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await getMusicDetails(id);
+        const response = await ContentService.getMusicDetails(id);
         if (response.success && response.data) {
           setContent(response.data);
         } else {
           setError(response.message || "Failed to fetch music details");
         }
-      } catch (err) {
+      } catch (_err) {
         setError("An error occurred while fetching music details");
       } finally {
         setLoading(false);
@@ -85,7 +81,7 @@ const MusicDetailsPage = () => {
     const fetchStatus = async () => {
       if (!content?._id) return;
       try {
-        const response = await checkContent({ contentId: content?._id });
+        const response = await ContentListService.checkContent({ contentId: content?._id });
         if (response.success && response.data) {
           setContentStatus(response.data.status || null);
           setContentRecordId(response.data.id || null);
@@ -93,7 +89,7 @@ const MusicDetailsPage = () => {
           setContentStatus(null);
           setContentRecordId(null);
         }
-      } catch (err: any) {
+      } catch (_err: any) {
         toast.error("Failed to fetch content status.");
       }
     };
@@ -106,7 +102,7 @@ const MusicDetailsPage = () => {
     try {
       let response;
       if (contentRecordId) {
-        response = await updateContentStatus(contentRecordId, {
+        response = await ContentListService.updateContentStatus(contentRecordId, {
           status: newStatus,
         });
         if (response.success) {
@@ -118,7 +114,7 @@ const MusicDetailsPage = () => {
           );
         }
       } else {
-        response = await addContent({
+        response = await ContentListService.addContent({
           content: { id: content?._id, type: "Music" },
           status: newStatus,
           suggestionId: undefined,
@@ -140,7 +136,7 @@ const MusicDetailsPage = () => {
   const handleAuthDialogClose = useCallback(
     (success: boolean = false) => {
       if (success) {
-        updateStatus(newStatus);
+        updateStatus(newStatus||"");
       } else {
         toast.error("Failed : Login first to change status");
       }
@@ -200,7 +196,7 @@ const MusicDetailsPage = () => {
     return (
       <main className="w-full mx-auto pb-[10vh] pt-0 px-4 sm:px-6 lg:px-8">
         <div className="py-6">
-          <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
+          <Button variant="ghost" className="mb-4" onClick={() => navigate({to: ".."})}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <div className="text-center py-12">
@@ -215,7 +211,7 @@ const MusicDetailsPage = () => {
     return (
       <main className="w-full mx-auto pb-[10vh] pt-0 px-4 sm:px-6 lg:px-8">
         <div className="py-6">
-          <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
+          <Button variant="ghost" className="mb-4" onClick={() => {}}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <div className="text-center py-12">
@@ -233,7 +229,7 @@ const MusicDetailsPage = () => {
   return (
     <main className="w-full mx-auto pb-[10vh] pt-0 px-4 sm:px-6 lg:px-8">
       <div className="py-6">
-        <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
+        <Button variant="ghost" className="mb-4" onClick={() => navigate({to: ".."})}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
 

@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { CustomTabsList } from "@/components/layout/CustomTabsList";
 import MyWatchListCard from "@/components/layout/MyWatchListCard";
 import AuthenticationFallback from "@/components/layout/AuthenticationFallback";
-import { getUserContent } from "@/services/contentList.service";
 import { toast } from "@/services/toast.service";
 import { BookmarkCheck } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/context/auth-context";
+import ContentListService from "@/services/contentList.service";
 
 interface ContentItem {
   id: string;
@@ -43,11 +43,13 @@ const MyWatchlist = () => {
     const fetchWatchlist = async () => {
       setIsLoading(true);
       try {
-        const response = await getUserContent({
+        const response = await ContentListService.getUserContent({
           page,
           limit,
           type: activeTab === "all" ? undefined : activeTab,
         });
+        
+        
         if (response.success) {
           console.log("Watchlist items: ", response.data);
           setWatchlistItems(response.data?.data || []);

@@ -2,7 +2,7 @@ import { HTMLAttributes, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, Navigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/auth-context';
@@ -37,6 +37,7 @@ const formSchema = z.object({
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const Navigate = useNavigate();
   const auth = useAuth();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import ProfileHeader from "@/components/profile/ProfileHeader";
-import PostCard from "@/components/profile/PostCard";
+import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate, useParams } from '@tanstack/react-router';
+import { Friend, myFriendsArray } from '@/data/myFriends';
+import { myPostsArray, Post } from '@/data/myPosts';
+import { SavedItem, savedItemsArray } from '@/data/mySavedItem';
+import { UserProfileData } from '@/interfaces/user.interface';
+import UserService from '@/services/user.service';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserPlus,
   UserMinus,
@@ -13,41 +13,40 @@ import {
   Grid,
   Bookmark,
   Settings,
-} from "lucide-react";
-import { useNavigate, useParams } from "react-router";
-import { SavedItem, savedItemsArray } from "@/data/mySavedItem";
-import { myPostsArray, Post } from "@/data/myPosts";
-import { Friend, myFriendsArray } from "@/data/myFriends";
-import UserService from "@/services/user.service";
-import { UserProfileData } from "@/interfaces/user.interface";
-import { useAuth } from "@/lib/auth-context";
-import { motion, AnimatePresence } from "framer-motion";
+} from 'lucide-react';
+import { useAuth } from '@/context/auth-context';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import PostCard from '@/components/profile/PostCard';
+import ProfileHeader from '@/components/profile/ProfileHeader';
 
 const Profile = () => {
-  const userService = new UserService();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState('profile');
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [_isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const authProvider = useAuth();
   const navigate = useNavigate();
 
   const [userData, setUserData] = useState<UserProfileData | null>(null);
-  const [savedItems, setSavedItems] = useState<SavedItem[]>(savedItemsArray);
-  const [posts, setPosts] = useState<Post[]>(myPostsArray);
+  const [savedItems, _setSavedItems] = useState<SavedItem[]>(savedItemsArray);
+  const [posts, _setPosts] = useState<Post[]>(myPostsArray);
   const [friends, setFriends] = useState<Friend[]>(myFriendsArray);
 
-  const { id } = useParams();
+  const { id } = useParams({ from: '/_authenticated/profile/$id/' });
 
   const refreshDetails = useCallback(async () => {
     setIsLoading(true);
     authProvider.refreshAuthState();
     const response = id
-      ? await userService.getUserProfileById(id)
-      : await userService.getUserProfile();
+      ? await UserService.getUserProfileById(id)
+      : await UserService.getUserProfile();
 
     if (response.success && response.data) {
-      setUserData(response.data);
+      setUserData(response.data as UserProfileData);
     } else {
       // getToast("error", response.message);
     }
@@ -58,9 +57,9 @@ const Profile = () => {
 
   useEffect(() => {
     refreshDetails();
-  }, []);
+  }, [id]);
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const _handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
     setIsEditing(false);
   };
@@ -79,18 +78,18 @@ const Profile = () => {
 
   // Loading UI Component
   const LoadingSkeleton = () => (
-    <div className="max-w-4xl mx-auto pt-0 px-4 sm:px-6 lg:px-8">
-      <div className="flex items-center space-x-4 mb-8">
-        <Skeleton className="h-24 w-24 rounded-full" />
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-8 w-1/3" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-1/4" />
+    <div className='mx-auto max-w-4xl px-4 pt-0 sm:px-6 lg:px-8'>
+      <div className='mb-8 flex items-center space-x-4'>
+        <Skeleton className='h-24 w-24 rounded-full' />
+        <div className='flex-1 space-y-2'>
+          <Skeleton className='h-8 w-1/3' />
+          <Skeleton className='h-4 w-1/2' />
+          <Skeleton className='h-4 w-1/4' />
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className='grid grid-cols-3 gap-4'>
         {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-40 w-full" />
+          <Skeleton key={i} className='h-40 w-full' />
         ))}
       </div>
     </div>
@@ -104,33 +103,33 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <AnimatePresence mode="wait">
+    <div className='bg-background min-h-screen'>
+      <AnimatePresence mode='wait'>
         {isLoading ? (
           <motion.div
-            key="loading"
+            key='loading'
             variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial='initial'
+            animate='animate'
+            exit='exit'
             transition={{ duration: 0.3 }}
           >
             <LoadingSkeleton />
           </motion.div>
         ) : userData ? (
           <motion.main
-            key="main"
+            key='main'
             variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial='initial'
+            animate='animate'
+            exit='exit'
             transition={{ duration: 0.3 }}
-            className="max-w-4xl w-full mx-auto pt-0 pb-[10vh] px-4 sm:px-6 lg:px-8"
+            className='mx-auto w-full max-w-4xl px-4 pt-0 pb-[10vh] sm:px-6 lg:px-8'
           >
             <ProfileHeader
               userData={userData}
               FollowersCount={userData.relations.followers.count}
-              onEditProfile={() => navigate("/edit-profile")}
+              onEditProfile={() => navigate({ to: '/edit-profile' })}
               onOpenSettings={() => setShowSettingsDialog(true)}
               followingCount={userData.relations.followings.count}
               postsCount={userData.postsCount}
@@ -141,76 +140,75 @@ const Profile = () => {
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
-              className="w-full"
+              className='w-full'
             >
-              <TabsList className="grid grid-cols-3 w-full my-4 bg-transparent border-b border-border rounded-none h-auto p-0">
+              <TabsList className='border-border my-4 grid h-auto w-full grid-cols-3 rounded-none border-b bg-transparent p-0'>
                 <TabsTrigger
-                  value="profile"
-                  className="flex items-center justify-center py-3 rounded-none border-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                  value='profile'
+                  className='data-[state=active]:border-primary flex items-center justify-center rounded-none border-0 py-3 data-[state=active]:border-b-2 data-[state=active]:shadow-none'
                 >
-                  <Grid className="h-4 w-4 mr-2" />
+                  <Grid className='mr-2 h-4 w-4' />
                   Posts
                 </TabsTrigger>
                 <TabsTrigger
-                  value="friends"
-                  className="flex items-center justify-center py-3 rounded-none border-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                  value='friends'
+                  className='data-[state=active]:border-primary flex items-center justify-center rounded-none border-0 py-3 data-[state=active]:border-b-2 data-[state=active]:shadow-none'
                 >
-                  <Users className="h-4 w-4 mr-2" />
+                  <Users className='mr-2 h-4 w-4' />
                   Friends
                 </TabsTrigger>
                 <TabsTrigger
-                  value="saved"
-                  className="flex items-center justify-center py-3 rounded-none border-0 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
+                  value='saved'
+                  className='data-[state=active]:border-primary flex items-center justify-center rounded-none border-0 py-3 data-[state=active]:border-b-2 data-[state=active]:shadow-none'
                 >
-                  <Bookmark className="h-4 w-4 mr-2" />
+                  <Bookmark className='mr-2 h-4 w-4' />
                   Saved
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="profile" className="mt-0 w-full">
-                <div className="grid grid-cols-3 gap-1 md:gap-4 w-full">
+              <TabsContent value='profile' className='mt-0 w-full'>
+                <div className='grid w-full grid-cols-3 gap-1 md:gap-4'>
                   {posts?.map((post) => (
-                    <div key={post.id} className="w-full aspect-square">
+                    <div key={post.id} className='aspect-square w-full'>
                       <PostCard
-                        id={post.id}
+                        _id={post.id}
                         imageUrl={post.imageUrl}
                         likes={post.likes}
                         comments={post.comments}
                         caption={post.caption}
                         onClick={() => handlePostClick(post.id)}
-                        
                       />
                     </div>
                   ))}
                 </div>
                 {posts?.length === 0 && (
-                  <div className="text-center py-12 w-full">
-                    <p className="text-muted-foreground">No posts yet.</p>
-                    <Button variant="outline" className="mt-4">
+                  <div className='w-full py-12 text-center'>
+                    <p className='text-muted-foreground'>No posts yet.</p>
+                    <Button variant='outline' className='mt-4'>
                       Create your first post
                     </Button>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="friends" className="mt-0 w-full">
-                <Card className="w-full">
-                  <CardHeader className="flex flex-row items-center justify-between">
+              <TabsContent value='friends' className='mt-0 w-full'>
+                <Card className='w-full'>
+                  <CardHeader className='flex flex-row items-center justify-between'>
                     <CardTitle>Friends</CardTitle>
-                    <Button variant="outline" size="sm">
-                      <UserPlus className="h-4 w-4 mr-2" />
+                    <Button variant='outline' size='sm'>
+                      <UserPlus className='mr-2 h-4 w-4' />
                       Add Friend
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    <div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2'>
                       {friends?.map((friend) => (
                         <div
                           key={friend.id}
-                          className="flex items-center justify-between p-3 border rounded-md hover:bg-accent/10 min-w-full box-border"
+                          className='hover:bg-accent/10 box-border flex min-w-full items-center justify-between rounded-md border p-3'
                         >
-                          <div className="flex items-center">
-                            <Avatar className="h-10 w-10 mr-3">
+                          <div className='flex items-center'>
+                            <Avatar className='mr-3 h-10 w-10'>
                               <AvatarImage
                                 src={friend.avatar}
                                 alt={friend.name}
@@ -220,30 +218,30 @@ const Profile = () => {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <h4 className="font-medium">{friend.name}</h4>
-                              <p className="text-xs text-muted-foreground">
+                              <h4 className='font-medium'>{friend.name}</h4>
+                              <p className='text-muted-foreground text-xs'>
                                 {friend.email}
                               </p>
                               {friend.mutualFriends && (
-                                <p className="text-xs text-muted-foreground">
+                                <p className='text-muted-foreground text-xs'>
                                   {friend.mutualFriends} mutual friends
                                 </p>
                               )}
                             </div>
                           </div>
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                            variant='ghost'
+                            size='icon'
+                            className='text-destructive hover:text-destructive/90 hover:bg-destructive/10'
                             onClick={() => handleRemoveFriend(friend.id)}
                           >
-                            <UserMinus className="h-4 w-4" />
+                            <UserMinus className='h-4 w-4' />
                           </Button>
                         </div>
                       ))}
                     </div>
                     {friends?.length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">
+                      <p className='text-muted-foreground py-8 text-center'>
                         You don't have any friends yet. Add some friends to get
                         started!
                       </p>
@@ -252,60 +250,54 @@ const Profile = () => {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="saved" className="mt-0 w-full">
-                <div className="mb-6 w-full">
-                  <h2 className="text-xl font-semibold mb-4">Saved Items</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+              <TabsContent value='saved' className='mt-0 w-full'>
+                <div className='mb-6 w-full'>
+                  <h2 className='mb-4 text-xl font-semibold'>Saved Items</h2>
+                  <div className='grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
                     {savedItems?.map((item) => (
                       <Card
                         key={item.id}
-                        className="overflow-hidden cursor-pointer hover:shadow-md transition-all min-w-full box-border"
+                        className='box-border min-w-full cursor-pointer overflow-hidden transition-all hover:shadow-md'
                         onClick={() => handleSavedItemClick(item.id)}
                       >
                         <div
-                          className="h-40 w-full bg-muted"
+                          className='bg-muted h-40 w-full'
                           onClick={() =>
-                            navigate(`/content/${item.id}`, {
-                              state: { contentDetails: item },
-                            })
+                            navigate({ to: `/content/${item.id}` })
                           }
                         >
                           <img
                             src={item.imageUrl}
                             alt={item.title}
-                            className="h-full w-full object-cover"
+                            className='h-full w-full object-cover'
                           />
                         </div>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-medium text-primary capitalize">
+                        <CardContent className='p-4'>
+                          <div className='mb-2 flex items-center justify-between'>
+                            <span className='text-primary text-xs font-medium capitalize'>
                               {item.type}
                             </span>
-                            <span className="text-xs text-muted-foreground">
-                              Saved on{" "}
+                            <span className='text-muted-foreground text-xs'>
+                              Saved on{' '}
                               {new Date(item.savedAt).toLocaleDateString()}
                             </span>
                           </div>
                           <h3
-                            className="font-semibold text-lg mb-1"
+                            className='mb-1 text-lg font-semibold'
                             onClick={() =>
-                              navigate(`/content/${item.id}`, {
-                                state: { contentDetails: item },
-                              })
+                              navigate({ to: `/content/${item.id}` })
                             }
                           >
                             {item.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className='text-muted-foreground text-sm'>
                             {item.creator} • {item.year}
                           </p>
-                          <div className="mt-4 flex justify-center">
+                          <div className='mt-4 flex justify-center'>
                             <Button
-                              className="w-full"
+                              className='w-full'
                               onClick={() =>
-                                navigate(`/content/${item.id}`, {
-                                  state: { contentDetails: item },
-                                })
+                                navigate({ to: `/content/${item.id}` })
                               }
                             >
                               More Info...
@@ -316,12 +308,12 @@ const Profile = () => {
                     ))}
                   </div>
                   {savedItems?.length === 0 && (
-                    <div className="text-center py-12 bg-muted/20 rounded-lg w-full">
-                      <Bookmark className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">
+                    <div className='bg-muted/20 w-full rounded-lg py-12 text-center'>
+                      <Bookmark className='text-muted-foreground mx-auto mb-4 h-12 w-12' />
+                      <p className='text-muted-foreground'>
                         No saved items yet.
                       </p>
-                      <p className="text-sm text-muted-foreground mt-2">
+                      <p className='text-muted-foreground mt-2 text-sm'>
                         Items you save will appear here.
                       </p>
                     </div>
@@ -332,18 +324,18 @@ const Profile = () => {
           </motion.main>
         ) : (
           <motion.div
-            key="error"
+            key='error'
             variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
+            initial='initial'
+            animate='animate'
+            exit='exit'
             transition={{ duration: 0.3 }}
-            className="max-w-4xl mx-auto pt-20 px-4 sm:px-6 lg:px-8 text-center"
+            className='mx-auto max-w-4xl px-4 pt-20 text-center sm:px-6 lg:px-8'
           >
-            <p className="text-muted-foreground">
+            <p className='text-muted-foreground'>
               Failed to load profile data.
             </p>
-            <Button variant="outline" className="mt-4" onClick={refreshDetails}>
+            <Button variant='outline' className='mt-4' onClick={refreshDetails}>
               Try Again
             </Button>
           </motion.div>
@@ -352,41 +344,41 @@ const Profile = () => {
 
       {showSettingsDialog && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className='fixed inset-0 z-50 flex items-center justify-center bg-black/50'
           onClick={() => setShowSettingsDialog(false)}
         >
           <div
-            className="bg-background rounded-lg shadow-lg p-6 w-full max-w-md"
+            className='bg-background w-full max-w-md rounded-lg p-6 shadow-lg'
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Settings className="h-5 w-5 mr-2" /> Profile Settings
+            <h2 className='mb-4 flex items-center text-xl font-semibold'>
+              <Settings className='mr-2 h-5 w-5' /> Profile Settings
             </h2>
-            <div className="space-y-4">
-              <div className="p-3 hover:bg-accent rounded-md cursor-pointer flex items-center justify-between">
+            <div className='space-y-4'>
+              <div className='hover:bg-accent flex cursor-pointer items-center justify-between rounded-md p-3'>
                 <span>Privacy</span>
-                <span className="text-muted-foreground">→</span>
+                <span className='text-muted-foreground'>→</span>
               </div>
-              <div className="p-3 hover:bg-accent rounded-md cursor-pointer flex items-center justify-between">
+              <div className='hover:bg-accent flex cursor-pointer items-center justify-between rounded-md p-3'>
                 <span>Notifications</span>
-                <span className="text-muted-foreground">→</span>
+                <span className='text-muted-foreground'>→</span>
               </div>
-              <div className="p-3 hover:bg-accent rounded-md cursor-pointer flex items-center justify-between">
+              <div className='hover:bg-accent flex cursor-pointer items-center justify-between rounded-md p-3'>
                 <span>Account Security</span>
-                <span className="text-muted-foreground">→</span>
+                <span className='text-muted-foreground'>→</span>
               </div>
-              <div className="p-3 hover:bg-accent rounded-md cursor-pointer flex items-center justify-between">
+              <div className='hover:bg-accent flex cursor-pointer items-center justify-between rounded-md p-3'>
                 <span>Theme</span>
-                <span className="text-muted-foreground">→</span>
+                <span className='text-muted-foreground'>→</span>
               </div>
-              <div className="p-3 hover:bg-accent rounded-md cursor-pointer flex items-center justify-between text-destructive">
+              <div className='hover:bg-accent text-destructive flex cursor-pointer items-center justify-between rounded-md p-3'>
                 <span>Logout</span>
-                <span className="text-muted-foreground">→</span>
+                <span className='text-muted-foreground'>→</span>
               </div>
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className='mt-6 flex justify-end'>
               <Button
-                variant="outline"
+                variant='outline'
                 onClick={() => setShowSettingsDialog(false)}
               >
                 Close

@@ -1,13 +1,11 @@
-"use client";
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
-
 import { motion } from "framer-motion";
 import { SearchResultItemComponent } from "./search-result-item";
 import { Loader2 } from "lucide-react";
-import type { TabDataType } from "./search-page";
 import { cn } from "@/lib/utils";
 import { SearchSkeleton } from "./search-skeleton";
+import { TabDataType } from "..";
 
 interface SearchResultsProps {
   activeTab: string;
@@ -17,7 +15,7 @@ interface SearchResultsProps {
   >;
   loading: boolean;
   hasSearched: boolean;
-  observerRef: React.RefObject<HTMLDivElement>;
+  observerRef: React.RefObject<HTMLDivElement|null>;
   isMobile: boolean;
   error: string | null;
 }
@@ -85,7 +83,7 @@ export function SearchResults({
                   item.spotifyId
                 }-${index}`}
                 item={item}
-                index={index}
+                _index={index}
                 activeTab={activeTab}
                 imageFailed={currentTabData.imageFailed[index]}
                 getPosterUrl={getPosterUrl}

@@ -1,25 +1,26 @@
-"use client"
-
-import type React from "react"
-
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import type { TabType, TabDataType, TabDataWithSearchState } from "./search-page"
-import { MobileSearchView } from "./mobile-search-view"
+import type React from 'react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { TabDataType, TabType } from '..';
+import { MobileSearchView } from './mobile-search-view';
 
 interface SearchTabsProps {
-  tabs: TabType[]
-  activeTab: string
-  setActiveTab: (tab: string) => void
-  isMobile: boolean
+  tabs: TabType[];
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  isMobile: boolean;
   // Add props for mobile view
-  tabData?: TabDataWithSearchState
-  setTabData?: React.Dispatch<React.SetStateAction<{ [key: string]: TabDataType }>>
-  loading?: boolean
-  hasSearched?: boolean
-  observerRef?: React.RefObject<HTMLDivElement>
-  error?: string | null
-  isSearchEmpty?: boolean
+  tabData?: {
+    [key: string]: TabDataType;
+  };
+  setTabData?: React.Dispatch<
+    React.SetStateAction<{ [key: string]: TabDataType }>
+  >;
+  loading?: boolean;
+  hasSearched?: boolean;
+  observerRef?: React.RefObject<HTMLDivElement | null>;
+  error?: string | null;
+  isSearchEmpty?: boolean;
 }
 
 export function SearchTabs({
@@ -50,30 +51,30 @@ export function SearchTabs({
         error={error || null}
         isSearchEmpty={isSearchEmpty || false}
       />
-    )
+    );
   }
 
   // Desktop view
   return (
-    <div className="mb-4 w-full max-w-[100%] overflow-x-hidden flex items-center justify-center">
-      <div className="flex flex-row gap-4 overflow-x-auto snap-x snap-mandatory whitespace-nowrap  max-w-[100%] pb-1">
+    <div className='mb-4 flex w-full max-w-[100%] items-center justify-center overflow-x-hidden'>
+      <div className='flex max-w-[100%] snap-x snap-mandatory flex-row gap-4 overflow-x-auto pb-1 whitespace-nowrap'>
         {tabs.map((tab) => (
           <Button
             key={tab.value}
-            variant={activeTab === tab.value ? "default" : "outline"}
+            variant={activeTab === tab.value ? 'default' : 'outline'}
             onClick={() => setActiveTab(tab.value)}
             className={cn(
-              "snap-center px-2 py-1 sm:px-3 sm:py-2 lg:px-4 lg:py-2.5 text-xs sm:text-xs md:text-sm lg:text-base rounded-full min-w-[40px] sm:min-w-[50px] lg:min-w-[60px] flex-shrink-0 box-border",
+              'box-border min-w-[40px] flex-shrink-0 snap-center rounded-full px-2 py-1 text-xs sm:min-w-[50px] sm:px-3 sm:py-2 sm:text-xs md:text-sm lg:min-w-[60px] lg:px-4 lg:py-2.5 lg:text-base',
               activeTab === tab.value
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-accent",
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-background text-foreground hover:bg-accent'
             )}
-            aria-current={activeTab === tab.value ? "true" : "false"}
+            aria-current={activeTab === tab.value ? 'true' : 'false'}
           >
             {tab.label}
           </Button>
         ))}
       </div>
     </div>
-  )
+  );
 }

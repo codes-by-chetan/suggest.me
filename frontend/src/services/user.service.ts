@@ -34,6 +34,8 @@ const UserService = {
     apiService.get('relations/friends'),
   updateUserProfilePicture: async (data: any): Promise<ApiResponse<any>> =>
     apiService.post('user/avatar', data),
+  updateUserProfile: async (data: any): Promise<ApiResponse<any>> =>
+    apiService.post('user/update/profile', data),
 };
 
 export default UserService;

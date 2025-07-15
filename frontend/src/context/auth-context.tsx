@@ -98,6 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const success = await AuthService
       .login({ email, password })
       .then((res) => {
+        console.log("Login response:", res);
+        
         if (res.success && res.data) {
           localStorage.setItem("token", res.data.token);
           localStorage.setItem("tokenExpiry", res.data.expiryTime);

@@ -1,14 +1,12 @@
-"use client";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Music, Book, Film, Tv, Library } from "lucide-react";
-import type { SearchResultItem } from "@/interfaces/search.interface";
-import { useNavigate } from "react-router-dom";
-import VerifiedBadgeIcon from "@/components/profile/VerifiedBadgeIcon";
+import { useNavigate } from '@tanstack/react-router';
+import type { SearchResultItem } from '@/interfaces/search.interface';
+import { Music, Book, Film, Tv, Library } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import VerifiedBadgeIcon from '@/components/profile/VerifiedBadgeIcon';
 
 interface SearchResultItemProps {
   item: SearchResultItem;
-  index: number;
+  _index: number;
   activeTab: string;
   imageFailed: boolean;
   getPosterUrl: (item: SearchResultItem) => string;
@@ -17,7 +15,7 @@ interface SearchResultItemProps {
 
 export function SearchResultItemComponent({
   item,
-  index,
+  _index,
   activeTab,
   imageFailed,
   getPosterUrl,
@@ -27,45 +25,45 @@ export function SearchResultItemComponent({
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case "music":
-      case "songs":
-        return <Music className="h-12 w-8 text-muted-foreground" />;
-      case "book":
-        return <Book className="h-12 w-8 text-muted-foreground" />;
-      case "movie":
-        return <Film className="h-12 w-8 text-muted-foreground" />;
-      case "series":
-        return <Tv className="h-12 w-8 text-muted-foreground" />;
+      case 'music':
+      case 'songs':
+        return <Music className='text-muted-foreground h-12 w-8' />;
+      case 'book':
+        return <Book className='text-muted-foreground h-12 w-8' />;
+      case 'movie':
+        return <Film className='text-muted-foreground h-12 w-8' />;
+      case 'series':
+        return <Tv className='text-muted-foreground h-12 w-8' />;
       default:
-        return <Library className="h-12 w-8 text-muted-foreground" />;
+        return <Library className='text-muted-foreground h-12 w-8' />;
     }
   };
 
   const clipPlot = (plot: string | undefined) => {
-    if (!plot) return "";
+    if (!plot) return '';
     return plot.length > 40 ? `${plot.slice(0, 40)}...` : plot;
   };
 
   const handleItemClick = () => {
-    if (activeTab === "users") {
+    if (activeTab === 'users') {
       // Navigate to user profile
-      navigate(`/profile/${item._id}`);
+      navigate({ to: `/profile/${item._id}` });
     } else {
       // Navigate to content detail page based on category
       const category = item.category || activeTab;
-      let route = "";
+      let route = '';
 
       switch (category) {
-        case "movie":
+        case 'movie':
           route = `/movies/${item.imdbId || item._id || item.tmdbId}`;
           break;
-        case "series":
+        case 'series':
           route = `/series/${item.imdbId || item._id || item.tmdbId}`;
           break;
-        case "book":
+        case 'book':
           route = `/books/${item.googleBooksId || item._id}`;
           break;
-        case "music":
+        case 'music':
           route = `/music/${item.spotifyId || item._id}`;
           break;
         default:
@@ -81,63 +79,63 @@ export function SearchResultItemComponent({
           }
       }
 
-      navigate(route);
+      navigate({ to: route });
     }
   };
 
   const getDisplayName = () => {
-    if (activeTab === "users") {
+    if (activeTab === 'users') {
       if (item.fullName) {
         return `${item.fullName.firstName} ${item.fullName.lastName}`.trim();
       }
-      return item.profile?.displayName || "Unknown User";
+      return item.profile?.displayName || 'Unknown User';
     }
-    return item.title || item.name || "Unknown";
+    return item.title || item.name || 'Unknown';
   };
 
   const getAvatarUrl = () => {
-    if (activeTab === "users") {
-      return item.profile?.avatar?.url || item.profileImage?.url || "";
+    if (activeTab === 'users') {
+      return item.profile?.avatar?.url || item.profileImage?.url || '';
     }
-    return "";
+    return '';
   };
-  
+
   return (
     <div
-      className="flex items-start gap-2 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors w-full box-border overflow-hidden min-h-16"
-      role="listitem"
+      className='hover:bg-accent/50 box-border flex min-h-16 w-full cursor-pointer items-start gap-2 overflow-hidden rounded-md p-2 transition-colors'
+      role='listitem'
       onClick={handleItemClick}
     >
-      {activeTab === "users" ? (
+      {activeTab === 'users' ? (
         <>
-          <Avatar className="h-12 w-12 flex-shrink-0">
+          <Avatar className='h-12 w-12 flex-shrink-0'>
             {getAvatarUrl() ? (
               <AvatarImage
-                src={getAvatarUrl() || "/placeholder.svg"}
+                src={getAvatarUrl() || '/placeholder.svg'}
                 alt={getDisplayName()}
               />
             ) : (
               <AvatarFallback>
-                {getDisplayName().charAt(0) || "U"}
+                {getDisplayName().charAt(0) || 'U'}
               </AvatarFallback>
             )}
           </Avatar>
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <div className="flex items-center gap-1">
-              <p className="font-semibold text-sm line-clamp-2 break-words">
-              {getDisplayName()}
-            </p>
-            {item?.profile.isVerified && (
-                <VerifiedBadgeIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className='min-w-0 flex-1 overflow-hidden'>
+            <div className='flex items-center gap-1'>
+              <p className='line-clamp-2 text-sm font-semibold break-words'>
+                {getDisplayName()}
+              </p>
+              {item?.profile.isVerified && (
+                <VerifiedBadgeIcon className='h-4 w-4 sm:h-5 sm:w-5' />
               )}
             </div>
             {item.profile?.bio && (
-              <p className="text-xs text-muted-foreground truncate break-words">
+              <p className='text-muted-foreground truncate text-xs break-words'>
                 {clipPlot(item.profile.bio)}
               </p>
             )}
             {item.profile?.displayName && (
-              <p className="text-xs text-muted-foreground truncate break-words">
+              <p className='text-muted-foreground truncate text-xs break-words'>
                 {clipPlot(item.profile.displayName)}
               </p>
             )}
@@ -146,25 +144,25 @@ export function SearchResultItemComponent({
       ) : (
         <>
           {imageFailed || !getPosterUrl(item) ? (
-            <div className="h-12 w-8 flex items-center justify-center flex-shrink-0">
+            <div className='flex h-12 w-8 flex-shrink-0 items-center justify-center'>
               {getCategoryIcon(item.category || activeTab)}
             </div>
           ) : (
             <img
-              src={getPosterUrl(item) || "/placeholder.svg"}
+              src={getPosterUrl(item) || '/placeholder.svg'}
               alt={getDisplayName()}
-              className="h-12 w-8 object-cover rounded flex-shrink-0"
+              className='h-12 w-8 flex-shrink-0 rounded object-cover'
               onError={onImageError}
             />
           )}
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <p className="font-semibold text-sm line-clamp-2 break-words">
+          <div className='min-w-0 flex-1 overflow-hidden'>
+            <p className='line-clamp-2 text-sm font-semibold break-words'>
               {getDisplayName()}
             </p>
-            <p className="text-xs text-muted-foreground truncate break-words">
-              {item.category || activeTab} {item.year ? `(${item.year})` : ""}
+            <p className='text-muted-foreground truncate text-xs break-words'>
+              {item.category || activeTab} {item.year ? `(${item.year})` : ''}
             </p>
-            <p className="text-xs max-w-full text-muted-foreground truncate break-words">
+            <p className='text-muted-foreground max-w-full truncate text-xs break-words'>
               {clipPlot(item.plot)}
             </p>
           </div>

@@ -15,11 +15,18 @@ import {
   IconUserCog,
   IconUserOff,
   IconUsers,
-} from '@tabler/icons-react'
-import {  BookmarkIcon, BookOpenCheck, HomeIcon, User } from 'lucide-react'
-import { type SidebarData } from '../types'
-import suggestMeLogoDark from '@/assets/suggestMeLogoDark.png'
-import suggestMeLogoLight from '@/assets/suggestMeLogo.png'
+} from '@tabler/icons-react';
+import {
+  Bell,
+  BookmarkIcon,
+  BookOpenCheck,
+  HomeIcon,
+  Search,
+  User,
+} from 'lucide-react';
+import suggestMeLogoLight from '@/assets/suggestMeLogo.png';
+import suggestMeLogoDark from '@/assets/suggestMeLogoDark.png';
+import { SidebarData } from '../types';
 
 export const sidebarData: SidebarData = {
   user: {
@@ -30,7 +37,7 @@ export const sidebarData: SidebarData = {
   teams: [
     {
       name: 'Suggest.ME',
-      logo: {light: suggestMeLogoDark, dark:suggestMeLogoLight },
+      logo: { light: suggestMeLogoDark, dark: suggestMeLogoLight },
       plan: 'Suggest Content',
     },
   ],
@@ -67,8 +74,18 @@ export const sidebarData: SidebarData = {
         {
           title: 'My Watchlist',
           url: '/my-watchlist',
-          icon: BookmarkIcon
-        }
+          icon: BookmarkIcon,
+        },
+        {
+          title: 'Search',
+          url: '/search',
+          icon: Search,
+        },
+        {
+          title: 'Notifications',
+          url: '/notifications',
+          icon: Bell,
+        },
       ],
     },
     {
@@ -175,4 +192,4 @@ export const sidebarData: SidebarData = {
       ],
     },
   ],
-}
+};

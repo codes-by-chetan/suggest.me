@@ -30,7 +30,7 @@ const isTokenExpired = (token: string): boolean => {
 };
 
 // Refreshes the access token
-const refreshAccessToken = async (): Promise<string | null> => {
+const _refreshAccessToken = async (): Promise<string | null> => {
   try {
     const response = await axios.post(
       `${config.API_URL}/auth/refresh-token`,
@@ -64,9 +64,10 @@ const createApiClient = (BASE_URL: string): AxiosInstance => {
   // Request Interceptor: Adds authorization token and handles token refresh
   apiClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
-      let token = getAccessToken();
+      const token = getAccessToken();
       if (token && isTokenExpired(token)) {
-        token = await refreshAccessToken();
+        
+        // token = await refreshAccessToken();
       }
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
@@ -89,13 +90,13 @@ const createApiClient = (BASE_URL: string): AxiosInstance => {
         }
 
         originalRequest._retry = true;
-        const newToken = await refreshAccessToken();
-        if (!newToken) {
+        // const newToken = await refreshAccessToken();
+        // if (!newToken) {
           return Promise.reject(error);
-        }
+        // }
 
-        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-        return apiClient(originalRequest);
+        // originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        // return apiClient(originalRequest);
       }
       return Promise.reject(error);
     }
@@ -106,6 +107,8 @@ const createApiClient = (BASE_URL: string): AxiosInstance => {
 
 // Initialize the API client
 const BASE_URL = config.API_URL;
+console.log(BASE_URL);
+
 const apiClient = createApiClient(BASE_URL);
 
 // Retries a request with exponential backoff

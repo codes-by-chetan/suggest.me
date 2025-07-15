@@ -63,7 +63,7 @@ export const CustomTabsList = ({
             <TabsTrigger
               key={value}
               value={value}
-              className="flex items-center gap-1.5 rounded-full whitespace-nowrap px-3 py-1.5 text-xs data-[state=active]:bg-white data-[state=active]:dark:bg-primary-900"
+              className="flex items-center gap-1.5 rounded-full whitespace-nowrap px-3 py-1.5 text-xs data-[state=active]:bg-white data-[state=active]:dark:bg-blue-950"
             >
               {Icon && <Icon className="h-4 w-4" />}
               <span className="hidden min-[470px]:inline">{label}</span>
@@ -80,7 +80,7 @@ export const CustomTabsList = ({
             <TabsTrigger
               key={value}
               value={value}
-              className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:dark:bg-primary-900"
+              className="flex items-center gap-2 rounded-full data-[state=active]:bg-white data-[state=active]:dark:bg-blue-900"
             >
               {Icon && <Icon className="h-4 w-4" />}
               <span className="hidden md:inline">{label}</span>
