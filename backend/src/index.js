@@ -19,7 +19,13 @@ connectDB()
 
         io = new Server(server, {
             cors: {
-                origin: "*", // Adjust this based on your frontend URL
+                origin: [
+                    "http://localhost:5173",
+                    "http://192.168.0.39:5173",
+                    "http://localhost:5174",
+                    "https://suggest-me-prototype.netlify.app/",
+                    "https://suggest-me-prototype.netlify.app",
+                ],
                 credentials: true,
             },
         });
