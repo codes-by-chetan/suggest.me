@@ -63,7 +63,7 @@ export default function AuthenticationFallback({
                 className='flex flex-col gap-3 sm:flex-row'
               >
                 <Button
-                  onClick={() => navigate({ to: '/sign-in' })}
+                  onClick={() => navigate({ to: '/sign-in-2' })}
                   className='flex-1 gap-2 rounded-full'
                   size='lg'
                 >

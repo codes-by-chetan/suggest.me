@@ -29,6 +29,7 @@ import AuthDialog from "@/components/layout/AuthDialog";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useAuth } from "@/context/auth-context";
 import ContentListService from "@/services/contentList.service";
+import { navigateBack } from "@/utils/navigate-back";
 
 const formatPlays = (plays: string): string => {
   const num = parseInt(plays.replace(/,/g, ""));
@@ -211,7 +212,7 @@ const MusicDetailsPage = () => {
     return (
       <main className="w-full mx-auto pb-[10vh] pt-0 px-4 sm:px-6 lg:px-8">
         <div className="py-6">
-          <Button variant="ghost" className="mb-4" onClick={() => {}}>
+          <Button variant="ghost" className="mb-4" onClick={navigateBack}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <div className="text-center py-12">
@@ -229,7 +230,7 @@ const MusicDetailsPage = () => {
   return (
     <main className="w-full mx-auto pb-[10vh] pt-0 px-4 sm:px-6 lg:px-8">
       <div className="py-6">
-        <Button variant="ghost" className="mb-4" onClick={() => navigate({to: ".."})}>
+        <Button variant="ghost" className="mb-4" onClick={navigateBack}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
 

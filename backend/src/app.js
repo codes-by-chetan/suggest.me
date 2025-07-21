@@ -11,7 +11,7 @@ import { fileURLToPath } from "url";
 
 const app = express();
 const corsConfig = cors({
-  origin: ["http://localhost:5173", "http://192.168.0.39:5173", "http://localhost:5174","https://suggest-me-prototype.netlify.app/"], // allow both localhost and LAN access
+  origin: ["http://localhost:5173", "http://192.168.0.39:5173", "http://localhost:5174","https://suggest-me-prototype.netlify.app/", "https://suggest-me-prototype.netlify.app"], // allow both localhost and LAN access
   credentials: true,
 });
 
