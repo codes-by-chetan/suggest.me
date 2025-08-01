@@ -29,8 +29,11 @@ const envVarSchema = joi
         GOOGLE_API_KEY: joi.string().description("Google API Access Key"),
         OPEN_AI_API_KEY: joi.string().description("OPEN AI API Access Key"),
         SERP_API_KEY: joi.string().description("Serp API Access Key"),
-        ENABLE_CACHE_WRITE:joi.string().description("Google API Access Key"),
-        OMDB_API_KEY:joi.string().description("OMDB API Access Key"),
+        ENABLE_CACHE_WRITE: joi.string().description("Google API Access Key"),
+        OMDB_API_KEY: joi.string().description("OMDB API Access Key"),
+        EMAIL_SERVICE: joi.string().description("EMAIL_SERVICE name"),
+        EMAIL_ID: joi.string().description("EMAIL_SERVICE email id"),
+        EMAIL_PASSKEY: joi.string().description("EMAIL_SERVICE passkey"),
     })
     .unknown();
 
@@ -87,9 +90,14 @@ const config = {
     omdb: {
         apiKey: envVars.OMDB_API_KEY,
     },
-    cache:{
-        enableCacheWrite: envVars.ENABLE_CACHE_WRITE
-    }
+    cache: {
+        enableCacheWrite: envVars.ENABLE_CACHE_WRITE,
+    },
+    email: {
+        service: envVars.EMAIL_SERVICE,
+        id: envVars.EMAIL_ID,
+        passkey: envVars.EMAIL_PASSKEY,
+    },
 };
 
 export default config;

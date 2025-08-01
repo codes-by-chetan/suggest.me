@@ -8,7 +8,7 @@ import { slugify as translitSlug } from "transliteration";
 import OpenAI from "openai";
 import { load } from "cheerio";
 import { io } from "../index.js"; // Import io instance
-
+import { randomUUID } from "crypto";
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: config.openAi.apiKey });
 
