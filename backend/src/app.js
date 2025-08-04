@@ -8,27 +8,33 @@ import logger from "./config/logger.config.js";
 import mainRouter from "./routes/index.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import passport from "passport";
+import session from "express-session";
 
 const app = express();
 const corsConfig = cors({
-  origin: ["http://localhost:5173", "http://192.168.0.39:5173", "http://localhost:5174","https://suggest-me-prototype.netlify.app/", "https://suggest-me-prototype.netlify.app"], // allow both localhost and LAN access
-  credentials: true,
+    origin: ["http://localhost:5173", "http://192.168.0.39:5173", "http://localhost:5174", "https://suggest-me-prototype.netlify.app/", "https://suggest-me-prototype.netlify.app"],
+    credentials: true,
 });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// console.log(
-//     import.meta.url,
-//     "\nfilename: ",
-//     __filename,
-//     "\ndirname: ",
-//     __dirname,
-//     "\njoined path: ",
-//     path.join(__dirname, "../public")
-// );
-
 app.set("trust proxy", true);
+
+// Initialize session for Passport
+app.use(
+    session({
+        secret: process.env.SESSION_SECRET || "your_session_secret",
+        resave: false,
+        saveUninitialized: false,
+        cookie: { secure: process.env.NODE_ENV === "production" },
+    })
+);
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Use morgan to log requests with colors
 app.use(logger.requestLogger);

@@ -18,10 +18,23 @@ router.post(
     controllers.authController.login
 );
 
+// Social login routes
+router.get("/google", controllers.authController.googleLogin);
+router.get("/google/callback", controllers.authController.googleCallback);
+router.get("/facebook", controllers.authController.facebookLogin);
+router.get("/facebook/callback", controllers.authController.facebookCallback);
+
+// Verify social token endpoint
+router.post(
+    "/verify-social-token",
+    controllers.authController.verifySocialToken
+);
+
 router.use(authMiddleware);
 // Change password endpoint
 router.post("/change-password", controllers.authController.changePassword);
 router.get("/refresh-user", controllers.authController.getUserDetails);
 router.get("/logout", controllers.authController.logout);
+
 const authRouter = router;
 export default authRouter;

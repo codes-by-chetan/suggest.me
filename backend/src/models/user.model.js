@@ -204,12 +204,6 @@ userSchema.methods.generateAccessToken = async function (req) {
     }
 
     const expiresAt = moment().add(expirySeconds, "seconds").toDate();
-    console.log(
-        "Generated expiresAt:",
-        expiresAt,
-        "Expiry seconds:",
-        expirySeconds
-    ); // Debug log
 
     const token = jwt.sign(
         {

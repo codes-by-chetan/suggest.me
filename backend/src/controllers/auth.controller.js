@@ -4,6 +4,8 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import httpStatus from "http-status";
+import passport from "passport";
+import config from "../config/env.config.js";
 
 const register = asyncHandler(async (req, res) => {
     const userData = await services.authService.registerUser(req.body);
@@ -26,14 +28,51 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
     const token = await services.authService.loginWithEmailAndPassword(req);
-
     const response = new ApiResponse(
         httpStatus.OK,
         token,
         "Login Successfull!!!"
     );
-
     res.status(httpStatus.OK).json(response);
+});
+
+// Social login handlers
+const googleLogin = passport.authenticate("google", {
+    scope: ["profile", "email"],
+});
+
+const googleCallback = asyncHandler(async (req, res) => {
+    const token = await services.authService.socialLogin(req.user, req);
+    const response = new ApiResponse(
+        httpStatus.OK,
+        token,
+        "Google login successful"
+    );
+    res.status(httpStatus.OK).json(response);
+});
+
+const facebookLogin = passport.authenticate("facebook", {
+    scope: ["email"],
+});
+
+const facebookCallback = asyncHandler(async (req, res) => {
+    const token = await services.authService.socialLogin(req.user, req);
+    const response = new ApiResponse(
+        httpStatus.OK,
+        token,
+        "Facebook login successful"
+    );
+    res.status(httpStatus.OK).json(response);
+});
+
+// Verify social token
+const verifySocialToken = asyncHandler(async (req, res) => {
+    const { provider, token } = req.body;
+    const authTokens = await services.authService.verifySocialToken(provider, token, req);
+    
+    // Redirect to frontend callback with provider and token
+    const redirectUrl = `${config.frontend_url}/auth/callback?provider=${provider}&token=${authTokens.token}`;
+    res.redirect(redirectUrl);
 });
 
 // Change password callback function
@@ -77,7 +116,6 @@ const verifyRegistrationToken = asyncHandler(async (req, res) => {
 
     if (token !== registrationToken) {
         console.log(token, " <===> ", registrationToken);
-
         throw new ApiError(401, "Invalid registration token", "/auth/sign-up");
     }
 
@@ -116,6 +154,11 @@ const logout = asyncHandler(async (req, res) => {
 const authController = {
     register,
     login,
+    googleLogin,
+    googleCallback,
+    facebookLogin,
+    facebookCallback,
+    verifySocialToken,
     changePassword,
     isAdmin,
     verifyUser,

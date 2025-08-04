@@ -27,13 +27,22 @@ const envVarSchema = joi
         TMDB_API_KEY: joi.string().description("TMDB API Access Key"),
         TMDB_AUTH_TOKEN: joi.string().description("TMDB Access Token"),
         GOOGLE_API_KEY: joi.string().description("Google API Access Key"),
+        GOOGLE_OAUTH_CLIENT_ID: joi
+            .string()
+            .description("Google oauth client id"),
+        GOOGLE_OAUTH_CLIENT_SECRET: joi
+            .string()
+            .description("Google oauth client secret"),
         OPEN_AI_API_KEY: joi.string().description("OPEN AI API Access Key"),
         SERP_API_KEY: joi.string().description("Serp API Access Key"),
-        ENABLE_CACHE_WRITE: joi.string().description("Google API Access Key"),
+        ENABLE_CACHE_WRITE: joi.string().description("enable cache write flag"),
         OMDB_API_KEY: joi.string().description("OMDB API Access Key"),
         EMAIL_SERVICE: joi.string().description("EMAIL_SERVICE name"),
         EMAIL_ID: joi.string().description("EMAIL_SERVICE email id"),
         EMAIL_PASSKEY: joi.string().description("EMAIL_SERVICE passkey"),
+        META_CLIENT_ID: joi.string().description("META app id"),
+        META_CLIENT_SECRET: joi.string().description("META app secret"),
+        SELF_HOST_URL: joi.string().description("servers self host url"),
     })
     .unknown();
 
@@ -83,6 +92,10 @@ const config = {
     google: {
         apiKey: envVars.GOOGLE_API_KEY,
         serpApiKey: envVars.SERP_API_KEY,
+        oAuth: {
+            clientId: envVars.GOOGLE_OAUTH_CLIENT_ID,
+            secret: envVars.GOOGLE_OAUTH_CLIENT_SECRET,
+        },
     },
     openAi: {
         apiKey: envVars.OPEN_AI_API_KEY,
@@ -97,6 +110,17 @@ const config = {
         service: envVars.EMAIL_SERVICE,
         id: envVars.EMAIL_ID,
         passkey: envVars.EMAIL_PASSKEY,
+    },
+    meta: {
+        app: {
+            id: envVars.META_APP_ID,
+            secret: envVars.META_APP_SECRET,
+        },
+    },
+    self: {
+        host: {
+            url: envVars.SELF_HOST_URL,
+        },
     },
 };
 

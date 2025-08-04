@@ -45,7 +45,7 @@ connectDB()
                 pass: config.email.passkey,
             },
         });
-        sendTestMail({ port, host, url: serverUrl });
+        // sendTestMail({ port, host, url: serverUrl });
     })
     .catch((err) => {
         logger.logMessage("error", "Error While Creating Server!!! : ", err);

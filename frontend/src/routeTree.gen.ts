@@ -32,6 +32,7 @@ import { Route as AuthenticatedSettingsIndexImport } from './routes/_authenticat
 import { Route as AuthenticatedSearchIndexImport } from './routes/_authenticated/search/index'
 import { Route as AuthenticatedNotificationsIndexImport } from './routes/_authenticated/notifications/index'
 import { Route as AuthenticatedHelpCenterIndexImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedFilePreviewIndexImport } from './routes/_authenticated/file-preview/index'
 import { Route as AuthenticatedChatsIndexImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedSettingsNotificationsImport } from './routes/_authenticated/settings/notifications'
@@ -237,6 +238,13 @@ const AuthenticatedHelpCenterIndexRoute =
   AuthenticatedHelpCenterIndexImport.update({
     id: '/help-center/',
     path: '/help-center/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+
+const AuthenticatedFilePreviewIndexRoute =
+  AuthenticatedFilePreviewIndexImport.update({
+    id: '/file-preview/',
+    path: '/file-preview/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -456,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatsIndexImport
       parentRoute: typeof AuthenticatedRouteImport
     }
+    '/_authenticated/file-preview/': {
+      id: '/_authenticated/file-preview/'
+      path: '/file-preview'
+      fullPath: '/file-preview'
+      preLoaderRoute: typeof AuthenticatedFilePreviewIndexImport
+      parentRoute: typeof AuthenticatedRouteImport
+    }
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
@@ -594,6 +609,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
+  AuthenticatedFilePreviewIndexRoute: typeof AuthenticatedFilePreviewIndexRoute
   AuthenticatedHelpCenterIndexRoute: typeof AuthenticatedHelpCenterIndexRoute
   AuthenticatedNotificationsIndexRoute: typeof AuthenticatedNotificationsIndexRoute
   AuthenticatedSearchIndexRoute: typeof AuthenticatedSearchIndexRoute
@@ -615,6 +631,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,
+  AuthenticatedFilePreviewIndexRoute: AuthenticatedFilePreviewIndexRoute,
   AuthenticatedHelpCenterIndexRoute: AuthenticatedHelpCenterIndexRoute,
   AuthenticatedNotificationsIndexRoute: AuthenticatedNotificationsIndexRoute,
   AuthenticatedSearchIndexRoute: AuthenticatedSearchIndexRoute,
@@ -658,6 +675,7 @@ export interface FileRoutesByFullPath {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/file-preview': typeof AuthenticatedFilePreviewIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/search': typeof AuthenticatedSearchIndexRoute
@@ -693,6 +711,7 @@ export interface FileRoutesByTo {
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/file-preview': typeof AuthenticatedFilePreviewIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/notifications': typeof AuthenticatedNotificationsIndexRoute
   '/search': typeof AuthenticatedSearchIndexRoute
@@ -731,6 +750,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/file-preview/': typeof AuthenticatedFilePreviewIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/notifications/': typeof AuthenticatedNotificationsIndexRoute
   '/_authenticated/search/': typeof AuthenticatedSearchIndexRoute
@@ -770,6 +790,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/apps'
     | '/chats'
+    | '/file-preview'
     | '/help-center'
     | '/notifications'
     | '/search'
@@ -804,6 +825,7 @@ export interface FileRouteTypes {
     | '/settings/notifications'
     | '/apps'
     | '/chats'
+    | '/file-preview'
     | '/help-center'
     | '/notifications'
     | '/search'
@@ -840,6 +862,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/notifications'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
+    | '/_authenticated/file-preview/'
     | '/_authenticated/help-center/'
     | '/_authenticated/notifications/'
     | '/_authenticated/search/'
@@ -916,6 +939,7 @@ export const routeTree = rootRoute
         "/_authenticated/",
         "/_authenticated/apps/",
         "/_authenticated/chats/",
+        "/_authenticated/file-preview/",
         "/_authenticated/help-center/",
         "/_authenticated/notifications/",
         "/_authenticated/search/",
@@ -999,6 +1023,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/chats/": {
       "filePath": "_authenticated/chats/index.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/file-preview/": {
+      "filePath": "_authenticated/file-preview/index.tsx",
       "parent": "/_authenticated"
     },
     "/_authenticated/help-center/": {
