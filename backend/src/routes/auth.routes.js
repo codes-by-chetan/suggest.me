@@ -18,11 +18,6 @@ router.post(
     controllers.authController.login
 );
 
-// Social login routes
-router.get("/google", controllers.authController.googleLogin);
-router.get("/google/callback", controllers.authController.googleCallback);
-router.get("/facebook", controllers.authController.facebookLogin);
-router.get("/facebook/callback", controllers.authController.facebookCallback);
 
 // Verify social token endpoint
 router.post(

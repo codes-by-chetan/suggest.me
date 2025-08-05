@@ -8,8 +8,7 @@ import logger from "./config/logger.config.js";
 import mainRouter from "./routes/index.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import passport from "passport";
-import session from "express-session";
+
 
 const app = express();
 const corsConfig = cors({
@@ -21,20 +20,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.set("trust proxy", true);
-
-// Initialize session for Passport
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET || "your_session_secret",
-        resave: false,
-        saveUninitialized: false,
-        cookie: { secure: process.env.NODE_ENV === "production" },
-    })
-);
-
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Use morgan to log requests with colors
 app.use(logger.requestLogger);

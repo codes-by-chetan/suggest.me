@@ -55,22 +55,7 @@ const loginWithEmailAndPassword = async (req) => {
     return token;
 };
 
-/**
- * Handles social login by generating a token for an authenticated user.
- *
- * @param {Object} user - The authenticated user object.
- * @param {Object} req - The request object.
- * @returns {Promise<Object>} - A promise that resolves to the access token and expiry.
- */
-const socialLogin = async (user, req) => {
-    if (!user) {
-        throw new ApiError(httpStatus.NOT_FOUND, "User not found");
-    }
-    if (user.status === constants.UserStatus.Inactive) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, "User is inactive");
-    }
-    return await user.generateAccessToken(req);
-};
+
 
 /**
  * Verifies a social login token and returns a JWT for the user.
@@ -79,7 +64,7 @@ const socialLogin = async (user, req) => {
  * @param {string} token - The social provider's access token.
  * @param {Object} req - The request object.
  * @returns {Promise<Object>} - A promise that resolves to the access token and expiry.
- * @throws {ApiError} - Throws an error if the token is invalid or user creation fails.
+ * @throws {ApiError} - Throws an error if the token is invalid.
  */
 const verifySocialToken = async (provider, token, req) => {
     let userData;
@@ -88,11 +73,14 @@ const verifySocialToken = async (provider, token, req) => {
         try {
             const ticket = await googleClient.verifyIdToken({
                 idToken: token,
-                audience: config.google.oAuth.clientId,
+                audience: config.google_client_id,
             });
             const payload = ticket.getPayload();
             if (!payload) {
-                throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid Google token, bhai!");
+                throw new ApiError(
+                    httpStatus.UNAUTHORIZED,
+                    "Invalid Google token, bhai!"
+                );
             }
             userData = {
                 oauthId: payload.sub,
@@ -105,7 +93,10 @@ const verifySocialToken = async (provider, token, req) => {
             };
         } catch (error) {
             console.error("Google token verification error:", error);
-            throw new ApiError(httpStatus.UNAUTHORIZED, "Google token verification failed, kuch toh gadbad hai!");
+            throw new ApiError(
+                httpStatus.UNAUTHORIZED,
+                "Google token verification failed, kuch toh gadbad hai!"
+            );
         }
     } else if (provider === "facebook") {
         try {
@@ -114,7 +105,10 @@ const verifySocialToken = async (provider, token, req) => {
             );
             const fbData = response.data;
             if (!fbData.id) {
-                throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid Facebook token, bhai!");
+                throw new ApiError(
+                    httpStatus.UNAUTHORIZED,
+                    "Invalid Facebook token, bhai!"
+                );
             }
             userData = {
                 oauthId: fbData.id,
@@ -127,13 +121,19 @@ const verifySocialToken = async (provider, token, req) => {
             };
         } catch (error) {
             console.error("Facebook token verification error:", error);
-            throw new ApiError(httpStatus.UNAUTHORIZED, "Facebook token verification failed, kuch toh gadbad hai!");
+            throw new ApiError(
+                httpStatus.UNAUTHORIZED,
+                "Facebook token verification failed, kuch toh gadbad hai!"
+            );
         }
     } else {
-        throw new ApiError(httpStatus.BAD_REQUEST, "Invalid provider, yeh kya bakchodi hai?");
+        throw new ApiError(
+            httpStatus.BAD_REQUEST,
+            "Invalid provider, yeh kya bakchodi hai?"
+        );
     }
 
-    // Find or create user
+    // Find user by oauthId and oauthProvider
     let user = await models.User.findOne({
         oauthId: userData.oauthId,
         oauthProvider: userData.oauthProvider,
@@ -141,27 +141,47 @@ const verifySocialToken = async (provider, token, req) => {
     });
 
     if (!user) {
-        // Check if email is taken by non-OAuth user
-        const emailTaken = await models.User.isEmailTaken(userData.email);
-        if (emailTaken) {
-            throw new ApiError(httpStatus.BAD_REQUEST, "Email already in use with different login method!");
-        }
-
-        user = await services.userService.createUser({
-            fullName: userData.fullName,
+        // Check if email exists
+        user = await models.User.findOne({
             email: userData.email,
-            oauthId: userData.oauthId,
-            oauthProvider: userData.oauthProvider,
-            role: constants.UserRoles.USER,
-            status: constants.UserStatus.Active,
+            deleted: { $ne: true },
         });
-    }
 
-    if (user.status === constants.UserStatus.Inactive) {
+        if (user) {
+            // Email exists, update with OAuth details and generate token
+            if (user.status === constants.UserStatus.Inactive) {
+                throw new ApiError(
+                    httpStatus.UNAUTHORIZED,
+                    "User is inactive, bhai!"
+                );
+            }
+            user.oauthId = userData.oauthId;
+            user.oauthProvider = userData.oauthProvider;
+            await user.save();
+        } else {
+            // Create new user
+            user = await services.userService.createUser({
+                fullName: userData.fullName,
+                email: userData.email,
+                oauthId: userData.oauthId,
+                oauthProvider: userData.oauthProvider,
+                role: constants.UserRoles.USER,
+                status: constants.UserStatus.Active,
+            });
+        }
+    } else if (user.status === constants.UserStatus.Inactive) {
         throw new ApiError(httpStatus.UNAUTHORIZED, "User is inactive, bhai!");
     }
-
-    return await user.generateAccessToken(req);
+    const authTokens = await user.generateAccessToken(req);
+    const choosenFields = {
+        fullName: user.fullName,
+        email: user.email,
+        contactNumber: user.contactNumber,
+        role: user.role,
+        fullNameString: user.fullNameString,
+        avatar: user?.profile?.avatar,
+    };
+    return { user: choosenFields, ...authTokens };
 };
 
 /**
@@ -250,7 +270,6 @@ const logout = async (userId, token) => {
 
 const authService = {
     loginWithEmailAndPassword,
-    socialLogin,
     verifySocialToken,
     registerOrganisation,
     registerUser,
