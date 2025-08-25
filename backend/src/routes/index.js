@@ -13,6 +13,7 @@ import musicRouter from "./music.routes.js";
 import researchRouter from "./research.routes.js";
 import suggestionRouter from "./suggestion.routes.js";
 import chatRouter from "./chat.routes.js";
+import trendingRouter from "./trending.routes.js";
 const router = express.Router();
 
 // Routes index
@@ -72,7 +73,11 @@ const defaultRoutes = [
     {
         path: "/chats",
         route: chatRouter,
-    }
+    },
+    {
+        path: "/trending",
+        route: trendingRouter,
+    },
 ];
 
 defaultRoutes.forEach((route) => {

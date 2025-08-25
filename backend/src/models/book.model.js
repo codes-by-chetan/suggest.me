@@ -48,6 +48,7 @@ const bookSchema = new mongoose.Schema(
                 "Poetry",
                 "Play",
                 "Other",
+                "paperback",
             ],
             required: true,
         },

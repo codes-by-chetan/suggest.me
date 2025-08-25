@@ -10,6 +10,7 @@ import researchService from "./research.service.js";
 import searchService from "./search.service.js";
 import seriesService from "./series.service.js";
 import suggestionService from "./suggestion.service.js";
+import trendingService from "./trending.service.js";
 import userService from "./user.service.js";
 import userContentService from "./userContent.service.js";
 import userKeyService from "./userKey.service.js";
@@ -33,7 +34,8 @@ const services = {
     encryptionKeyService,
     messageService,
     userKeyService,
-    userContentService
+    userContentService,
+    trendingService,
 };
 
 export default services;
