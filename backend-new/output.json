@@ -1,0 +1,425 @@
+{
+    "statusCode": 200,
+    "data": {
+        "results": {
+            "movie": {
+                "data": [
+                    {
+                        "_id": "682f2447693f11824a893560",
+                        "title": "Dashavatar",
+                        "slug": "dashavatar",
+                        "year": 2008,
+                        "poster": {
+                            "url": "https://image.tmdb.org/t/p/w500/i1hOuoNpzbFIa6ZjTAoSkbvfnKv.jpg",
+                            "publicId": "/i1hOuoNpzbFIa6ZjTAoSkbvfnKv.jpg"
+                        },
+                        "director": [
+                            "682f2446693f11824a893510"
+                        ],
+                        "writers": [
+                            "682f2446693f11824a893510",
+                            "682f2446693f11824a893517"
+                        ],
+                        "references": {
+                            "tmdbId": "32137"
+                        },
+                        "cast": [
+                            {
+                                "person": "682f2447693f11824a893526",
+                                "character": "Narrator (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a893530",
+                                "character": "Lord Vishnu (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a89354d",
+                                "character": "Narad (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a893546",
+                                "character": "Apsara (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a893541",
+                                "character": "Bali Raja (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a893553",
+                                "character": "Parshuram (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a893528",
+                                "character": "Hiranakshyapu (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a893533",
+                                "character": "Lord Indra (voice)"
+                            },
+                            {
+                                "person": "682f2447693f11824a89353b",
+                                "character": "Kansa (voice)"
+                            }
+                        ],
+                        "matchReason": "Text fields"
+                    },
+                    {
+                        "tmdbId": 32137,
+                        "imdbId": "",
+                        "title": "Dashavatar",
+                        "slug": "dashavatar",
+                        "poster": "https://image.tmdb.org/t/p/w500/i1hOuoNpzbFIa6ZjTAoSkbvfnKv.jpg",
+                        "plot": "Two children are transported through time to learn about the 10 avatars of Lord Vishnu and discover that Vishnu took on various incarnations to combat evil in every era.",
+                        "year": 2008,
+                        "matchReason": "TMDB API"
+                    },
+                    {
+                        "tmdbId": 17888,
+                        "imdbId": "",
+                        "title": "Dasavatharam",
+                        "slug": "dasavatharam",
+                        "poster": "https://image.tmdb.org/t/p/w500/6JVJEJmFb0cL7r7p00BvNDeC70Y.jpg",
+                        "plot": "Bio-technologist Govind K Somaiyya sets about on a precarious journey to India to retrieve a vial containing a deadly virus and prevent it from reaching the wrong hands of an ex-CIA agent and deadly assassins.",
+                        "year": 2008,
+                        "matchReason": "TMDB API"
+                    }
+                ],
+                "total": 3
+            },
+            "series": {
+                "data": [],
+                "total": 0
+            },
+            "book": {
+                "data": [
+                    {
+                        "googleBooksId": "TBUcyYZDsO0C",
+                        "title": "Nishnaabemwin Reference Grammar",
+                        "slug": "nishnaabemwin-reference-grammar",
+                        "poster": "http://books.google.com/books/content?id=TBUcyYZDsO0C&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "Randy Valentine",
+                        "year": 2001,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "2bfwBgAAQBAJ",
+                        "title": "Monatsschrift Kinderheilkunde",
+                        "slug": "monatsschrift-kinderheilkunde",
+                        "poster": "http://books.google.com/books/content?id=2bfwBgAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "K. D. Bachmann, H. Berger, J. Bierich, D. Boda, H.-J. Bremer, J. Brodehl, G. R. Burgio, K. Fischer, E. Gladtke, B. Hadorn, B. Hagberg, N. Hallman, H. G. Hansen, H. Harbauer, G.-A. von Harnack, W. C. Hecker, H. Helge, W. H. Hitzig, E. Huth, E. Kleihauer, W. Künzer, M. A. Lassrich, B. Leiber, B. Lindquist, W. Marget, J. Oehme, H. Olbing, R. A. Pfeiffer, A. Prader, K. Riegel, E. Rossi, K. Schärer, E. Schmidt, F.-J. Schulte, H. Spiess, J. Spranger, G. Stalder, U. Stephan, J. Stoermer, J. Ströder, W. Teller, R. Zetterström, E. Zweymüller",
+                        "year": 2013,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "MQ2WDwAAQBAJ",
+                        "title": "To Love Ru Vol. 13",
+                        "slug": "to-love-ru-vol-13",
+                        "poster": "http://books.google.com/books/content?id=MQ2WDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "Saki Hasemi, Kentaro Yabuki",
+                        "year": 2019,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "g4gREQAAQBAJ",
+                        "title": "On The Language Of The Gypsies In Russia (Folklore History Series)",
+                        "slug": "on-the-language-of-the-gypsies-in-russia-folklore-history-series-",
+                        "poster": "http://books.google.com/books/content?id=g4gREQAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "D. Fearon Ranking",
+                        "year": 2024,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "ti5CDwAAQBAJ",
+                        "title": "The Love and Creed of Sae Maki",
+                        "slug": "the-love-and-creed-of-sae-maki",
+                        "poster": "http://books.google.com/books/content?id=ti5CDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "Tohru Uchimizu",
+                        "year": null,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "yXdIAAAAYAAJ",
+                        "title": "Journal of the Gypsy Lore Society",
+                        "slug": "journal-of-the-gypsy-lore-society",
+                        "poster": "http://books.google.com/books/content?id=yXdIAAAAYAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "Gypsy Lore Society",
+                        "year": 1892,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "-LeVPUZL4rUC",
+                        "title": "Second All-Union Conference on Photosynthesis",
+                        "slug": "second-all-union-conference-on-photosynthesis",
+                        "poster": "http://books.google.com/books/content?id=-LeVPUZL4rUC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "",
+                        "year": 1957,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "0ImFLPxjME0C",
+                        "title": "Imprisoned in Uzbekistan",
+                        "slug": "imprisoned-in-uzbekistan",
+                        "poster": "http://books.google.com/books/content?id=0ImFLPxjME0C&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "United States. Congress. Commission on Security and Cooperation in Europe",
+                        "year": 2015,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "T9qFZQH4_bkC",
+                        "title": "The October 1987 Market Break",
+                        "slug": "the-october-1987-market-break",
+                        "poster": "http://books.google.com/books/content?id=T9qFZQH4_bkC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "United States. Securities and Exchange Commission. Division of Market Regulation",
+                        "year": 1988,
+                        "matchReason": "Google Books API"
+                    },
+                    {
+                        "googleBooksId": "KklSEAAAQBAJ",
+                        "title": "Systems, Decision and Control in Energy III",
+                        "slug": "systems-decision-and-control-in-energy-iii",
+                        "poster": "http://books.google.com/books/content?id=KklSEAAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
+                        "plot": "Artur Zaporozhets",
+                        "year": 2021,
+                        "matchReason": "Google Books API"
+                    }
+                ],
+                "total": 10
+            },
+            "music": {
+                "data": [
+                    {
+                        "spotifyId": "5pkaQ5pS44JGsA8chmUQzk",
+                        "title": "Rayini Maatram",
+                        "slug": "rayini-maatram",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2734e5ea08766b1c8b4249fe1e3",
+                        "plot": "Himesh Reshammiya, Hariharan - Dhasavathaaram (Telugu) (Original Motion Picture Soundtrack)",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "7cEbOdPHth4Ca2Qejq55if",
+                        "title": "Dashavatar",
+                        "slug": "dashavatar",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b273460fe6f2972b44fc069c3fec",
+                        "plot": "Narci, Bhuvan Sharma, Ezik - Dashavatar",
+                        "year": 2020,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "7008zrsudcCrPNCW1gauAe",
+                        "title": "Dashavatar",
+                        "slug": "dashavatar",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b273fe38cd5336bbaba893531346",
+                        "plot": "Shankar Mahadevan, Shreya Ghoshal - Dashavatar",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "2wrAEmJ6C5P5R2PDpUdtxR",
+                        "title": "Dashavatar Stotram-Pralayapayodhijale",
+                        "slug": "dashavatar-stotram-pralayapayodhijale",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2731eb3291b629d428be713fba2",
+                        "plot": "Sanatana Bharat, Upadhyay, Amrita Chaturvedi - Dashavatar Stotram-Pralayapayodhijale",
+                        "year": 2024,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "3enDl9NExaF70oyUFs50Ms",
+                        "title": "Dashavatar Stotram-Adi Shankaracharya Virachitam",
+                        "slug": "dashavatar-stotram-adi-shankaracharya-virachitam",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b273fddb817417cd1406069d4a0d",
+                        "plot": "Amrita Chaturvedi - Dashavatar Stotram-Adi Shankaracharya Virachitam",
+                        "year": 2025,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "3n0944L23I5MwduK8tzZ1C",
+                        "title": "Mawa Bro",
+                        "slug": "mawa-bro",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2739029dd526906012c8d07e001",
+                        "plot": "Ram Miriyala - Mawa Bro (From \"Das Ka Dhamki\")",
+                        "year": 2023,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "1uJFj9IFo8h9VkP0slzuMF",
+                        "title": "Om Namo Narayan",
+                        "slug": "om-namo-narayan",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2739e3db0d80126ce698dd877b4",
+                        "plot": "Himesh Reshammiya, Hariharan - Dashavtar - Hindi (Original Motion Picture Soundtrack)",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "5hYmazOzOj3U7bjdID55ku",
+                        "title": "Oh...Ho...Sanam",
+                        "slug": "oh-ho-sanam",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b27316bfecef5db3a7f2a2500fa9",
+                        "plot": "Kamal Haasan, Mahalakshmi Iyer - Dhasavathaaram-Tamil",
+                        "year": 2009,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "0W6rzOcmUJpBMqFZEt7qQM",
+                        "title": "Mukundha Mukundha",
+                        "slug": "mukundha-mukundha",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2734e5ea08766b1c8b4249fe1e3",
+                        "plot": "Himesh Reshammiya, Sadhana Sargam, Kamal Haasan - Dhasavathaaram (Telugu) (Original Motion Picture Soundtrack)",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "66HrRSmRyMdzf60QISnLlL",
+                        "title": "Dhasavathaaram (Telugu) (Original Motion Picture Soundtrack)",
+                        "slug": "dhasavathaaram-telugu-original-motion-picture-soundtrack-",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2734e5ea08766b1c8b4249fe1e3",
+                        "plot": "Himesh Reshammiya",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    }
+                ],
+                "total": 29
+            },
+            "songs": {
+                "data": [
+                    {
+                        "spotifyId": "5pkaQ5pS44JGsA8chmUQzk",
+                        "title": "Rayini Maatram",
+                        "slug": "rayini-maatram",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2734e5ea08766b1c8b4249fe1e3",
+                        "plot": "Himesh Reshammiya, Hariharan - Dhasavathaaram (Telugu) (Original Motion Picture Soundtrack)",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "7cEbOdPHth4Ca2Qejq55if",
+                        "title": "Dashavatar",
+                        "slug": "dashavatar",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b273460fe6f2972b44fc069c3fec",
+                        "plot": "Narci, Bhuvan Sharma, Ezik - Dashavatar",
+                        "year": 2020,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "7008zrsudcCrPNCW1gauAe",
+                        "title": "Dashavatar",
+                        "slug": "dashavatar",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b273fe38cd5336bbaba893531346",
+                        "plot": "Shankar Mahadevan, Shreya Ghoshal - Dashavatar",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "2wrAEmJ6C5P5R2PDpUdtxR",
+                        "title": "Dashavatar Stotram-Pralayapayodhijale",
+                        "slug": "dashavatar-stotram-pralayapayodhijale",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2731eb3291b629d428be713fba2",
+                        "plot": "Sanatana Bharat, Upadhyay, Amrita Chaturvedi - Dashavatar Stotram-Pralayapayodhijale",
+                        "year": 2024,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "3enDl9NExaF70oyUFs50Ms",
+                        "title": "Dashavatar Stotram-Adi Shankaracharya Virachitam",
+                        "slug": "dashavatar-stotram-adi-shankaracharya-virachitam",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b273fddb817417cd1406069d4a0d",
+                        "plot": "Amrita Chaturvedi - Dashavatar Stotram-Adi Shankaracharya Virachitam",
+                        "year": 2025,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "3n0944L23I5MwduK8tzZ1C",
+                        "title": "Mawa Bro",
+                        "slug": "mawa-bro",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2739029dd526906012c8d07e001",
+                        "plot": "Ram Miriyala - Mawa Bro (From \"Das Ka Dhamki\")",
+                        "year": 2023,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "1uJFj9IFo8h9VkP0slzuMF",
+                        "title": "Om Namo Narayan",
+                        "slug": "om-namo-narayan",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2739e3db0d80126ce698dd877b4",
+                        "plot": "Himesh Reshammiya, Hariharan - Dashavtar - Hindi (Original Motion Picture Soundtrack)",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "5hYmazOzOj3U7bjdID55ku",
+                        "title": "Oh...Ho...Sanam",
+                        "slug": "oh-ho-sanam",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b27316bfecef5db3a7f2a2500fa9",
+                        "plot": "Kamal Haasan, Mahalakshmi Iyer - Dhasavathaaram-Tamil",
+                        "year": 2009,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "0W6rzOcmUJpBMqFZEt7qQM",
+                        "title": "Mukundha Mukundha",
+                        "slug": "mukundha-mukundha",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2734e5ea08766b1c8b4249fe1e3",
+                        "plot": "Himesh Reshammiya, Sadhana Sargam, Kamal Haasan - Dhasavathaaram (Telugu) (Original Motion Picture Soundtrack)",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    },
+                    {
+                        "spotifyId": "66HrRSmRyMdzf60QISnLlL",
+                        "title": "Dhasavathaaram (Telugu) (Original Motion Picture Soundtrack)",
+                        "slug": "dhasavathaaram-telugu-original-motion-picture-soundtrack-",
+                        "poster": "https://i.scdn.co/image/ab67616d0000b2734e5ea08766b1c8b4249fe1e3",
+                        "plot": "Himesh Reshammiya",
+                        "year": 2008,
+                        "matchReason": "Spotify API"
+                    }
+                ],
+                "total": 29
+            },
+            "album": {
+                "data": [],
+                "total": 0
+            },
+            "musicVideo": {
+                "data": [],
+                "total": 0
+            },
+            "video": {
+                "data": [],
+                "total": 0
+            },
+            "people": {
+                "data": [],
+                "total": 0
+            },
+            "performance": {
+                "data": [],
+                "total": 0
+            },
+            "productionCompanie": {
+                "data": [],
+                "total": 0
+            },
+            "studio": {
+                "data": [],
+                "total": 0
+            },
+            "publisher": {
+                "data": [],
+                "total": 0
+            },
+            "recordLabel": {
+                "data": [],
+                "total": 0
+            }
+        },
+        "pagination": {
+            "page": 1,
+            "limit": 10,
+            "totalResults": 71,
+            "totalPages": 8
+        }
+    },
+    "message": "Search results fetched successfully",
+    "success": true,
+    "redirect": null
+}

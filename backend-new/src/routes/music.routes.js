@@ -1,0 +1,11 @@
+import express from "express";
+import controllers from "../controllers/index.js";
+import validations from "../validations/index.js";
+import validate from "../middlewares/validate.js";
+
+const router = express.Router();
+
+router.get("/music/details/:musicId", controllers.musicController.getMusicDetails)
+
+const musicRouter = router;
+export default musicRouter;
